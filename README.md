@@ -6,7 +6,8 @@ Julia package for Recurrent Equilibrium Networks. This package is a work-in-prog
 - Tutorial on [developing Julia packages](https://julialang.org/contribute/developing_package/) by Chris Rackauckas (MIT)
 - Documentation on [managing Julia packages](https://pkgdocs.julialang.org/v1/managing-packages/) and developing unregistered packages with `Pkg.jl`
 - To contribute to the development of this package, clone this repository into `~/.julia/dev/RecurrentEquilibriumNetworks/` (for linux)
-- Pull/push changes to the package as normal
-- To use your local version of the package (best for development), type `dev RecurrentEquilibriumNetworks` instead of `add RecurrentEquilibriumNetworks` when using the package in another project.
+- Use git to pull/push changes to the package as normal
+- Type `dev RecurrentEquilibriumNetworks` to add the package to a project. This will link to whatever your current local version of the package is (best for development)
+- Whenever you want to use the package in a file, include `using RecurrentEquilibriumNetworks` at the top of your script
 
 Email Nic Barbara (nicholas.barbara@sydney.edu.au) for any questions/concerns.
