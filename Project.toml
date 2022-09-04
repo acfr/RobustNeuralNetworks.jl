@@ -1,0 +1,13 @@
+name = "RecurrentEquilibriumNetworks"
+uuid = "a1f18e6b-8af1-433f-a85d-2e1ee636a2b8"
+authors = ["Nicholas Barbara", "Ruigang Wang", "Jing Cheng", "Jerome Justin", "Ian Manchester"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
