@@ -1,5 +1,7 @@
 module RecurrentEquilibriumNetworks
 
-# Write your package code here.
+
+export test_ren_package
+include("functions.jl")
 
 end
