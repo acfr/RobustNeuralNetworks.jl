@@ -5,5 +5,5 @@ function test_ren_package()
 end
 
 function test_ren_package_v2()
-    return "Does this work?"
+    return "Does this work? Test #2"
 end
