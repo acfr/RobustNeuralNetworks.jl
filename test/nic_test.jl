@@ -2,7 +2,6 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate("./..")
 
-using ControlSystems
 using LinearAlgebra
 using RecurrentEquilibriumNetworks
 
@@ -29,4 +28,6 @@ D = randn(ny,nu)
 
 cren = ContractingRENParams(nv, A, B, C, D)
 
-exit()
+println("Made it to the end")
+
+# exit()

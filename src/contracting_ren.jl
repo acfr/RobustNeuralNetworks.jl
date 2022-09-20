@@ -9,9 +9,14 @@ mutable struct ContractingRENParams{T} <: AbstractRENParams
     nv::Int
     ny::Int
     direct::DirectParams{T}
-    output::Output{T}
+    output::OutputLayer{T}
 end
 
+"""
+    ContractingRENParams(nu, nx, nv, ny; ...)
+
+Main constructor for `ContractingRENParams`.
+"""
 function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     init = :random,
@@ -31,15 +36,17 @@ function ContractingRENParams{T}(
     )
 
     # Output layer
-    output_ps = Output{T}(nu, nx, nv, ny; rng=rng)
+    output_ps = OutputLayer{T}(nu, nx, nv, ny; rng=rng)
 
     return ContractingRENParams{T}(nu, nx, nv, ny, direct_ps, output_ps)
 
 end
 
 """
+    ContractingRENParams(nv, A, B, C, D; ...)
+
 Alternative constructor for `ContractingRENParams` that initialises the
-REN from a **stable** discrete linear system ss(A,B,C,D)
+REN from a **stable** discrete-time linear system ss(A,B,C,D)
 """
 function ContractingRENParams(
     nv::Int,
@@ -99,7 +106,7 @@ function ContractingRENParams(
 
     # Build REN params
     direct_ps = DirectParams{T}(nl, ρ, V, S1, B2, D12, bx, bv, ϵ, polar_param)
-    output_ps = Output{T}(ℂ2, 𝔻21, 𝔻22, by)
+    output_ps = OutputLayer{T}(ℂ2, 𝔻21, 𝔻22, by)
 
     return ContractingRENParams{T}(nu, nx, nv, ny, direct_ps, output_ps)
 

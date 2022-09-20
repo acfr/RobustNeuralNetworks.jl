@@ -27,7 +27,7 @@ include("utils.jl")
 
 # Common structures
 include("direct_params.jl")
-include("output.jl")
+include("output_layer.jl")
 
 # Variations of REN
 include("contracting_ren.jl")
@@ -39,5 +39,6 @@ include("contracting_ren.jl")
 export AbstractRENParams
 export ContractingRENParams
 export DirectParams
+export OutputLayer
 
 end # end RecurrentEquilibriumNetworks

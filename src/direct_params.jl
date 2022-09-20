@@ -17,6 +17,8 @@ mutable struct DirectParams{T}
 end
 
 """
+    DirectParams{T}(nu, nx, nv; ...)
+
 Constructor for `DirectParams` struct. Allows for the following
 initialisation methods, specified as symbols by `init` argument:
 - `:random`: Random sampling for all parameters
