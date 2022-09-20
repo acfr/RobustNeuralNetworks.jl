@@ -2,7 +2,6 @@ module RecurrentEquilibriumNetworks
 
 ############ Package dependencies ############
 
-using ControlSystems: StateSpace
 using CUDA
 using DocStringExtensions
 using Flux
