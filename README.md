@@ -44,4 +44,4 @@ Use git to pull/push changes to the package as normal
 - To use the code on the current main branch of the repo (latest stable release), instead type `] add git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`. You will have to manually update the package as normal with `] update RecurrentEquilibriumNetworks`.
 
 ### Contact
-Nic Barbara (nicholas.barbara@sydney.edu.au) for any questions/concerns.
+Nic Barbara (nicholas.barbara@sydney.edu.au) for any questions/concerns. 
