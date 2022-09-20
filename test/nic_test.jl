@@ -1,6 +1,32 @@
+cd(@__DIR__)
+using Pkg
+Pkg.activate("./..")
+
+using ControlSystems
+using LinearAlgebra
 using RecurrentEquilibriumNetworks
 
 """
 Nic's random testing script
 """
 
+nu = 4
+nx = 10
+nv = 20
+ny = 2
+
+# Test constructors
+params = DirectParams{Float64}(nu, nx, nv; init=:random)
+params = DirectParams{Float32}(nu, nx, nv; init=:cholesky)
+
+cren = ContractingRENParams{Float64}(nu, nx, nv, ny; init=:random)
+
+# Test linear system initialisation for fun
+A = Matrix{Float64}(I(nx)*0.99)
+B = randn(nx,nu)
+C = randn(ny,nx)
+D = randn(ny,nu)
+
+cren = ContractingRENParams(nv, A, B, C, D)
+
+exit()
