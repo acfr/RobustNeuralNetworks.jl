@@ -37,7 +37,7 @@ include("contracting_ren.jl")
 
 ############ Exports ############
 export AbstractRENParams
-export ContractingREN
+export ContractingRENParams
 export DirectParams
 
 end # end RecurrentEquilibriumNetworks
