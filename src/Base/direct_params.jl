@@ -111,7 +111,12 @@ function DirectParams{T}(
 )
 end
 
-# Trainable params. Filter empty ones (handy when nx=0)
+"""
+    Flux.trainable(L::DirectParams)
+
+Define trainable parameters for `DirectParams` type.
+Filter empty ones (handy when nx=0)
+"""
 function Flux.trainable(L::DirectParams)
     if L.D22_free
         return filter(
@@ -125,7 +130,11 @@ function Flux.trainable(L::DirectParams)
     )
 end
 
-# GPU/CPU compatibility
+"""
+    Flux.gpu(M::DirectParams{T}) where T
+
+Add GPU compatibility for `DirectParams` type
+"""
 function Flux.gpu(M::DirectParams{T}) where T
     if T != Float32
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
@@ -137,6 +146,11 @@ function Flux.gpu(M::DirectParams{T}) where T
     )
 end
 
+"""
+    Flux.cpu(M::DirectParams{T}) where T
+
+Add CPU compatibility for `DirectParams` type
+"""
 function Flux.cpu(M::DirectParams{T}) where T
     return DirectParams{T}(
         M.ϕ, cpu(M.V), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 

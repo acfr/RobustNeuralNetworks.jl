@@ -33,4 +33,6 @@ println("Made it to the end")
 exit()
 
 # Things to test:
-# - Various constructions with D22 trainable/free or not (4 combinations)
+#   - Various constructions with D22 trainable/free or not (4 combinations)
+#   - GeneralRENParams (everything)
+#   - CPU/GPU compatibility

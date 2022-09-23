@@ -23,14 +23,15 @@ abstract type AbstractRENParams end
 ############ Includes ############
 
 # Useful
-include("utils.jl")
+include("Base/utils.jl")
 
 # Common structures
-include("direct_params.jl")
-include("output_layer.jl")
+include("Base/direct_params.jl")
+include("Base/output_layer.jl")
 
 # Variations of REN
-include("contracting_ren.jl")
+include("ParameterTypes/contracting_ren.jl")
+include("ParameterTypes/general_ren.jl")
 
 # Main REN type
 
@@ -39,6 +40,7 @@ include("contracting_ren.jl")
 export AbstractRENParams
 export ContractingRENParams
 export DirectParams
+export GeneralRENParams
 export OutputLayer
 
 end # end RecurrentEquilibriumNetworks

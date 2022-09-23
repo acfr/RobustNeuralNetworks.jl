@@ -26,7 +26,11 @@ function OutputLayer{T}(nu::Int, nx::Int, nv::Int, ny::Int; D22_trainable=false,
     return OutputLayer{T}(C2, D21, D22, by, D22_trainable)
 end
 
-# Trainable params
+"""
+    Flux.trainable(layer::OutputLayer)
+
+Define trainable parameters for `OutputLayer` type
+"""
 function Flux.trainable(layer::OutputLayer)
     if layer.D22_trainable
         return (layer.C2, layer.D21, layer.D22, layer.by)
@@ -41,7 +45,11 @@ Call the output layer: y = C2x + D21w + D22u + by
 """
 (layer::OutputLayer)(x, w, u) = layer.C2 * x + layer.D21 * w + layer.D22 * u .+ layer.by
 
-# GPU/CPU compatibility
+"""
+    Flux.gpu(layer::OutputLayer{T}) where T
+
+Add GPU compatibility for `OutputLayer` type
+"""
 function Flux.gpu(layer::OutputLayer{T}) where T
     if T != Float32
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
@@ -49,6 +57,11 @@ function Flux.gpu(layer::OutputLayer{T}) where T
     return OutputLayer{T}(gpu(layer.C2), gpu(layer.D21), gpu(layer.D22), gpu(layer.by))
 end
 
+"""
+    Flux.cpu(layer::OutputLayer{T}) where T
+
+Add CPU compatibility for `OutputLayer` type
+"""
 function Flux.cpu(layer::OutputLayer{T}) where T
     return OutputLayer{T}(cpu(layer.C2), cpu(layer.D21), cpu(layer.D22), cpu(layer.by))
 end
