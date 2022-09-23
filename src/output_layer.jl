@@ -8,24 +8,31 @@ mutable struct OutputLayer{T}
     D21::Union{Matrix{T},CuMatrix{T}}
     D22::Union{Matrix{T},CuMatrix{T}}
     by::Union{Vector{T},CuVector{T}}
+    D22_trainable::Bool
 end
 
 """
-    OutputLayer{T}(nu, nx, nv, ny; rng=Random.GLOBAL_RNG) where T
+    OutputLayer{T}(nu, nx, nv, ny; ; D22_trainable=false rng=Random.GLOBAL_RNG) where T
 
 Main constructor for the output layer. Randomly generates all matrices
-except D22 from the Glorot normal distribution.
+from the Glorot normal distribution, except D22 = 0. Must specify if you
+want D22 to be a trainable parameter.
 """
-function OutputLayer{T}(nu::Int, nx::Int, nv::Int, ny::Int; rng=Random.GLOBAL_RNG) where T
+function OutputLayer{T}(nu::Int, nx::Int, nv::Int, ny::Int; D22_trainable=false, rng=Random.GLOBAL_RNG) where T
     C2  = glorot_normal(ny,nx; rng=rng)
     D21 = glorot_normal(ny,nv; rng=rng)
-    D22 = zeros(T, ny, nu)                          # TODO: Why zeros?
+    D22 = zeros(T, ny, nu)                          # TODO: Keep as zeros or initialise as random?
     by  = glorot_normal(ny; rng=rng)
-    return OutputLayer{T}(C2, D21, D22, by)
+    return OutputLayer{T}(C2, D21, D22, by, D22_trainable)
 end
 
 # Trainable params
-Flux.trainable(layer::OutputLayer) = (layer.C2, layer.D21, layer.D22, layer.by)
+function Flux.trainable(layer::OutputLayer)
+    if layer.D22_trainable
+        return (layer.C2, layer.D21, layer.D22, layer.by)
+    end
+    return (layer.C2, layer.D21, layer.by)
+end
 
 """
     (layer::OutputLayer)(x, w, u)

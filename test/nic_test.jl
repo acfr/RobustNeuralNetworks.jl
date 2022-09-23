@@ -15,8 +15,8 @@ nv = 20
 ny = 2
 
 # Test constructors
-params = DirectParams{Float64}(nu, nx, nv; init=:random)
-params = DirectParams{Float32}(nu, nx, nv; init=:cholesky)
+params = DirectParams{Float64}(nu, nx, nv, ny; init=:random)
+params = DirectParams{Float32}(nu, nx, nv, ny; init=:cholesky)
 
 cren = ContractingRENParams{Float64}(nu, nx, nv, ny; init=:random)
 
@@ -30,4 +30,7 @@ cren = ContractingRENParams(nv, A, B, C, D)
 
 println("Made it to the end")
 
-# exit()
+exit()
+
+# Things to test:
+# - Various constructions with D22 trainable/free or not (4 combinations)
