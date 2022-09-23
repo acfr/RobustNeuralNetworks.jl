@@ -91,3 +91,17 @@ function Flux.cpu(m::GeneralRENParams{T}) where T
         m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
 end
+
+
+"""
+    direct_to_explicit(ps::GeneralRENParams)
+
+Convert direct REN parameterisation to explicit parameterisation
+using behavioural constraints encoded in Q, S, R
+"""
+function direct_to_explicit(ps::GeneralRENParams)
+
+    # TODO: Fill this in
+
+    return nothing
+end

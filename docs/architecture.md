@@ -4,7 +4,6 @@ Some notes from our team meeting on 19/09/22. This document is a work-in-progres
 
 ## Description
 The package is structured around the `REN` type. An object of type `REN` should have the following attributes:
-- output layer
 - explicit model struct
 - in/out, state/nl sizes
 - nonlinearity
@@ -13,6 +12,7 @@ and functions to build/use it as follows:
 - constructor
 - self-call method
 - init state
+- set output zero
 - update params...? (possibly not)
 
 Each `REN` is constructed from a direct (implicit) parameterisation of the REN architecture. Each variation of REN (eg: contracting, passive, Lipschitz bounded) will be a subtype of `AbstractRENParams`, an abstract type. They must all include the following attributes:
@@ -30,6 +30,11 @@ The main file is `src/RecurrentEquilibriumNetworks.jl`. This imports all relevan
 When including files in our `src/` folder, the order often matters. I have tried to structure the `include` statements in `RecurrentEquilibriumNetworks.jl` so that we only ever have to include code once, in the main file. Please follow the conventioned outlined in the comments.
 
 ## TODO Lists (and other useful things)
+
+### General:
+- Write direct_to_explicit functions for `ContractingRENParams` and `GeneralRENParams`
+- Types are not carried through to `REN` class currently. [FIX THIS]
+- Add documentation and improve speed for `Base/acyclic_ren_solver.jl` code taken from Max's work
 
 ### Changes from previous code:
 - Currently no method to construct a REN without specifying type. Seems good to force it

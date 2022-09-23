@@ -39,13 +39,6 @@ function Flux.trainable(layer::OutputLayer)
 end
 
 """
-    (layer::OutputLayer)(x, w, u)
-
-Call the output layer: y = C2x + D21w + D22u + by
-"""
-(layer::OutputLayer)(x, w, u) = layer.C2 * x + layer.D21 * w + layer.D22 * u .+ layer.by
-
-"""
     Flux.gpu(layer::OutputLayer{T}) where T
 
 Add GPU compatibility for `OutputLayer` type

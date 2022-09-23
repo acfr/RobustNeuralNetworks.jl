@@ -157,3 +157,16 @@ function Flux.cpu(m::ContractingRENParams{T}) where T
     output_ps = Flux.cpo(m.output)
     return ContractingRENParams{T}(m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar)
 end
+
+"""
+    direct_to_explicit(ps::ContractingRENParams)
+
+Convert direct REN parameterisation to explicit parameterisation
+for contracting REN
+"""
+function direct_to_explicit(ps::ContractingRENParams)
+
+    # TODO: Fill this in
+
+    return nothing
+end

@@ -8,6 +8,7 @@ using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
 using Random
+using Zygote: @adjoint
 
 import Flux.gpu, Flux.cpu
 
@@ -24,10 +25,12 @@ abstract type AbstractRENParams end
 
 # Useful
 include("Base/utils.jl")
+include("Base/acyclic_ren_solver.jl")
 
 # Common structures
 include("Base/direct_params.jl")
 include("Base/output_layer.jl")
+include("Base/ren.jl")
 
 # Variations of REN
 include("ParameterTypes/contracting_ren.jl")
@@ -40,7 +43,9 @@ include("ParameterTypes/general_ren.jl")
 export AbstractRENParams
 export ContractingRENParams
 export DirectParams
+export ExplicitParams
 export GeneralRENParams
 export OutputLayer
+export REN
 
 end # end RecurrentEquilibriumNetworks

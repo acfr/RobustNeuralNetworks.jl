@@ -28,6 +28,21 @@ D = randn(ny,nu)
 
 cren = ContractingRENParams(nv, A, B, C, D)
 
+e = ExplicitParams{Float64}(
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1.0 1.0],
+    [1],
+    [1],
+    [1]
+)
+
 println("Made it to the end")
 
 exit()
@@ -36,3 +51,4 @@ exit()
 #   - Various constructions with D22 trainable/free or not (4 combinations)
 #   - GeneralRENParams (everything)
 #   - CPU/GPU compatibility
+#   - Check that REN() class actually works
