@@ -18,7 +18,7 @@ import Flux.gpu, Flux.cpu
 """
 $(TYPEDEF)
 """
-abstract type AbstractRENParams end
+abstract type AbstractRENParams{T} end
 
 
 ############ Includes ############
@@ -40,6 +40,8 @@ include("ParameterTypes/general_ren.jl")
 
 
 ############ Exports ############
+
+# Types
 export AbstractRENParams
 export ContractingRENParams
 export DirectParams
@@ -47,5 +49,9 @@ export ExplicitParams
 export GeneralRENParams
 export OutputLayer
 export REN
+
+# Functions
+export init_states
+export set_output_zero!
 
 end # end RecurrentEquilibriumNetworks

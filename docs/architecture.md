@@ -32,8 +32,7 @@ When including files in our `src/` folder, the order often matters. I have tried
 ## TODO Lists (and other useful things)
 
 ### General:
-- Write direct_to_explicit functions for `ContractingRENParams` and `GeneralRENParams`
-- Types are not carried through to `REN` class currently. [FIX THIS]
+- Write direct_to_explicit functions for and `GeneralRENParams`
 - Add documentation and improve speed for `Base/acyclic_ren_solver.jl` code taken from Max's work
 
 ### Changes from previous code:
@@ -55,3 +54,4 @@ When including files in our `src/` folder, the order often matters. I have tried
 - `sample_ff_ren` had `randn(2nx + nv, 2nx + nv) / sqrt(2nx + nv)`, not `.../ sqrt(2*(2nx + nv))`. Why?
 - Why have `bx_scale` and `bv_scale` in constructor for `DirectParams`?
 - Constructor for `implicit_ff_cell` has zeros for some params, random for others. Why?
+- Construction of S (now `Y1`) in `ffREN.jl` line 130/136 divides by 2 an extra time. Not necessary, right? Does this change anything?

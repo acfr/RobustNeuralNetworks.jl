@@ -4,7 +4,6 @@ $(TYPEDEF)
 Direct (implicit) parameters used to construct a REN.
 """
 mutable struct DirectParams{T}
-    nl                                  # nonlinearity
     ρ::Union{Vector{T},CuVector{T}}     # used in polar param
     V::Union{Matrix{T},CuMatrix{T}}
     Y1::Union{Matrix{T},CuMatrix{T}}
@@ -36,7 +35,6 @@ Note that `D22_free = false` by default.
 function DirectParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
     init = :random,
-    nl = Flux.relu, 
     ϵ = T(0.001), 
     bx_scale = T(0), 
     bv_scale = T(1), 
@@ -104,7 +102,7 @@ function DirectParams{T}(
     bx = T(bx_scale) * glorot_normal(nx; T=T, rng=rng)
 
     return DirectParams(
-        nl, ρ ,V, 
+        ρ ,V, 
         Y1, X3, Y3, Z3, 
         B2, D12, bx, bv, T(ϵ), 
         polar_param, D22_free
@@ -140,7 +138,7 @@ function Flux.gpu(M::DirectParams{T}) where T
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
     end
     return DirectParams{T}(
-        M.ϕ, gpu(M.V), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
+        gpu(M.V), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
         gpu(M.Z3), gpu(M.B2), gpu(M.D12), gpu(M.bx), 
         gpu(M.bv), M.ϵ, M.polar_param
     )
@@ -153,7 +151,7 @@ Add CPU compatibility for `DirectParams` type
 """
 function Flux.cpu(M::DirectParams{T}) where T
     return DirectParams{T}(
-        M.ϕ, cpu(M.V), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
+        cpu(M.V), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
         cpu(M.Z3), cpu(M.B2), cpu(M.D12), cpu(M.bx), 
         cpu(M.bv), M.ϵ, M.polar_param
     )

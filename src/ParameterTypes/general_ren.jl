@@ -4,7 +4,8 @@ $(TYPEDEF)
 Parameter struct to build an acyclic REN with behavioural
 constraints encoded in Q, S, R matrices
 """
-mutable struct GeneralRENParams{T} <: AbstractRENParams
+mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
+    nl                          # Sector-bounded nonlinearity
     nu::Int
     nx::Int
     nv::Int
@@ -44,14 +45,14 @@ function GeneralRENParams{T}(
     # Direct (implicit) params
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
-        init=init, nl=nl, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
+        init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
         polar_param=polar_param, rng=rng
     )
 
     # Output layer
     output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=true, rng=rng)
 
-    return GeneralRENParams{T}(nu, nx, nv, ny, direct_ps, output_ps, αbar, Q, S, R)
+    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar, Q, S, R)
 
 end
 
@@ -75,7 +76,7 @@ function Flux.gpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
     output_ps = Flux.gpo(m.output)
     return GeneralRENParams{T}(
-        m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
@@ -88,7 +89,7 @@ function Flux.cpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
     output_ps = Flux.cpo(m.output)
     return GeneralRENParams{T}(
-        m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 

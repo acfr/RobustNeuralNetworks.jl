@@ -30,6 +30,7 @@ mutable struct REN
     nv::Int
     ny::Int
     explicit::ExplicitParams
+    T::DataType
 end
 
 """
@@ -37,9 +38,9 @@ end
 
 Construct REN from direct parameterisation
 """
-function REN(ps::AbstractRENParams)
+function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
-    return REN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit)
+    return REN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, T)
 end
 
 """
@@ -65,7 +66,7 @@ end
 Return state vector initialised as zeros
 """
 function init_states(m::REN)
-    return typeof(m.explicit.A)(zeros(m.nx))
+    return zeros(m.T, m.nx)
 end
 
 """
@@ -74,7 +75,7 @@ end
 Return matrix of (nbatches) state vectors initialised as zeros
 """
 function init_states(m::REN, nbatches)
-    return typeof(m.explicit.A)(zeros(m.nx, nbatches))
+    return zeros(m.T, m.nx, nbatches)
 end
 
 """
