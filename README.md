@@ -48,7 +48,7 @@ The main file is `src/RecurrentEquilibriumNetworks.jl`. This imports all relevan
 
 When including files in our `src/` folder, the order often matters. I have tried to structure the `include` statements in `RecurrentEquilibriumNetworks.jl` so that we only ever have to include code once, in the main file. Please follow the conventioned outlined in the comments.
 
-The source files for our package are al in the `src/` folder, and are split between `src/Base/` and `src/ParameterTypes/`. The `Base/` folder should contain code relevant to the core functionality of this package. The `ParameterTypes/` is where to add different versions of REN (eg: contracting REN, Lipschitz-bounded REN, etc.). See `src/ParameterTypes/general_ren.jl` for an example.
+The source files for our package are al in the `src/` folder, and are split between `src/Base/` and `src/ParameterTypes/`. The `Base/` folder should contain code relevant to the core functionality of this package. The `ParameterTypes/` is where to add different versions of REN (eg: contracting REN, Lipschitz-bounded REN, etc.). See below for further documentation.
 
 Once you have written any code for this package, be sure to test it thoroughly. Write testing scripts for the package in `test/`:
 - See [`Test.jl`](https://docs.julialang.org/en/v1/stdlib/Test/) documentation for writing tests
