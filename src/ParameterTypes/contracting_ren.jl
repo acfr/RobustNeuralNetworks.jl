@@ -36,7 +36,7 @@ function ContractingRENParams{T}(
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, rng=rng
+        polar_param=polar_param, D22_free=true, rng=rng
     )
 
     # Output layer
@@ -77,7 +77,6 @@ function ContractingRENParams(
     ny = size(C,1)
 
     # Use given matrices for explicit REN (\bb for explicit)
-    # TODO: Change notation. Use \scr for implicit, normal for explicit
     𝔸  = A; 𝔹2  = B
     ℂ2 = C; 𝔻22 = D
 
@@ -173,10 +172,8 @@ for contracting REN
 function direct_to_explicit(ps::ContractingRENParams{T}) where T
 
     # System sizes
-    nu = ps.nu
     nx = ps.nx
     nv = ps.nv
-    ny = ps.ny
 
     # To be used later
     ᾱ = ps.αbar
@@ -188,7 +185,8 @@ function direct_to_explicit(ps::ContractingRENParams{T}) where T
     V = ps.direct.V
     H = ps.direct.polar_param ? exp(ρ[1])*V'*V / norm(V)^2 : V'*V + ϵ*I
 
-    # Extract sections of H matrix TODO: Try using @view to improve speed!
+    # Extract sections of H matrix 
+    # Note: using @view slightly faster, but not supported by CUDA
     H11 = H[1:nx, 1:nx]
     H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
     H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]

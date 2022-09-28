@@ -29,7 +29,7 @@ function GeneralRENParams{T}(
     Q = nothing, S = nothing, R = nothing;
     init = :random,
     nl = Flux.relu, 
-    ϵ = T(0.001), 
+    ϵ = T(1e-6), 
     αbar = T(1),
     bx_scale = T(0), 
     bv_scale = T(1), 
@@ -42,15 +42,23 @@ function GeneralRENParams{T}(
     (S === nothing) && (S = zeros(T, nu, ny))
     (R === nothing) && (R = zeros(T, nu, nu))
 
+    # Check conditions on Q
+    if !isposdef(-Q)
+        Q = Q .- ϵ*I
+        if ~isposdef(-Q)
+            error("Q must be negative semi-definite for this construction.")
+        end
+    end
+
     # Direct (implicit) params
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, rng=rng
+        polar_param=polar_param, D22_free=false, rng=rng
     )
 
     # Output layer
-    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=true, rng=rng)
+    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=false, rng=rng)
 
     return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar, Q, S, R)
 
