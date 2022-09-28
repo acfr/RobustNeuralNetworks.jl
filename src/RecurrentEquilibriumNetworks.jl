@@ -1,7 +1,57 @@
 module RecurrentEquilibriumNetworks
 
+############ Package dependencies ############
 
-export test_ren_package, test_ren_package_v2
-include("functions.jl")
+using CUDA
+using DocStringExtensions
+using Flux
+using LinearAlgebra
+using MatrixEquations: lyapd, plyapd
+using Random
+using Zygote: @adjoint
 
-end
+import Flux.gpu, Flux.cpu
+
+
+############ Abstract type ############
+
+"""
+$(TYPEDEF)
+"""
+abstract type AbstractRENParams{T} end
+
+
+############ Includes ############
+
+# Useful
+include("Base/utils.jl")
+include("Base/acyclic_ren_solver.jl")
+
+# Common structures
+include("Base/direct_params.jl")
+include("Base/output_layer.jl")
+include("Base/ren.jl")
+
+# Variations of REN
+include("ParameterTypes/contracting_ren.jl")
+include("ParameterTypes/general_ren.jl")
+
+# Main REN type
+
+
+############ Exports ############
+
+# Types
+export AbstractRENParams
+export ContractingRENParams
+export DirectParams
+export ExplicitParams
+export GeneralRENParams
+export OutputLayer
+export REN
+
+# Functions
+export init_states
+export set_output_zero!
+
+end # end RecurrentEquilibriumNetworks

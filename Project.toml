@@ -3,6 +3,16 @@ uuid = "a1f18e6b-8af1-433f-a85d-2e1ee636a2b8"
 authors = ["Nicholas Barbara", "Ruigang Wang", "Jing Cheng", "Jerome Justin", "Ian Manchester"]
 version = "0.1.0"
 
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MatrixEquations = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
 [compat]
 julia = "1"
 
