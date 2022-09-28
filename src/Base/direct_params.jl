@@ -92,9 +92,10 @@ function DirectParams{T}(
         Y3 = zeros(T, 0, 0)
         Z3 = zeros(T, 0, 0)
     else
-        X3 = glorot_normal(nu, nu; T=T, rng=rng)
-        Y3 = glorot_normal(nu, nu; T=T, rng=rng)
-        Z3 = glorot_normal(abs(ny - nu), ny;  T=T, rng=rng)
+        d = min(nu, ny)
+        X3 = glorot_normal(d, d; T=T, rng=rng)
+        Y3 = glorot_normal(d, d; T=T, rng=rng)
+        Z3 = glorot_normal(abs(ny - nu), d;  T=T, rng=rng)
     end
 
     # Bias terms
