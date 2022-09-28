@@ -101,16 +101,47 @@ function Flux.cpu(m::GeneralRENParams{T}) where T
     )
 end
 
-
 """
     direct_to_explicit(ps::GeneralRENParams)
 
 Convert direct REN parameterisation to explicit parameterisation
 using behavioural constraints encoded in Q, S, R
 """
-function direct_to_explicit(ps::GeneralRENParams)
+function direct_to_explicit(ps::GeneralRENParams{T}) where T
 
-    # TODO: Fill this in
+    # System sizes
+    nu = ps.nu
+    nx = ps.nx
+    nv = ps.nv
+    ny = ps.ny
+
+    # To be used later
+    ᾱ = ps.αbar
+    Y1 = ps.direct.Y1
+
+    # Extract useful parameters
+    ϵ = ps.direct.ϵ
+    ρ = ps.direct.ρ
+    X = ps.direct.X
+
+    X3 = ps.direct.X3
+    Y3 = ps.direct.Y3
+    Z3 = ps.direct.Z3
+
+    B2_imp = ps.direct.B2
+    C2_imp = ps.output.C2
+    D21_imp = ps.output.D21
+
+    # Constructing D22
+    LQ = Matrix{T}(cholesky(-Q).U)
+    LR = Matrix{T}(cholesky(R - S * (Q \ S')).U)
+
+    M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+    if ny >= nu
+        # N = ...;
+    else
+        # N = ...;
+    end
 
     return nothing
 end
