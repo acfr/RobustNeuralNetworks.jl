@@ -50,6 +50,13 @@ end
 test_ren(cren_ps)
 
 # Test more general REN construction with Q,S,R matrices
+Q = Matrix{Float64}(-I(ny))
+R = 0.1^2 * Matrix{Float64}(I(nu))
+S = zeros(Float64, nu, ny)
+
+gren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R)
+
+test_ren(gren_ps)
 
 println("Made it to the end")
 # exit()

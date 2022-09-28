@@ -5,7 +5,7 @@ Direct (implicit) parameters used to construct a REN.
 """
 mutable struct DirectParams{T}
     ρ::Union{Vector{T},CuVector{T}}     # used in polar param
-    V::Union{Matrix{T},CuMatrix{T}}
+    X::Union{Matrix{T},CuMatrix{T}}
     Y1::Union{Matrix{T},CuMatrix{T}}
     X3::Union{Matrix{T},CuMatrix{T}}
     Y3::Union{Matrix{T},CuMatrix{T}}
@@ -25,7 +25,7 @@ end
 Constructor for `DirectParams` struct. Allows for the following
 initialisation methods, specified as symbols by `init` argument:
 - `:random`: Random sampling for all parameters
-- `:cholesky`: Compute `V` with cholesky factorisation of `H`, sets `E,F,P = I`
+- `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`
 
 Option `D22_free` specifies whether or not to include parameters X3, Y3, and Z3
 as trainable parameters used in the explicit construction of D22. If `D22_free == true`
@@ -51,11 +51,11 @@ function DirectParams{T}(
         
         ρ = zeros(1)
         
-        # Make orthogonal V
-        V = glorot_normal(2nx + nv, 2nx + nv; T=T, rng=rng)
-        V = Matrix(qr(V).Q)
+        # Make orthogonal X
+        X = glorot_normal(2nx + nv, 2nx + nv; T=T, rng=rng)
+        X = Matrix(qr(X).Q)
 
-    # Specify H and compute V
+    # Specify H and compute X
     elseif init == :cholesky
 
         E = Matrix{T}(I, nx, nx)
@@ -77,7 +77,7 @@ function DirectParams{T}(
                  F  B1  P] + ϵ * I
         
         ρ = zeros(T, 1)
-        V = Matrix{T}(cholesky(Htild).U) # H = V'*V
+        X = Matrix{T}(cholesky(Htild).U) # H = X'*X
 
     else
         error("Undefined initialisation method ", init)
@@ -92,9 +92,10 @@ function DirectParams{T}(
         Y3 = zeros(T, 0, 0)
         Z3 = zeros(T, 0, 0)
     else
-        X3 = glorot_normal(nu, nu; T=T, rng=rng)
-        Y3 = glorot_normal(nu, nu; T=T, rng=rng)
-        Z3 = glorot_normal(abs(ny - nu), ny;  T=T, rng=rng)
+        d = min(nu, ny)
+        X3 = glorot_normal(d, d; T=T, rng=rng)
+        Y3 = glorot_normal(d, d; T=T, rng=rng)
+        Z3 = glorot_normal(abs(ny - nu), d;  T=T, rng=rng)
     end
 
     # Bias terms
@@ -102,7 +103,7 @@ function DirectParams{T}(
     bx = T(bx_scale) * glorot_normal(nx; T=T, rng=rng)
 
     return DirectParams(
-        ρ ,V, 
+        ρ ,X, 
         Y1, X3, Y3, Z3, 
         B2, D12, bx, bv, T(ϵ), 
         polar_param, D22_free
@@ -119,12 +120,12 @@ function Flux.trainable(L::DirectParams)
     if L.D22_free
         return filter(
             p -> length(p) !=0, 
-            [L.ρ, L.V, L.Y1, L.B2, L.D12, L.bx, L.bv]
+            [L.ρ, L.X, L.Y1, L.B2, L.D12, L.bx, L.bv]
         )
     end
     return filter(
         p -> length(p) !=0, 
-        [L.ρ, L.V, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.D12, L.bx, L.bv]
+        [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.D12, L.bx, L.bv]
     )
 end
 
@@ -138,7 +139,7 @@ function Flux.gpu(M::DirectParams{T}) where T
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
     end
     return DirectParams{T}(
-        gpu(M.V), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
+        gpu(M.X), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
         gpu(M.Z3), gpu(M.B2), gpu(M.D12), gpu(M.bx), 
         gpu(M.bv), M.ϵ, M.polar_param
     )
@@ -151,7 +152,7 @@ Add CPU compatibility for `DirectParams` type
 """
 function Flux.cpu(M::DirectParams{T}) where T
     return DirectParams{T}(
-        cpu(M.V), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
+        cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
         cpu(M.Z3), cpu(M.B2), cpu(M.D12), cpu(M.bx), 
         cpu(M.bv), M.ϵ, M.polar_param
     )

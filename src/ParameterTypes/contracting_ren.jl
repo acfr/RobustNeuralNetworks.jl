@@ -103,7 +103,7 @@ function ContractingRENParams(
 
     # Sample nearby nonlinear systems and decompose
     (df_wishart !== nothing) && (H = rand(Wishart(df_wishart,H))/df_wishart + ϵ*I)
-    V = Matrix{T}(cholesky(H).U)
+    X = Matrix{T}(cholesky(H).U)
 
     # Add bias terms
     bv = T(bv_scale) * glorot_normal(nv; T=T, rng=rng)
@@ -119,7 +119,7 @@ function ContractingRENParams(
 
     # Build REN params
     αbar = T(1)
-    direct_ps = DirectParams{T}(ρ, V, Y1, X3, Y3, Z3, B2, D12, bx, bv, ϵ, polar_param, D22_free)
+    direct_ps = DirectParams{T}(ρ, X, Y1, X3, Y3, Z3, B2, D12, bx, bv, ϵ, polar_param, D22_free)
     output_ps = OutputLayer{T}(ℂ2, 𝔻21, 𝔻22, by, D22_trainable)
 
     return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar)
@@ -182,8 +182,8 @@ function direct_to_explicit(ps::ContractingRENParams{T}) where T
     # Extract useful parameters and construct H
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
-    V = ps.direct.V
-    H = ps.direct.polar_param ? exp(ρ[1])*V'*V / norm(V)^2 : V'*V + ϵ*I
+    X = ps.direct.X
+    H = ps.direct.polar_param ? exp(ρ[1])*X'*X / norm(X)^2 : X'*X + ϵ*I
 
     # Extract sections of H matrix 
     # Note: using @view slightly faster, but not supported by CUDA
