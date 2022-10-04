@@ -130,12 +130,10 @@ end
     Flux.trainable(m::ContractingRENParams)
 
 Define trainable parameters for `ContractingRENParams` type
-Filter empty ones (handy when nx=0)
 """
-Flux.trainable(m::ContractingRENParams) = filter(
-    p -> length(p) !=0, 
-    (Flux.trainable(m.direct)..., Flux.trainable(m.output)...)
-)
+Flux.trainable(m::ContractingRENParams) = [
+    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
+]
 
 """
     Flux.gpu(m::ContractingRENParams{T}) where T
