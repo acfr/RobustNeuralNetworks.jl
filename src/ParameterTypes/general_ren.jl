@@ -38,13 +38,13 @@ function GeneralRENParams{T}(
 ) where T
 
     # IQC params
-    (Q === nothing) && (Q = zeros(T, ny, ny))
+    (Q === nothing) && (Q = Matrix{T}(-I, ny, ny))
     (S === nothing) && (S = zeros(T, nu, ny))
-    (R === nothing) && (R = zeros(T, nu, nu))
+    (R === nothing) && (R = Matrix{T}(I, nu, nu))
 
     # Check conditions on Q
     if !isposdef(-Q)
-        Q = Q .- ϵ*I
+        Q = Q - ϵ*I
         if ~isposdef(-Q)
             error("Q must be negative semi-definite for this construction.")
         end

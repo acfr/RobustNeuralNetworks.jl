@@ -115,9 +115,6 @@ x1, y1 = ren(x0, u0)  # Evaluates the REN over one timestep
 # Update the model after changing a parameter
 ren.params.direct.B2 .*= rand(size(ren.params.direct.B2)...)
 update_explicit!(ren)
-
-println(x1)
-println(y1)
 ```
 [NOTE] This operation is not compatible with Flux differentiation because the explicit parameters are mutated during the update.
 
