@@ -29,13 +29,20 @@ end
 """
     Flux.trainable(layer::OutputLayer)
 
-Define trainable parameters for `OutputLayer` type
+Define trainable parameters for `OutputLayer` type.
+Filter empty ones (handy when nx=0)
 """
 function Flux.trainable(layer::OutputLayer)
     if layer.D22_trainable
-        return (layer.C2, layer.D21, layer.D22, layer.by)
+        return filter(
+            p -> length(p) !=0, 
+            [layer.C2, layer.D21, layer.D22, layer.by]
+        )
     end
-    return (layer.C2, layer.D21, layer.by)
+    return filter(
+        p -> length(p) !=0, 
+        [layer.C2, layer.D21, layer.by]
+    )
 end
 
 """

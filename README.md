@@ -28,12 +28,12 @@ batches = 50
 nu, nx, nv, ny = 4, 10, 20, 2
 
 contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny)
-contracting_ren = REN(ren_ps)
+contracting_ren = REN(contracting_ren_ps)
 
 x0 = init_states(contracting_ren, batches)
 u0 = randn(contracting_ren.nu, batches)
 
-x1, y1 = ren(x0, u0)  # Evaluates the REN over one timestep
+x1, y1 = contracting_ren(x0, u0)  # Evaluates the REN over one timestep
 
 println(x1)
 println(y1)
@@ -68,7 +68,7 @@ Once the package is functional, it can be used in other Julia workspaces like an
 
 
 ## Some Early Documentation
-The package is structured around the `REN` type. An object of type `REN` has the following attributes:
+The package is structured around the `REN <: AbstractREN` type. An object of type `REN` has the following attributes:
 - explicit model struct
 - in/out, state/nl sizes
 - nonlinearity
@@ -91,6 +91,35 @@ The output layer and implicit parameters are structs defined in `src/Base/output
 - A definition of `direct_to_explicit()` to convert the direct paramterisation to its explicit form
 
 See `src/ParameterTypes/general_ren.jl` for an example.
+
+
+### Non-differentiable REN Wrapper
+
+There are many ways to train a REN, some of which do not involve differentiating the model. In these cases, it is convenient to have a wrapper `WrapREN <: AbstractREN` for the `REN` type that does not need to be destroyed an recreated whenever the direct parameters change. `WrapREN` is structured exactly the same as `REN`, but also holds the `AbstractRENParams` used to construct its explicit model. The explicit model can be updated in-place following any changes to the direct parameters. See below for an example.
+
+```julia
+using Random
+using RecurrentEquilibriumNetworks
+
+batches = 50
+nu, nx, nv, ny = 4, 10, 20, 2
+
+ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny)
+ren = WrapREN(ren_ps)
+
+x0 = init_states(ren, batches)
+u0 = randn(ren.nu, batches)
+
+x1, y1 = ren(x0, u0)  # Evaluates the REN over one timestep
+
+# Update the model after changing a parameter
+ren.params.direct.B2 .*= rand(size(ren.params.direct.B2)...)
+update_explicit!(ren)
+
+println(x1)
+println(y1)
+```
+[NOTE] This operation is not compatible with Flux differentiation because the explicit parameters are mutated during the update.
 
 ## Contact
 Nic Barbara (nicholas.barbara@sydney.edu.au) for any questions/concerns.
