@@ -80,7 +80,7 @@ Add GPU compatibility for `GeneralRENParams` type
 """
 function Flux.gpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpo(m.output)
+    output_ps = Flux.gpu(m.output)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
@@ -93,7 +93,7 @@ Add CPU compatibility for `GeneralRENParams` type
 """
 function Flux.cpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpo(m.output)
+    output_ps = Flux.cpu(m.output)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
@@ -165,6 +165,8 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
         H = X'*X + ϵ*I + Γ2 - Γ1
     end
 
+    # TODO: Make a general function to do everything below here:
+    
     # Extract sections of H matrix 
     # Note: using @view slightly faster, but not supported by CUDA
     H11 = H[1:nx, 1:nx]

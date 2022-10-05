@@ -142,7 +142,7 @@ Add GPU compatibility for `ContractingRENParams` type
 """
 function Flux.gpu(m::ContractingRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpo(m.output)
+    output_ps = Flux.gpu(m.output)
     return ContractingRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar
     )
@@ -155,7 +155,7 @@ Add CPU compatibility for `ContractingRENParams` type
 """
 function Flux.cpu(m::ContractingRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpo(m.output)
+    output_ps = Flux.cpu(m.output)
     return ContractingRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar
     )
