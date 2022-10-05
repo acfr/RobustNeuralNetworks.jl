@@ -39,6 +39,7 @@ include("Base/ren.jl")
 include("Base/wrapren.jl")
 
 # Variations of REN
+include("ParameterTypes/utils.jl")
 include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
 
