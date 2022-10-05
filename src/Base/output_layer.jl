@@ -34,15 +34,11 @@ Filter empty ones (handy when nx=0)
 """
 function Flux.trainable(layer::OutputLayer)
     if layer.D22_trainable
-        return filter(
-            p -> length(p) !=0, 
-            [layer.C2, layer.D21, layer.D22, layer.by]
-        )
+        ps = [layer.C2, layer.D21, layer.D22, layer.by] 
+    else
+        ps = [layer.C2, layer.D21, layer.by]
     end
-    return filter(
-        p -> length(p) !=0, 
-        [layer.C2, layer.D21, layer.by]
-    )
+    return filter(p -> length(p) !=0, ps)
 end
 
 """
