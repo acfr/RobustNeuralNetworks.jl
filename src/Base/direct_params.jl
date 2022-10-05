@@ -118,15 +118,12 @@ Filter empty ones (handy when nx=0)
 """
 function Flux.trainable(L::DirectParams)
     if L.D22_free
-        return filter(
-            p -> length(p) !=0, 
-            [L.ρ, L.X, L.Y1, L.B2, L.D12, L.bx, L.bv]
-        )
+        ps = [L.ρ, L.X, L.Y1, L.B2, L.D12, L.bx, L.bv]
+    else
+        ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.D12, L.bx, L.bv]
     end
-    return filter(
-        p -> length(p) !=0, 
-        [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.D12, L.bx, L.bv]
-    )
+    !(L.polar_param) && popfirst!(ps)
+    return filter(p -> length(p) !=0, ps)
 end
 
 """
