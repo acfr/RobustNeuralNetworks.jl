@@ -23,7 +23,7 @@ $(TYPEDEF)
 
 Main Recurrent Equilibrium Network type
 """
-mutable struct REN
+mutable struct REN <: AbstractREN
     nl
     nu::Int
     nx::Int
@@ -44,13 +44,13 @@ function REN(ps::AbstractRENParams{T}) where T
 end
 
 """
-    (m::REN)(xt::VecOrMat, ut::VecOrMat)
+    (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
 Call the REN given internal states xt and inputs ut. If 
 function arguments are matrices, each column must be a 
 vector of states or inputs (allows batch simulations).
 """
-function (m::REN)(xt::VecOrMat, ut::VecOrMat)
+function (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
     b = m.explicit.C1 * xt + m.explicit.D12 * ut .+ m.explicit.bv
     wt = tril_eq_layer(m.nl, m.explicit.D11, b)
@@ -61,29 +61,29 @@ function (m::REN)(xt::VecOrMat, ut::VecOrMat)
 end
 
 """
-    init_states(m::REN)
+    init_states(m::AbstractREN; rng=nothing)
 
 Return state vector initialised as zeros
 """
-function init_states(m::REN)
+function init_states(m::AbstractREN; rng=nothing)
     return zeros(m.T, m.nx)
 end
 
 """
-    init_states(m::REN, nbatches)
+    init_states(m::AbstractREN, nbatches; rng=nothing)
 
 Return matrix of (nbatches) state vectors initialised as zeros
 """
-function init_states(m::REN, nbatches)
+function init_states(m::AbstractREN, nbatches; rng=nothing)
     return zeros(m.T, m.nx, nbatches)
 end
 
 """
-    set_output_zero!(m::REN)
+    set_output_zero!(m::AbstractREN)
 
 Set output map of REN to zero
 """
-function set_output_zero!(m::REN)
+function set_output_zero!(m::AbstractREN)
     m.explicit.C2 .*= 0
     m.explicit.D21 .*= 0
     m.explicit.D22 .*= 0
