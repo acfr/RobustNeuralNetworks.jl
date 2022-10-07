@@ -4,6 +4,7 @@ Pkg.activate("./..")
 
 using BenchmarkTools
 using LinearAlgebra
+using Flux
 using RecurrentEquilibriumNetworks
 
 """
@@ -58,10 +59,28 @@ gren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R)
 
 test_ren(gren_ps)
 
+# Tryp constructing a REN with the wrapper
+wrapren = WrapREN(gren_ps)
+
+x0s = init_states(wrapren, 20)
+u0s = randn(wrapren.nu, 20)
+
+x1s, y1s = wrapren(x0s, u0s)
+
+# Check that the parameters can be updated correctly
+ps = Flux.params(wrapren)
+ps[7]
+
+wrapren.params.direct.B2 .*= rand(size(wrapren.params.direct.B2)...)
+ps[7]
+
+wrapren.explicit.B2
+update_explicit!(wrapren)
+wrapren.explicit.B2
+
 println("Made it to the end")
 # exit()
 
 # Things to test:
 #   - Various constructions with D22 trainable/free or not (4 combinations)
-#   - GeneralRENParams (everything)
 #   - CPU/GPU compatibility
