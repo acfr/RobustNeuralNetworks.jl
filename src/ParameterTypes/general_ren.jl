@@ -38,13 +38,13 @@ function GeneralRENParams{T}(
 ) where T
 
     # IQC params
-    (Q === nothing) && (Q = zeros(T, ny, ny))
+    (Q === nothing) && (Q = Matrix{T}(-I, ny, ny))
     (S === nothing) && (S = zeros(T, nu, ny))
-    (R === nothing) && (R = zeros(T, nu, nu))
+    (R === nothing) && (R = Matrix{T}(I, nu, nu))
 
     # Check conditions on Q
     if !isposdef(-Q)
-        Q = Q .- ϵ*I
+        Q = Q - ϵ*I
         if ~isposdef(-Q)
             error("Q must be negative semi-definite for this construction.")
         end
@@ -67,13 +67,11 @@ end
 """
     Flux.trainable(m::GeneralRENParams)
 
-Define trainable parameters for `ContractingRENParams` type
-Filter empty ones (handy when nx=0)
+Define trainable parameters for `GeneralRENParams` type
 """
-Flux.trainable(m::GeneralRENParams) = filter(
-    p -> length(p) !=0, 
-    (Flux.trainable(m.direct)..., Flux.trainable(m.output)...)
-)
+Flux.trainable(m::GeneralRENParams) = [
+    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
+]
 
 """
     Flux.gpu(m::GeneralRENParams{T}) where T
@@ -82,7 +80,7 @@ Add GPU compatibility for `GeneralRENParams` type
 """
 function Flux.gpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpo(m.output)
+    output_ps = Flux.gpu(m.output)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
@@ -95,7 +93,7 @@ Add CPU compatibility for `GeneralRENParams` type
 """
 function Flux.cpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpo(m.output)
+    output_ps = Flux.cpu(m.output)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
     )
@@ -112,7 +110,6 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
     # System sizes
     nu = ps.nu
     nx = ps.nx
-    nv = ps.nv
     ny = ps.ny
 
     # Dissipation parameters
@@ -121,12 +118,9 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
     R = ps.R
 
     # Implicit parameters
-    ᾱ = ps.αbar
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
     X = ps.direct.X
-
-    Y1 = ps.direct.Y1
 
     X3 = ps.direct.X3
     Y3 = ps.direct.Y3
@@ -167,39 +161,7 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
         H = X'*X + ϵ*I + Γ2 - Γ1
     end
 
-    # Extract sections of H matrix 
-    # Note: using @view slightly faster, but not supported by CUDA
-    H11 = H[1:nx, 1:nx]
-    H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
-    H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
-    H21 = H[nx + 1:nx + nv, 1:nx]
-    H31 = H[nx + nv + 1:2nx + nv, 1:nx]
-    H32 = H[nx + nv + 1:2nx + nv, nx + 1:nx + nv]
-
-    # Construct implicit model parameters
-    P_imp = H33
-    F = H31
-    E = (H11 + P_imp/ᾱ^2 + Y1 - Y1')/2
-
-    # Equilibrium network parameters
-    B1_imp = H32
-    C1_imp = -H21
-    Λ_inv = (1 ./ diag(H22)) * 2
-    D11_imp = -tril(H22, -1)
-
-    # Construct the explicit model
-    A = E \ F
-    B1 = E \ B1_imp
-    B2 = E \ ps.direct.B2
-    
-    C1 = Λ_inv .* C1_imp
-    D11 = Λ_inv .* D11_imp
-    D12 = Λ_inv .* D12_imp
-
-    bx = ps.direct.bx
-    bv = ps.direct.bv
-    by = ps.output.by
-    
-    return ExplicitParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
+    # Get explicit parameterisation
+    return hmatrix_to_explicit(ps, H, D22)
 
 end
