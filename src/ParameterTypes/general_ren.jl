@@ -26,7 +26,7 @@ Main constructor for `GeneralRENParams`.
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
-    Q = nothing, S = nothing, R = nothing;
+    Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
     init = :random,
     nl = Flux.relu, 
     ϵ = T(1e-6), 
@@ -36,11 +36,6 @@ function GeneralRENParams{T}(
     polar_param = true,
     rng = Random.GLOBAL_RNG
 ) where T
-
-    # IQC params
-    (Q === nothing) && (Q = Matrix{T}(-I, ny, ny))
-    (S === nothing) && (S = zeros(T, nu, ny))
-    (R === nothing) && (R = Matrix{T}(I, nu, nu))
 
     # Check conditions on Q
     if !isposdef(-Q)

@@ -98,13 +98,18 @@ See `src/ParameterTypes/general_ren.jl` for an example.
 There are many ways to train a REN, some of which do not involve differentiating the model. In these cases, it is convenient to have a wrapper `WrapREN <: AbstractREN` for the `REN` type that does not need to be destroyed an recreated whenever the direct parameters change. `WrapREN` is structured exactly the same as `REN`, but also holds the `AbstractRENParams` used to construct its explicit model. The explicit model can be updated in-place following any changes to the direct parameters. See below for an example.
 
 ```julia
+using LinearAlgebra
 using Random
 using RecurrentEquilibriumNetworks
 
 batches = 50
 nu, nx, nv, ny = 4, 10, 20, 2
 
-ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny)
+Q = Matrix{Float64}(-I(ny))
+R = 0.1^2 * Matrix{Float64}(I(nu))
+S = zeros(Float64, nu, ny)
+
+ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R)
 ren = WrapREN(ren_ps)
 
 x0 = init_states(ren, batches)
