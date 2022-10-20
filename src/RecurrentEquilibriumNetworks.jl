@@ -42,6 +42,7 @@ include("Base/wrapren.jl")
 include("ParameterTypes/utils.jl")
 include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
+include("ParameterTypes/lipschitz_ren.jl")
 
 # Main REN type
 
@@ -55,6 +56,7 @@ export ContractingRENParams
 export DirectParams
 export ExplicitParams
 export GeneralRENParams
+export LipschitzRENParams
 export OutputLayer
 export REN
 export WrapREN

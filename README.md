@@ -61,10 +61,16 @@ Use git to pull/push changes to the package as normal while developing it.
 
 Once the package is functional, it can be used in other Julia workspaces like any normal package by following these instructions:
 
+- To use the code on the current main branch of the repo (latest stable release), type `] add git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`. 
+- We have to use the git link not the package name because it is an unregistered Julia package.
+- You will have to manually update the package as normal with `] update RecurrentEquilibriumNetworks`.
+
+If you just want to use the latest version of the package on your computer (useful for rapid development), you may not want to have to manually update the package each time. In this case:
 - Add a development version of the package with: `] dev git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`
-- This is instead of the usual `] add` command. We also have to use the git link not the package name because it is an unregistered Julia package.
-- Whenever you use the package, it will access the latest version in your `.julia/dev/` folder rather than the stable release in the `main` branch. This is easiest for development while we frequently change the package.
-- To use the code on the current main branch of the repo (latest stable release), instead type `] add git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`. You will have to manually update the package as normal with `] update RecurrentEquilibriumNetworks`.
+- This replaces the usual `] add` command. 
+- Whenever you use the package, it will access the latest version in your `.julia/dev/` folder rather than the stable release in the `main` branch. 
+
+This is easiest for development while we frequently change the package, but you risk breaking your code if someone changes something important during deveopment!
 
 
 ## Some Early Documentation

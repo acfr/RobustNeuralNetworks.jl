@@ -45,6 +45,17 @@ function GeneralRENParams{T}(
         end
     end
 
+    # Check conditions on S and R
+    if !ishermitian(R - S * (Q \ S'))
+        Lr = R - S * (Q \ S')
+        if maximum(abs.(Lr .- Lr')) < 1e-10
+            @warn """Matrix R - S * (Q \\ S') is not Hermitian due to 
+            numerical conditioning issues. Will convert to Hermitian matrix."""
+        else
+            error("Matrix R - S * (Q \\ S') must be Hermitian.")
+        end
+    end
+
     # Direct (implicit) params
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
@@ -129,9 +140,11 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
     D21 = ps.output.D21
 
     # Constructing D22. See Eqns 31-33 of TAC paper
+    # Currently converts to Hermitian to avoid numerical conditioning issues
     LQ = Matrix{T}(cholesky(-Q).U)
-    LR = Matrix{T}(cholesky(R - S * (Q \ S')).U)
-
+    R1 = Hermitian(R - S * (Q \ S'))
+    LR = Matrix{T}(cholesky(R1).U) 
+    
     M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
     if ny >= nu
         N = [(I - M) / (I + M); -2*Z3 / (I + M)]
@@ -139,7 +152,7 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
         N = [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
     end
 
-    D22 = Q \ S' + LQ \ N * LR
+    D22 = (Q \ S') + (LQ \ N) * LR
 
     # Constructing H. See Eqn 28 of TAC paper
     C2_imp = (D22'*Q + S)*C2
