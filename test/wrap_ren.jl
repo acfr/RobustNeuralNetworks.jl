@@ -4,26 +4,11 @@ using RecurrentEquilibriumNetworks
 using Test
 
 """
-Test basic functionality with contracting REN
+Test REN wrapper with General REN params
 """
-batches = 50
-nu, nx, nv, ny = 4, 10, 20, 2
+batches = 20
+nu, nx, nv, ny = 4, 5, 10, 2
 
-contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny)
-contracting_ren = REN(contracting_ren_ps)
-
-x0 = init_states(contracting_ren, batches)
-u0 = randn(contracting_ren.nu, batches)
-
-x1, y1 = contracting_ren(x0, u0)  # Evaluates the REN over one timestep
-
-@test typeof(x1) <: Matrix{Float64}
-
-
-"""
-Test REN wrapper with General REN params.
-Slightly modified from version in the README (uses Q,S,R)
-"""
 Q = Matrix{Float64}(-I(ny))
 R = 0.1^2 * Matrix{Float64}(I(nu))
 S = zeros(Float64, nu, ny)
