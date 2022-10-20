@@ -9,6 +9,6 @@ using Test
     # Test for desired behaviour
     include("contraction.jl")
     # include("general_behavioural_constrains.jl")
-    # include("lipschitz_bound.jl")
+    include("lipschitz_bound.jl")
 
 end
