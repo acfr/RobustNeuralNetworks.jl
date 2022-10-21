@@ -132,7 +132,7 @@ function direct_to_explicit(ps::LipschitzRENParams{T}) where T
     C2_imp = -(D22')*C2
     D21_imp = -(D22')*D21 - D12_imp'
 
-    𝑅 = -D22'*D22 .+ γ^2
+    𝑅 = -D22'*D22 + (γ^2 * I)
 
     Γ1 = [C2'; D21'; zeros(nx, ny)] * [C2 D21 zeros(ny, nx)]
     Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])

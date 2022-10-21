@@ -29,5 +29,4 @@ vecnorm(A,d=1) = sqrt.(sum(abs.(A .^2); dims=d))
 norm_dy = vecnorm(y0 - y1)
 norm_du = vecnorm(u0 - u1)
 
-# @test 
-all(norm_dy .<= γ * norm_du)
+@test all(norm_dy .<= γ * norm_du)

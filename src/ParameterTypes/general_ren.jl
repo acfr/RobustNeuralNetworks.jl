@@ -152,7 +152,7 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
         N = [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
     end
 
-    D22 = (Q \ S') + (LQ \ N) * LR
+    D22 = -(Q \ S') + (LQ \ N) * LR
 
     # Constructing H. See Eqn 28 of TAC paper
     C2_imp = (D22'*Q + S)*C2
