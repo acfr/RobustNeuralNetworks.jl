@@ -36,4 +36,3 @@ M = [Q S'; S R]
 condition = sum(dyu .* (M * dyu); dims=1)
 
 @test all(condition .>= 0)
-# all(condition .>= 0)
