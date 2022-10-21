@@ -61,3 +61,25 @@ Add CPU compatibility for `OutputLayer` type
 function Flux.cpu(layer::OutputLayer{T}) where T
     return OutputLayer{T}(cpu(layer.C2), cpu(layer.D21), cpu(layer.D22), cpu(layer.by))
 end
+
+
+"""
+    ==(o1::OutputLayer, o2::OutputLayer)
+
+Define equality for two objects of type `OutputLayer`
+"""
+function ==(o1::OutputLayer, o2::OutputLayer)
+
+    # Compare the options
+    (o1.D22_trainable != o2.D22_trainable) && (return false)
+
+    c = fill(false, 4)
+
+    # Check output layer
+    c[1] = o1.C2 == o2.C2
+    c[2] = o1.D21 == o2.D21
+    c[3] = o1.by == o2.by
+    c[4] = o1.D22 == o2.D22
+
+    return all(c)
+end
