@@ -8,10 +8,11 @@ using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
 using Random
+using Zygote
 using Zygote: @adjoint
 
+import Base.:(==)
 import Flux.gpu, Flux.cpu
-
 
 ############ Abstract types ############
 
@@ -36,7 +37,11 @@ include("Base/acyclic_ren_solver.jl")
 include("Base/direct_params.jl")
 include("Base/output_layer.jl")
 include("Base/ren.jl")
-include("Base/wrapren.jl")
+
+# Wrappers
+include("Wrappers/diff_ren.jl")
+include("Wrappers/wrap_ren.jl")
+include("Wrappers/wrap_ren_2.jl")
 
 # Variations of REN
 include("ParameterTypes/utils.jl")
@@ -52,14 +57,19 @@ include("ParameterTypes/lipschitz_ren.jl")
 # Types
 export AbstractREN
 export AbstractRENParams
-export ContractingRENParams
+
 export DirectParams
 export ExplicitParams
-export GeneralRENParams
-export LipschitzRENParams
 export OutputLayer
 export REN
+
+export ContractingRENParams
+export GeneralRENParams
+export LipschitzRENParams
+
+export DiffREN
 export WrapREN
+export WrapREN2
 
 # Functions
 export init_states
