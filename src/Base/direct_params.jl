@@ -154,3 +154,40 @@ function Flux.cpu(M::DirectParams{T}) where T
         cpu(M.bv), M.ϵ, M.polar_param
     )
 end
+
+"""
+    ==(ps1::DirectParams, ps2::DirectParams)
+
+Define equality for two objects of type `DirectParams`
+"""
+function ==(ps1::DirectParams, ps2::DirectParams)
+
+    # Compare the options
+    (ps1.D22_free != ps2.D22_free) && (return false)
+    (ps1.polar_param != ps2.polar_param) && (return false)
+
+    c = fill(false, 11)
+
+    # Check implicit parameters
+    c[1] = ps1.X == ps2.X
+    c[2] = ps1.Y1 == ps2.Y1
+
+    c[3] = ps1.B2 == ps2.B2
+    c[4] = ps1.D12 == ps2.D12
+
+    c[5] = ps1.bx == ps2.bx
+    c[6] = ps1.bv == ps2.bv
+
+    c[7] = ps1.ϵ == ps2.ϵ
+    c[8] = ps1.polar_param ? (ps1.ρ == ps2.ρ) : true
+
+    if !ps1.D22_free
+        c[9] = ps1.X3 == ps2.X3
+        c[10] = ps1.Y3 == ps2.Y3
+        c[11] = ps1.Z3 == ps2.Z3
+    else
+        c[9], c[10], c[11] = true, true, true
+    end
+
+    return all(c)
+end

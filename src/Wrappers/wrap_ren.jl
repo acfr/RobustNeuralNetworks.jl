@@ -2,7 +2,10 @@
 $(TYPEDEF)
 
 Wrapper for Recurrent Equilibrium Network type combining
-direct parameters and explicit model into one type
+direct parameters and explicit model into one type.
+
+Requires user to manually update explicit params when
+direct params are changed. Not compatible with Flux.jl
 """
 mutable struct WrapREN <: AbstractREN
     nl
@@ -40,6 +43,4 @@ end
 
 Define trainable parameters for `WrapREN` type
 """
-Flux.trainable(m::WrapREN) = [
-    Flux.trainable(m.params.direct)..., Flux.trainable(m.params.output)...
-]
+Flux.trainable(m::WrapREN) = Flux.params(m.params)
