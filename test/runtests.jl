@@ -4,8 +4,7 @@ using Test
 @testset "RecurrentEquilibriumNetworks.jl" begin
   
     # Test a basic example from the README
-    include("Wrappers/wrap_ren.jl")
-    # include("Wrappers/diff_ren.jl")
+    include("Wrappers/wrap_rens.jl")
 
     # Test for desired behaviour
     include("ParameterTypes/contraction.jl")
