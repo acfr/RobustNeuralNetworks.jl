@@ -111,7 +111,7 @@ end
 Convert direct REN parameterisation to explicit parameterisation
 using behavioural constraints encoded in Q, S, R
 """
-function direct_to_explicit(ps::GeneralRENParams{T}) where T
+function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     # System sizes
     nu = ps.nu
@@ -170,6 +170,7 @@ function direct_to_explicit(ps::GeneralRENParams{T}) where T
     end
 
     # Get explicit parameterisation
-    return hmatrix_to_explicit(ps, H, D22)
+    !return_h && (return hmatrix_to_explicit(ps, H, D22))
+    return H
 
 end

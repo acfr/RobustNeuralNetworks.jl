@@ -3,6 +3,9 @@ using Test
 
 @testset "RecurrentEquilibriumNetworks.jl" begin
   
+    # Useful
+    include("test_utils.jl")
+
     # Test a basic example from the README
     include("Wrappers/wrap_rens.jl")
 

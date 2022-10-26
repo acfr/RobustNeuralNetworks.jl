@@ -16,9 +16,6 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     γ::T
 end
 
-# TODO: Need to change all of this to be for Lipschitz REN
-
-
 """
     LipschitzRENParams(nu, nx, nv, ny; ...)
 
@@ -92,7 +89,7 @@ end
 Convert direct REN parameterisation to explicit parameterisation
 using Lipschitz bounded behavioural constraint
 """
-function direct_to_explicit(ps::LipschitzRENParams{T}) where T
+function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
 
     # System sizes
     nu = ps.nu
@@ -144,6 +141,7 @@ function direct_to_explicit(ps::LipschitzRENParams{T}) where T
     end
 
     # Get explicit parameterisation
-    return hmatrix_to_explicit(ps, H, D22)
+    !return_h && (return hmatrix_to_explicit(ps, H, D22))
+    return H
 
 end
