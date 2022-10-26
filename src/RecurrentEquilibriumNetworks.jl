@@ -72,6 +72,7 @@ export WrapREN
 export WrapREN2
 
 # Functions
+export direct_to_explicit
 export init_states
 export set_output_zero!
 export update_explicit!
