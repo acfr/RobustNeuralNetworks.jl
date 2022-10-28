@@ -48,6 +48,7 @@ include("ParameterTypes/utils.jl")
 include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
+include("ParameterTypes/passive_ren.jl")
 
 # Main REN type
 
@@ -66,6 +67,7 @@ export REN
 export ContractingRENParams
 export GeneralRENParams
 export LipschitzRENParams
+export PassiveRENParams
 
 export DiffREN
 export WrapREN

@@ -1,3 +1,5 @@
+#  Old directory: /test/
+# ----------------------------------
 cd(@__DIR__)
 using Pkg
 Pkg.activate("./..")
@@ -18,10 +20,11 @@ nv = 20
 ny = 4
 T = 100
 
+
+
 # Test constructors
-Params = PassiveRENParams(nu, nx, nv, ny; init=:random)
-
-
+Params = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random)
+ren = REN(Params)
 
 u = [randn(nu, 1) for t in 1:T]
 
