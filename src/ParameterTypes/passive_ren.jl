@@ -12,7 +12,8 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     direct::DirectParams{T}
     output::OutputLayer{T}
     αbar::T
-    # TODO: Add a filed for different types of passivity (also need ρ ν)
+    ν::T
+    # TODO: Add a filed for output passivity (ρ)
 end
 
 """
@@ -20,11 +21,13 @@ end
 
 Main constructor for `PassiveRENParams`.
 ᾱ ∈ (0,1] is the upper bound on contraction rate.
+ν>0 is to define incrementally input passive; v == 0 for incrementally passive model. 
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     init = :random,
     nl = Flux.relu, 
+    ν = 0,
     ϵ = T(1e-6), 
     αbar = T(1),
     bx_scale = T(0), 
@@ -48,7 +51,7 @@ function PassiveRENParams{T}(
     # Output layer
     output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=false, rng=rng)
 
-    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar)
+    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar,ν)
 
 end
 
@@ -99,13 +102,13 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     nu = ps.nu
     nx = ps.nx
     ny = ps.ny
+    ν = ps.ν
     
     # Dissipation IQC conditions
-    # TODO: change with passivity type
     Q = zeros(ny, ny)
-    S = zeros(nu, nu)
-    R = Matrix(I, nu, ny)
-
+    S = Matrix(I, nu, ny)
+    R = -2ν * Matrix(I, nu, nu)
+    
     # Implicit parameters
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
@@ -122,18 +125,13 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     C2 = ps.output.C2
     D21 = ps.output.D21
 
-    # Constructing D22. See Eqns 31-33 of TAC paper
+    # Constructing D22 for incrementally passive and incrementally strictly input passive. 
+    # See Eqns 31-33 of TAC paper 
     # Currently converts to Hermitian to avoid numerical conditioning issues
-    # leaving here for now, TODO: include other passivity types
-    # LQ = Matrix{T}(cholesky(-Q).U)
-    # R1 = Hermitian(R - S * (Q \ S'))
-    # LR = Matrix{T}(cholesky(R1).U) 
-    
     M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
     N = [(I - M) / (I + M); -2*Z3 / (I + M)]
 
-    # D22 = -(Q \ S') + (LQ \ N) * LR
-    D22 = M
+    D22 = ν*Matrix(I, ny,nu) + M
 
     # Constructing H. See Eqn 28 of TAC paper
     C2_imp = (D22'*Q + S)*C2
@@ -154,7 +152,3 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     return hmatrix_to_explicit(ps, H, D22)
 
 end
-
-
-
-
