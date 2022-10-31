@@ -5,10 +5,9 @@
 2. check julia Pkg developing work flow with Nic
 3. any tools to check/record what is working and what is on-going work?
 
-
 ## TODO Lists 
-src/ParameterTypes/passive_ren
-Base/direct_params.jl (do passive ren first, input/output strictly passive later)
+src/ParameterTypes/passive_ren Add incremental input passive
+/test/ParameterTypes/passive.jl Add incremental input passive
 
 ## Typos in the TAC paper
 Line below eq(23)       E^T

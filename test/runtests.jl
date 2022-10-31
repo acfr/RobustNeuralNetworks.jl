@@ -13,5 +13,5 @@ using Test
     include("ParameterTypes/contraction.jl")
     include("ParameterTypes/general_behavioural_constrains.jl")
     include("ParameterTypes/lipschitz_bound.jl")
-
+    include("ParameterTypes/passivity.jl")
 end

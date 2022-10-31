@@ -100,7 +100,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     nx = ps.nx
     ny = ps.ny
     
-    # Dissipation parameters
+    # Dissipation IQC conditions
     # TODO: change with passivity type
     Q = zeros(ny, ny)
     S = zeros(nu, nu)
