@@ -2,16 +2,17 @@ using Random
 using RecurrentEquilibriumNetworks
 using Test
 
-# -------------copy of lipshitz test
+# -------------copy of lipshitz test below
 """
-Test that the model satisfies a specified Lipschitz bound
+Test 
 """
 batches = 100
-nu, nx, nv, ny = 4, 5, 10, 2
-γ = 10
+nu, nx, nv, ny = 6, 5, 10, 6
+T = 100
 
-ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
-ren = REN(ren_ps)
+# Test constructors
+Params = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random)
+ren = REN(Params)
 
 # Different inputs with same initial condition
 u0 = 10*randn(nu, batches)
@@ -23,10 +24,14 @@ x0 = randn(nx, batches)
 _, y0 = ren(x0, u0)
 _, y1 = ren(x0, u1)
 
-# Test Lipschitz condition
-vecnorm(A,d=1) = sqrt.(sum(abs.(A .^2); dims=d))
+# Test passivity
+dyu = vcat(y1 .- y0, u1 .- u0)
 
-norm_dy = vecnorm(y0 - y1)
-norm_du = vecnorm(u0 - u1)
+# Dissipation QSR
+Q = zeros(ny, ny)
+S = zeros(nu, nu)
+R = Matrix(I, nu, ny)
+M = [Q S'; S R]
+condition = sum(dyu .* (M * dyu); dims=1)
 
-@test all(norm_dy .<= γ * norm_du)
+@test all(condition .>= 0)
