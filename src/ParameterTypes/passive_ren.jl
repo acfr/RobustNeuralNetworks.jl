@@ -21,13 +21,13 @@ end
 
 Main constructor for `PassiveRENParams`.
 ᾱ ∈ (0,1] is the upper bound on contraction rate.
-ν>0 is to define incrementally input passive; v == 0 for incrementally passive model. 
+ν>0 for incrementally input passive; v == 0 for incrementally passive model. 
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     init = :random,
     nl = Flux.relu, 
-    ν = 0,
+    ν = T(0),
     ϵ = T(1e-6), 
     αbar = T(1),
     bx_scale = T(0), 
@@ -56,12 +56,23 @@ function PassiveRENParams{T}(
 end
 
 """
+    passive_rainable(L::DirectParams)
+
+Override Flux.trainable(L::DirectParams) for passive ren. 
+"""
+function passive_trainable(L::DirectParams)
+    ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.B2, L.D12, L.bx, L.bv]
+    !(L.polar_param) && popfirst!(ps)
+    return filter(p -> length(p) !=0, ps)
+end
+
+"""
     Flux.trainable(m::PassiveRENParams)
 
 Define trainable parameters for `PassiveRENParams` type
 """
 Flux.trainable(m::PassiveRENParams) = [
-    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
+    passive_trainable(m.direct)..., Flux.trainable(m.output)...
 ]
 
 """
@@ -105,9 +116,9 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     ν = ps.ν
     
     # Dissipation IQC conditions
-    Q = zeros(ny, ny)
-    S = Matrix(I, nu, ny)
-    R = -2ν * Matrix(I, nu, nu)
+    # Q = zeros(ny, ny)
+    # S = Matrix(I, nu, ny)
+    # R = -2ν * Matrix(I, nu, nu)
     
     # Implicit parameters
     ϵ = ps.direct.ϵ
@@ -116,7 +127,6 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
 
     X3 = ps.direct.X3
     Y3 = ps.direct.Y3
-    Z3 = ps.direct.Z3
 
     # Implicit system and output matrices
     B2_imp = ps.direct.B2
@@ -128,24 +138,23 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     # Constructing D22 for incrementally passive and incrementally strictly input passive. 
     # See Eqns 31-33 of TAC paper 
     # Currently converts to Hermitian to avoid numerical conditioning issues
-    M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-    N = [(I - M) / (I + M); -2*Z3 / (I + M)]
+    M = X3'*X3 + Y3 - Y3' + ϵ*I
 
     D22 = ν*Matrix(I, ny,nu) + M
 
-    # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = (D22'*Q + S)*C2
-    D21_imp = (D22'*Q + S)*D21 - D12_imp'
+    # Constructing H. See Eqn 28 of TAC paper, with passive QSR
+    # C2_imp = C2
+    D21_imp = D21 - D12_imp'
 
-    𝑅 = R + S*D22 + D22'*S' + D22'*Q*D22
+    𝑅 = -2ν * Matrix(I, nu, nu) + D22 + D22'
 
-    Γ1 = [C2'; D21'; zeros(nx, ny)] * Q * [C2 D21 zeros(ny, nx)]
-    Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
+    Γ2 = [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
 
     if ps.direct.polar_param 
-        H = exp(ρ[1])*X'*X / norm(X)^2 + Γ2 - Γ1
+        # See Eqns 29 of TAC paper 
+        H = exp(ρ[1])*X'*X / norm(X)^2 + Γ2
     else
-        H = X'*X + ϵ*I + Γ2 - Γ1
+        H = X'*X + ϵ*I + Γ2
     end
 
     # Get explicit parameterisation
