@@ -14,8 +14,8 @@ glorot_normal(n::Int; T=Float64, rng=Random.GLOBAL_RNG) =
 Set output map of REN to zero
 """
 function set_output_zero!(m::AbstractRENParams)
-    m.output.C2 .*= 0
-    m.output.D21 .*= 0
-    m.output.D22 .*= 0
-    m.output.by .*= 0
+    m.direct.C2 .*= 0
+    m.direct.D21 .*= 0
+    m.direct.D22 .*= 0
+    m.direct.by .*= 0
 end

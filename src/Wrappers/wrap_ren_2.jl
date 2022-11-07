@@ -50,8 +50,7 @@ have been updated.
 function (m::WrapREN2)(xt::VecOrMat, ut::VecOrMat)
 
     # Compute explicit parameterisation
-    if !( (m.params.direct == m.old_params.direct) &&
-          (m.params.output == m.old_params.output) )
+    if !( m.params.direct == m.old_params.direct )
         m.explicit = direct_to_explicit(m.params)
         m.old_params = deepcopy(m.params)
     end

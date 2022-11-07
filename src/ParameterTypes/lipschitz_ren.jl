@@ -11,7 +11,6 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     nv::Int
     ny::Int
     direct::DirectParams{T}
-    output::OutputLayer{T}
     αbar::T
     γ::T
 end
@@ -41,10 +40,7 @@ function LipschitzRENParams{T}(
         polar_param=polar_param, D22_free=false, rng=rng
     )
 
-    # Output layer
-    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=false, rng=rng)
-
-    return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar, T(γ))
+    return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, T(γ))
 
 end
 
@@ -53,9 +49,7 @@ end
 
 Define trainable parameters for `LipschitzRENParams` type
 """
-Flux.trainable(m::LipschitzRENParams) = [
-    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
-]
+Flux.trainable(m::LipschitzRENParams) = Flux.trainable(m.direct)
 
 """
     Flux.gpu(m::LipschitzRENParams{T}) where T
@@ -64,9 +58,8 @@ Add GPU compatibility for `LipschitzRENParams` type
 """
 function Flux.gpu(m::LipschitzRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpu(m.output)
     return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.γ
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
     )
 end
 
@@ -77,9 +70,8 @@ Add CPU compatibility for `LipschitzRENParams` type
 """
 function Flux.cpu(m::LipschitzRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpu(m.output)
     return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.γ
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
     )
 end
 
@@ -112,8 +104,8 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     B2_imp = ps.direct.B2
     D12_imp = ps.direct.D12
 
-    C2 = ps.output.C2
-    D21 = ps.output.D21
+    C2 = ps.direct.C2
+    D21 = ps.direct.D21
 
     # Constructing D22. See Eqns 31-33 of TAC paper
     M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I

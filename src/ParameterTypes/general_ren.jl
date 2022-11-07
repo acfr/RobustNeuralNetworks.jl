@@ -11,7 +11,6 @@ mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
     nv::Int
     ny::Int
     direct::DirectParams{T}
-    output::OutputLayer{T}
     αbar::T
     Q::Matrix{T}
     S::Matrix{T}
@@ -63,10 +62,7 @@ function GeneralRENParams{T}(
         polar_param=polar_param, D22_free=false, rng=rng
     )
 
-    # Output layer
-    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=false, rng=rng)
-
-    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar, Q, S, R)
+    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, Q, S, R)
 
 end
 
@@ -75,9 +71,7 @@ end
 
 Define trainable parameters for `GeneralRENParams` type
 """
-Flux.trainable(m::GeneralRENParams) = [
-    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
-]
+Flux.trainable(m::GeneralRENParams) = Flux.trainable(m.direct)
 
 """
     Flux.gpu(m::GeneralRENParams{T}) where T
@@ -86,9 +80,8 @@ Add GPU compatibility for `GeneralRENParams` type
 """
 function Flux.gpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpu(m.output)
     return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
@@ -99,9 +92,8 @@ Add CPU compatibility for `GeneralRENParams` type
 """
 function Flux.cpu(m::GeneralRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpu(m.output)
     return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
@@ -136,8 +128,8 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
     B2_imp = ps.direct.B2
     D12_imp = ps.direct.D12
 
-    C2 = ps.output.C2
-    D21 = ps.output.D21
+    C2 = ps.direct.C2
+    D21 = ps.direct.D21
 
     # Constructing D22. See Eqns 31-33 of TAC paper
     # Currently converts to Hermitian to avoid numerical conditioning issues

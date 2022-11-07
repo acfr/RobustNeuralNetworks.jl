@@ -87,11 +87,10 @@ and functions to build/use it as follows:
 
 Each `REN` is constructed from a direct (implicit) parameterisation of the REN architecture. Each variation of REN (eg: contracting, passive, Lipschitz bounded) is a subtype of `AbstractRENParams`, an abstract type. This encodes all information required to build a `REN` satisfying some set of behavioural constraints. Each subtype must include the following attributes:
 - in/out, state/nl sizes `nu, ny, nx, nv`
-- output layer of type `OutputLayer`
 - direct (implicit) parameters of type `DirectParams`
 - Any other attributes relevant to the parameterisation. Eg: `Q, S, R, alpha_bar` for a general REN
 
-The output layer and implicit parameters are structs defined in `src/Base/output_layer.jl` and `src/Base/direct_params.jl` (respectively). Each subtype of `AbstractRENParams` must also have the following methods:
+The output layer and implicit parameters are structs defined in `src/Base/direct_params.jl`. Each subtype of `AbstractRENParams` must also have the following methods:
 - A constructor
 - A definition of `Flux.trainable()` specifying the trainable parameters
 - A definition of `direct_to_explicit()` to convert the direct paramterisation to its explicit form

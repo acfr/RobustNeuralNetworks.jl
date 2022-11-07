@@ -35,7 +35,6 @@ include("Base/acyclic_ren_solver.jl")
 
 # Common structures
 include("Base/direct_params.jl")
-include("Base/output_layer.jl")
 include("Base/ren.jl")
 
 # Wrappers
@@ -60,7 +59,6 @@ export AbstractRENParams
 
 export DirectParams
 export ExplicitParams
-export OutputLayer
 export REN
 
 export ContractingRENParams
