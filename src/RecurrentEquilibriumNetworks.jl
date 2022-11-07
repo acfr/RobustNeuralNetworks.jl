@@ -26,6 +26,11 @@ $(TYPEDEF)
 """
 abstract type AbstractREN end
 
+"""
+$(TYPEDEF)
+"""
+abstract type AbstractLBDN end
+
 
 ############ Includes ############
 
@@ -48,7 +53,8 @@ include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
 
-# Main REN type
+# LBDN
+include("LBDN/lbfn.jl")
 
 
 ############ Exports ############
@@ -68,6 +74,9 @@ export LipschitzRENParams
 export DiffREN
 export WrapREN
 export WrapREN2
+
+export AbstractLBDN
+export LBFN
 
 # Functions
 export direct_to_explicit
