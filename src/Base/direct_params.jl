@@ -21,6 +21,7 @@ mutable struct DirectParams{T}
     ϵ::T
     polar_param::Bool                   # Whether or not to use polar param
     D22_free::Bool                      # Is D22 free or parameterised by (X3,Y3,Z3)?
+    D22_zero::Bool                      # Option to remove feedthrough.
 end
 
 """
@@ -34,6 +35,8 @@ initialisation methods, specified as symbols by `init` argument:
 Option `D22_free` specifies whether or not to train D22 as a free
 parameter, or constructed separately from X3, Y3, Z3. Typically use
 `D22_free = true` for a contracting REN. Default is `D22_free = false`.
+
+Option `D22_zero` fixes `D22 = 0` to remove any feedthrough. Default `false`.
 """
 function DirectParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
@@ -43,8 +46,15 @@ function DirectParams{T}(
     bv_scale = T(1), 
     polar_param = false,
     D22_free = false,
+    D22_zero = false,
     rng = Random.GLOBAL_RNG
 ) where T
+
+    # Check options
+    if D22_zero
+        @warn """Setting D22 fixed at 0. Removing feedthrough."""
+        D22_free = true
+    end
 
     # Random sampling
     if init == :random
@@ -116,7 +126,7 @@ function DirectParams{T}(
         Y1, X3, Y3, Z3, 
         B2, C2, D12, D21, D22,
         bx, bv, by, T(ϵ), 
-        polar_param, D22_free
+        polar_param, D22_free, D22_zero
 )
 end
 
@@ -128,15 +138,16 @@ Filter empty ones (handy when nx=0)
 """
 function Flux.trainable(L::DirectParams)
     if L.D22_free
-        ps = [
-            L.ρ, L.X, L.Y1, L.B2, L.C2, 
-            L.D12, L.D21, L.D22, L.bx, L.bv, L.by
-        ]
+        if L.D22_zero
+            ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
+                  L.D12, L.D21, L.D22, L.bx, L.bv, L.by]
+        else
+            ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
+                 L.D12, L.D21, L.bx, L.bv, L.by]
+        end
     else
-        ps = [
-            L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2,
-            L.C2, L.D12, L.D21, L.bx, L.bv, L.by
-        ]
+        ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2,
+              L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
     end
     !(L.polar_param) && popfirst!(ps)
     return filter(p -> length(p) !=0, ps)
@@ -155,7 +166,7 @@ function Flux.gpu(M::DirectParams{T}) where T
         gpu(M.ρ), gpu(M.X), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
         gpu(M.Z3), gpu(M.B2), gpu(M.C2), gpu(M.D12), gpu(M.D21),
         gpu(M.D22), gpu(M.bx), gpu(M.bv), gpu(M.by),
-        M.ϵ, M.polar_param
+        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
     )
 end
 
@@ -169,7 +180,7 @@ function Flux.cpu(M::DirectParams{T}) where T
         cpu(M.ρ), cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
         cpu(M.Z3), cpu(M.B2), cpu(M.C2), cpu(M.D12), cpu(M.D21),
         cpu(M.D22), cpu(M.bx), cpu(M.bv), cpu(M.by),
-        M.ϵ, M.polar_param
+        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
     )
 end
 
@@ -181,6 +192,7 @@ Define equality for two objects of type `DirectParams`
 function ==(ps1::DirectParams, ps2::DirectParams)
 
     # Compare the options
+    (ps1.D22_zero != ps2.D22_zero) && (return false)
     (ps1.D22_free != ps2.D22_free) && (return false)
     (ps1.polar_param != ps2.polar_param) && (return false)
 

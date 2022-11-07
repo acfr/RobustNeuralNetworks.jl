@@ -108,6 +108,7 @@ function ContractingRENParams(
 
     # D22 parameterisation
     D22_free = true
+    D22_zero = false
     X3 = zeros(T, 0, 0)
     Y3 = zeros(T, 0, 0)
     Z3 = zeros(T, 0, 0)
@@ -117,7 +118,7 @@ function ContractingRENParams(
     direct_ps = DirectParams{T}(
         ρ, X, Y1, X3, Y3, Z3, B2, 
         ℂ2, D12, 𝔻21, 𝔻22, bx, bv, by, 
-        ϵ, polar_param, D22_free
+        ϵ, polar_param, D22_free, D22_zero
     )
 
     return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)
