@@ -108,7 +108,6 @@ function ContractingRENParams(
 
     # D22 parameterisation
     D22_free = true
-    D22_trainable = true
     X3 = zeros(T, 0, 0)
     Y3 = zeros(T, 0, 0)
     Z3 = zeros(T, 0, 0)
