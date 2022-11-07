@@ -26,4 +26,5 @@ end
 """
 Matrix weighted norm
 """
+vecnorm2(A,d=1) = sum(abs.(A .^2); dims=d)
 mat_norm2(A, x) = sum(x .* (A * x); dims=1)

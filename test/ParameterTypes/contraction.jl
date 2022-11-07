@@ -2,31 +2,31 @@ using Random
 using RecurrentEquilibriumNetworks
 using Test
 
+# include("../test_utils.jl")
+
 """
 Test that the contracting REN actually does contract
 """
-nsteps = 40
-batches = 20
+batches = 42
 nu, nx, nv, ny = 4, 5, 10, 2
+ᾱ = 0.5
 
-# Init. with :cholesky is slower to converge than :random
-contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; init=:cholesky, αbar=0.5)
-contracting_ren = REN(contracting_ren_ps)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; init=:cholesky, αbar=ᾱ)
+ren = REN(ren_ps)
 
-# Set up states and controls
-us = [randn(nu, batches) for _ in 1:nsteps]
+# Same inputs. different initial conditions
+u0 = randn(nu, batches)
 
-xs0 = fill(zeros(nx,batches), nsteps)
-xs1 = fill(zeros(nx,batches), nsteps)
-
-xs0[1] = randn(nx, batches);
-xs1[1] = randn(nx, batches);
+x0 = randn(nx, batches)
+x1 = randn(nx, batches)
 
 # Simulate
-for t in 2:nsteps
-    xs0[t], _ = contracting_ren(xs0[t-1], us[t])
-    xs1[t], _ = contracting_ren(xs1[t-1], us[t])
-end
+x0n, y0 = ren(x0, u0)
+x1n, y1 = ren(x1, u0)
 
-# Test for contraction
-@test maximum(abs.(xs0[end] .- xs1[end])) < 1e-8
+# Test contraction condition
+P = compute_p(ren_ps)
+lhs = mat_norm2(P, x0n .- x1n) - mat_norm2(P, x0 .- x1)*ᾱ^2
+rhs = 0.0
+
+@test all(lhs .<= rhs)

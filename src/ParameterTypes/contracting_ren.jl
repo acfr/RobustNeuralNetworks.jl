@@ -167,13 +167,14 @@ end
 Convert direct REN parameterisation to explicit parameterisation
 for contracting REN
 """
-function direct_to_explicit(ps::ContractingRENParams{T}) where T
+function direct_to_explicit(ps::ContractingRENParams{T}, return_h=false) where T
 
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
     X = ps.direct.X
     H = ps.direct.polar_param ? exp(ρ[1])*X'*X / norm(X)^2 : X'*X + ϵ*I
     
-    return hmatrix_to_explicit(ps, H)
+    !return_h && (return hmatrix_to_explicit(ps, H))
+    return H
 
 end

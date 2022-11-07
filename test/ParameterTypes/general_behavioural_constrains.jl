@@ -8,7 +8,7 @@ using Test
 """
 Test that the behavioural constraints are satisfied
 """
-batches = 100
+batches = 42
 nu, nx, nv, ny = 10, 5, 10, 20
 
 # Generate random matrices
