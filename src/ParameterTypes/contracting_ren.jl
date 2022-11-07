@@ -10,7 +10,6 @@ mutable struct ContractingRENParams{T} <: AbstractRENParams{T}
     nv::Int
     ny::Int
     direct::DirectParams{T}
-    output::OutputLayer{T}
     αbar::T
 end
 
@@ -39,10 +38,7 @@ function ContractingRENParams{T}(
         polar_param=polar_param, D22_free=true, rng=rng
     )
 
-    # Output layer
-    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=true, rng=rng)
-
-    return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar)
+    return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)
 
 end
 
@@ -112,17 +108,20 @@ function ContractingRENParams(
 
     # D22 parameterisation
     D22_free = true
-    D22_trainable = true
+    D22_zero = false
     X3 = zeros(T, 0, 0)
     Y3 = zeros(T, 0, 0)
     Z3 = zeros(T, 0, 0)
 
     # Build REN params
     αbar = T(1)
-    direct_ps = DirectParams{T}(ρ, X, Y1, X3, Y3, Z3, B2, D12, bx, bv, ϵ, polar_param, D22_free)
-    output_ps = OutputLayer{T}(ℂ2, 𝔻21, 𝔻22, by, D22_trainable)
+    direct_ps = DirectParams{T}(
+        ρ, X, Y1, X3, Y3, Z3, B2, 
+        ℂ2, D12, 𝔻21, 𝔻22, bx, bv, by, 
+        ϵ, polar_param, D22_free, D22_zero
+    )
 
-    return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar)
+    return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)
 
 end
 
@@ -131,9 +130,7 @@ end
 
 Define trainable parameters for `ContractingRENParams` type
 """
-Flux.trainable(m::ContractingRENParams) = [
-    Flux.trainable(m.direct)..., Flux.trainable(m.output)...
-]
+Flux.trainable(m::ContractingRENParams) = Flux.trainable(m.direct)
 
 """
     Flux.gpu(m::ContractingRENParams{T}) where T
@@ -142,9 +139,8 @@ Add GPU compatibility for `ContractingRENParams` type
 """
 function Flux.gpu(m::ContractingRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpu(m.output)
     return ContractingRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
     )
 end
 
@@ -155,9 +151,8 @@ Add CPU compatibility for `ContractingRENParams` type
 """
 function Flux.cpu(m::ContractingRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpu(m.output)
     return ContractingRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
     )
 end
 

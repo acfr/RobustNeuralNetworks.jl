@@ -43,13 +43,13 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T}
     D11 = Λ_inv .* D11_imp
     D12 = Λ_inv .* ps.direct.D12
 
-    C2 = ps.output.C2
-    D21 = ps.output.D21
-    isempty(D22) && (D22 = ps.output.D22)
+    C2 = ps.direct.C2
+    D21 = ps.direct.D21
+    isempty(D22) && (D22 = ps.direct.D22)
 
     bx = ps.direct.bx
     bv = ps.direct.bv
-    by = ps.output.by
+    by = ps.direct.by
     
     return ExplicitParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
 
