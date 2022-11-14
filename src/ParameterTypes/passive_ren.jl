@@ -10,7 +10,6 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     nv::Int
     ny::Int
     direct::DirectParams{T}
-    output::OutputLayer{T}
     αbar::T
     ν::T
     # TODO: Add a filed for output passivity (ρ)
@@ -21,7 +20,7 @@ end
 
 Main constructor for `PassiveRENParams`.
 ᾱ ∈ (0,1] is the upper bound on contraction rate.
-ν>0 for incrementally input passive; v == 0 for incrementally passive model. 
+ν>0 for incrementally strictly input passive model; v == 0 for incrementally passive model. 
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
@@ -48,10 +47,7 @@ function PassiveRENParams{T}(
         polar_param=polar_param, D22_free=false, rng=rng
     )
 
-    # Output layer
-    output_ps = OutputLayer{T}(nu, nx, nv, ny; D22_trainable=false, rng=rng)
-
-    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, output_ps, αbar,ν)
+    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar,ν)
 
 end
 
@@ -61,7 +57,7 @@ end
 Override Flux.trainable(L::DirectParams) for passive ren. 
 """
 function passive_trainable(L::DirectParams)
-    ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.B2, L.D12, L.bx, L.bv]
+    ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
     !(L.polar_param) && popfirst!(ps)
     return filter(p -> length(p) !=0, ps)
 end
@@ -71,9 +67,7 @@ end
 
 Define trainable parameters for `PassiveRENParams` type
 """
-Flux.trainable(m::PassiveRENParams) = [
-    passive_trainable(m.direct)..., Flux.trainable(m.output)...
-]
+Flux.trainable(m::PassiveRENParams) = passive_trainable(m.direct)
 
 """
     Flux.gpu(m::PassiveRENParams{T}) where T
@@ -82,9 +76,8 @@ Add GPU compatibility for `PassiveRENParams` type
 """
 function Flux.gpu(m::PassiveRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
-    output_ps = Flux.gpu(m.output)
     return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
@@ -95,9 +88,8 @@ Add CPU compatibility for `PassiveRENParams` type
 """
 function Flux.cpu(m::PassiveRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
-    output_ps = Flux.cpu(m.output)
     return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, output_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
@@ -107,7 +99,7 @@ end
 Convert direct REN parameterisation to explicit parameterisation
 using behavioural constraints encoded in Q, S, R
 """
-function direct_to_explicit(ps::PassiveRENParams{T}) where T
+function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
     nu = ps.nu
@@ -132,8 +124,8 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     B2_imp = ps.direct.B2
     D12_imp = ps.direct.D12
 
-    C2 = ps.output.C2
-    D21 = ps.output.D21
+    C2 = ps.direct.C2
+    D21 = ps.direct.D21
 
     # Constructing D22 for incrementally passive and incrementally strictly input passive. 
     # See Eqns 31-33 of TAC paper 
@@ -158,6 +150,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}) where T
     end
 
     # Get explicit parameterisation
-    return hmatrix_to_explicit(ps, H, D22)
+    !return_h && (return hmatrix_to_explicit(ps, H, D22))
+    return H
 
 end
