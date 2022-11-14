@@ -13,7 +13,7 @@ nu, nx, nv, ny = 6, 5, 10, 6
 T = 100
 
 # Test constructors
-ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random, ν= 0.0)
+ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random, ν= 1.0)
 ren = REN(ren_ps)
 
 # Different inputs with different initial conditions
