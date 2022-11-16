@@ -13,7 +13,7 @@ mutable struct LBFN{T} <: AbstractLBDN
 end
 
 """
-    LBFN{T}(nu, nh, nv, γ; ...)
+    LBFN{T}(nu, nh, ny, γ; ...)
 
 Constructor for an LBFN with nu inputs, nv outputs, and
 `nh = [nh1, nh2,...]` specifying the size of hidden layers.
