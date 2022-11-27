@@ -12,7 +12,7 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     direct::DirectParams{T}
     αbar::T
     ν::T
-    # TODO: Add a filed for output passivity (ρ)
+    # TODO: Add a field for incrementally strictly output passive model (ρ)
 end
 
 """

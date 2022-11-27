@@ -3,7 +3,7 @@ using Random
 using RecurrentEquilibriumNetworks
 using Test
 
-include("../test_utils.jl")
+# include("../test_utils.jl")
 
 """
 Test passivity inequality
