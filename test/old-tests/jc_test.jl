@@ -10,9 +10,10 @@ using RecurrentEquilibriumNetworks
 # using Distributions
 """
 Johnny's random testing script: 
-1. Passive ren test Done
-2. passivity type
+# 1. Passive ren test Done
+# 2. passivity type
 3. Next: try training
+4. Recap: what was ν again?
 """
 
 nu = 4
@@ -29,3 +30,12 @@ ren = REN(Params)
 
 u = [randn(nu, 1) for t in 1:T]
 
+
+
+# Training parameters
+# general
+m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
+# lpsz
+m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
+# passive
+m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν

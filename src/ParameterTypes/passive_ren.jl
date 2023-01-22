@@ -47,12 +47,12 @@ function PassiveRENParams{T}(
         polar_param=polar_param, D22_free=false, rng=rng
     )
 
-    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar,ν)
+    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν)
 
 end
 
 """
-    passive_rainable(L::DirectParams)
+    passive_trainable(L::DirectParams)
 
 Override Flux.trainable(L::DirectParams) for passive ren. 
 """
@@ -77,7 +77,7 @@ Add GPU compatibility for `PassiveRENParams` type
 function Flux.gpu(m::PassiveRENParams{T}) where T
     direct_ps = Flux.gpu(m.direct)
     return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
     )
 end
 
@@ -89,7 +89,7 @@ Add CPU compatibility for `PassiveRENParams` type
 function Flux.cpu(m::PassiveRENParams{T}) where T
     direct_ps = Flux.cpu(m.direct)
     return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
+        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
     )
 end
 
@@ -97,7 +97,7 @@ end
     direct_to_explicit(ps::PassiveRENParams)
 
 Convert direct REN parameterisation to explicit parameterisation
-using behavioural constraints encoded in Q, S, R
+using passive behavioural constraints encoded in Q, S, R
 """
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
@@ -106,12 +106,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     nx = ps.nx
     ny = ps.ny
     ν = ps.ν
-    
-    # Dissipation IQC conditions
-    # Q = zeros(ny, ny)
-    # S = Matrix(I, nu, ny)
-    # R = -2ν * Matrix(I, nu, nu)
-    
+        
     # Implicit parameters
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
@@ -133,9 +128,6 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     M = X3'*X3 + Y3 - Y3' + ϵ*I
 
     D22 = ν*Matrix(I, ny,nu) + M
-
-    # Constructing H. See Eqn 28 of TAC paper, with passive QSR
-    # C2_imp = C2
     D21_imp = D21 - D12_imp'
 
     𝑅 = -2ν * Matrix(I, nu, nu) + D22 + D22'
