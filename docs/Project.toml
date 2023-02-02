@@ -1,0 +1,7 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+RecurrentEquilibriumNetworks = "a1f18e6b-8af1-433f-a85d-2e1ee636a2b8"
+
+[compat]
+Documenter = "0.27"
