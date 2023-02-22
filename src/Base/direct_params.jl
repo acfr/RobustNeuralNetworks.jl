@@ -140,10 +140,10 @@ function Flux.trainable(L::DirectParams)
     if L.D22_free
         if L.D22_zero
             ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
-                  L.D12, L.D21, L.D22, L.bx, L.bv, L.by]
+                  L.D12, L.D21, L.bx, L.bv, L.by]
         else
             ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
-                 L.D12, L.D21, L.bx, L.bv, L.by]
+                 L.D12, L.D21, L.D22, L.bx, L.bv, L.by]
         end
     else
         ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2,
