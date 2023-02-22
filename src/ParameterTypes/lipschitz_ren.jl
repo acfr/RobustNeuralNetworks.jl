@@ -25,7 +25,7 @@ function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
     init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-6), 
+    ϵ = T(1e-12), 
     αbar = T(1),
     bx_scale = T(0), 
     bv_scale = T(1), 
@@ -127,7 +127,7 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 
     if ps.direct.polar_param 
-        H = exp(ρ[1])*X'*X / norm(X)^2 + Γ2 + Γ1
+        H = exp(ρ[1])*(X'*X + ϵ*I) / norm(X)^2 + Γ2 + Γ1
     else
         H = X'*X + ϵ*I + Γ2 + Γ1
     end

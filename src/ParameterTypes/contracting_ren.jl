@@ -23,7 +23,7 @@ function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     init = :random,
     nl = Flux.relu, 
-    ϵ = T(0.001), 
+    ϵ = T(1e-12), 
     αbar = T(1),
     bx_scale = T(0), 
     bv_scale = T(1), 
@@ -54,7 +54,7 @@ function ContractingRENParams(
     nv::Int,
     A::AbstractMatrix{T}, B::AbstractMatrix{T}, C::AbstractMatrix{T}, D::AbstractMatrix{T};
     nl = Flux.relu, 
-    ϵ = T(1e-6), 
+    ϵ = T(1e-12), 
     bx_scale = T(0), 
     bv_scale = T(1), 
     polar_param = true, 
@@ -167,7 +167,7 @@ function direct_to_explicit(ps::ContractingRENParams{T}, return_h=false) where T
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
     X = ps.direct.X
-    H = ps.direct.polar_param ? exp(ρ[1])*X'*X / norm(X)^2 : X'*X + ϵ*I
+    H = ps.direct.polar_param ? exp(ρ[1])*(X'*X + ϵ*I) / norm(X)^2 : X'*X + ϵ*I
     
     !return_h && (return hmatrix_to_explicit(ps, H))
     return H

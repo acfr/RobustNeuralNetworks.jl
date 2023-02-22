@@ -41,7 +41,7 @@ Option `D22_zero` fixes `D22 = 0` to remove any feedthrough. Default `false`.
 function DirectParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
     init = :random,
-    ϵ = T(0.001), 
+    ϵ = T(1e-12), 
     bx_scale = T(0), 
     bv_scale = T(1), 
     polar_param = false,
@@ -102,7 +102,7 @@ function DirectParams{T}(
     # Output layer
     C2  = glorot_normal(ny,nx; rng=rng)
     D21 = glorot_normal(ny,nv; rng=rng)
-    D22 = zeros(T, ny, nu)                          # TODO: Keep as zeros or initialise as random?
+    D22 = zeros(T, ny, nu)
 
     # Parameters for D22 in output layer
     if D22_free
@@ -111,9 +111,9 @@ function DirectParams{T}(
         Z3 = zeros(T, 0, 0)
     else
         d = min(nu, ny)
-        X3 = glorot_normal(d, d; T=T, rng=rng)
-        Y3 = glorot_normal(d, d; T=T, rng=rng)
-        Z3 = glorot_normal(abs(ny - nu), d;  T=T, rng=rng)
+        X3 = Matrix{T}(I, d, d)
+        Y3 = zeros(T, d, d)
+        Z3 = zeros(T, abs(ny - nu), d)
     end
     
     # Bias terms
