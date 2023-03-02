@@ -118,18 +118,18 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     D22 = γ*N
 
     # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = -(D22')*C2
-    D21_imp = -(D22')*D21 - D12_imp'
+    C2_imp = -(D22')*C2 / γ
+    D21_imp = -(D22')*D21 / γ - D12_imp'
 
-    𝑅 = -D22'*D22 + (γ^2 * I)
+    𝑅 = -D22'*D22 / γ + (γ * I)
 
-    Γ1 = [C2'; D21'; zeros(nx, ny)] * [C2 D21 zeros(ny, nx)]
+    Γ1 = [C2'; D21'; zeros(nx, ny)] * [C2 D21 zeros(ny, nx)] * (-1/γ)
     Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 
     if ps.direct.polar_param 
-        H = exp(ρ[1])*(X'*X + ϵ*I) / norm(X)^2 + Γ2 + Γ1
+        H = exp(ρ[1])*(X'*X + ϵ*I) / norm(X)^2 + Γ2 - Γ1
     else
-        H = X'*X + ϵ*I + Γ2 + Γ1
+        H = X'*X + ϵ*I + Γ2 - Γ1
     end
 
     # Get explicit parameterisation

@@ -47,7 +47,7 @@ network layer.
 function tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq; tol=1E-9)
     one_vec = typeof(b)(ones(size(b)))
     v = W * zeq + b
-    j = Zygote.pullback(z -> ϕ.(z), v)[2](one_vec)[1]
+    j = pullback(z -> ϕ.(z), v)[2](one_vec)[1]
     # J = Diagonal(j[:])
 
     eval_grad(t) = (I - (j[:, t] .* W))' \ Δz[:, t]

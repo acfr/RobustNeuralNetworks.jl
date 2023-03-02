@@ -2,13 +2,13 @@ module RecurrentEquilibriumNetworks
 
 ############ Package dependencies ############
 
-using CUDA
+using CUDA: CuVector, CuMatrix
 using DocStringExtensions
 using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
 using Random
-using Zygote
+using Zygote: pullback
 using Zygote: @adjoint
 
 import Base.:(==)
