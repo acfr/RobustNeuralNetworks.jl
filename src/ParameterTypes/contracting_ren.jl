@@ -28,6 +28,7 @@ function ContractingRENParams{T}(
     bx_scale = T(0), 
     bv_scale = T(1), 
     polar_param = true,
+    D22_zero = false,
     rng = Random.GLOBAL_RNG
 ) where T
 
@@ -35,7 +36,8 @@ function ContractingRENParams{T}(
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, D22_free=true, rng=rng
+        polar_param=polar_param, D22_free=true, D22_zero=D22_zero,
+        rng=rng
     )
 
     return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)

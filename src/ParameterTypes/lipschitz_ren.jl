@@ -30,14 +30,20 @@ function LipschitzRENParams{T}(
     bx_scale = T(0), 
     bv_scale = T(1), 
     polar_param = true,
+    D22_zero = false,
     rng = Random.GLOBAL_RNG
 ) where T
+
+    # If D22 fixed at 0, it should not be constructed from other
+    # direct params (so set D22_free = true)
+    D22_free = D22_zero ? true : false
 
     # Direct (implicit) params
     direct_ps = DirectParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, D22_free=false, rng=rng
+        polar_param=polar_param, D22_free=D22_free, D22_zero=D22_zero,
+        rng=rng
     )
 
     return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, T(γ))
@@ -108,14 +114,14 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     D21 = ps.direct.D21
 
     # Constructing D22. See Eqns 31-33 of TAC paper
-    M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-    if ny >= nu
-        N = [(I - M) / (I + M); -2*Z3 / (I + M)]
+    if ps.direct.D22_zero
+        D22 = ps.direct.D22
     else
-        N = [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+        N = (ny >= nu) ? [(I - M) / (I + M); -2*Z3 / (I + M)] :
+                        [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        D22 = γ*N
     end
-
-    D22 = γ*N
 
     # Constructing H. See Eqn 28 of TAC paper
     C2_imp = -(D22')*C2 / γ
