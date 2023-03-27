@@ -5,7 +5,7 @@ Pkg.activate("./..")
 using BenchmarkTools
 using LinearAlgebra
 using Flux
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 
 """
 Nic's random testing script

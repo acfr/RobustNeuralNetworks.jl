@@ -1,7 +1,7 @@
-# RecurrentEquilibriumNetworks.jl
+# RobustNeuralNetworks.jl
 
 ## Status
-[![Build Status](https://github.com/nic-barbara/RecurrentEquilibriumNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/nic-barbara/RecurrentEquilibriumNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/nic-barbara/RobustNeuralNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/nic-barbara/RobustNeuralNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 ## Package Description
 
@@ -15,14 +15,14 @@ Julia package for Recurrent Equilibrium Networks.
 ## Installation for Development
 
 To install the package for development, clone the repository into your Julia dev folder:
-- For Linux/Mac, use `git clone git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git RecurrentEquilibriumNetworks` inside your `~/.julia/dev/` directory.
-- Note that the repo is `RecurrentEquilibriumNetworks.jl`, but the folder is `RecurrentEquilibriumNetworks`. This is convention for Julia packages.
+- For Linux/Mac, use `git clone git@github.com:acfr/RobustNeuralNetworks.jl.git RobustNeuralNetworks` inside your `~/.julia/dev/` directory.
+- Note that the repo is `RobustNeuralNetworks.jl`, but the folder is `RobustNeuralNetworks`. This is convention for Julia packages.
 
 Navigate to the repository directory, start the Julia REPL, and type `] activate .` to activate the package. You can now test out some basic functionality:
 
 ```julia
 using Random
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 
 batches = 50
 nu, nx, nv, ny = 4, 10, 20, 2
@@ -42,11 +42,11 @@ println(y1)
 
 ## Contributing to the Package
 
-The main file is `src/RecurrentEquilibriumNetworks.jl`. This imports all relevant packages, defines abstract types, includes code from other files, and exports the necessary components of our package. All `using PackageName` statements should be included in this file. As a general guide:
+The main file is `src/RobustNeuralNetworks.jl`. This imports all relevant packages, defines abstract types, includes code from other files, and exports the necessary components of our package. All `using PackageName` statements should be included in this file. As a general guide:
 - Only import packages you really need
 - If you only need one function from a package, import it explicitly (not the whole package)
 
-When including files in our `src/` folder, the order often matters. I have tried to structure the `include` statements in `RecurrentEquilibriumNetworks.jl` so that we only ever have to include code once, in the main file. Please follow the conventioned outlined in the comments.
+When including files in our `src/` folder, the order often matters. I have tried to structure the `include` statements in `RobustNeuralNetworks.jl` so that we only ever have to include code once, in the main file. Please follow the conventioned outlined in the comments.
 
 The source files for our package are al in the `src/` folder, and are split between `src/Base/` and `src/ParameterTypes/`. The `Base/` folder should contain code relevant to the core functionality of this package. The `ParameterTypes/` is where to add different versions of REN (eg: contracting REN, Lipschitz-bounded REN, etc.). See below for further documentation.
 
@@ -61,12 +61,12 @@ Use git to pull/push changes to the package as normal while developing it.
 
 Once the package is functional, it can be used in other Julia workspaces like any normal package by following these instructions:
 
-- To use the code on the current main branch of the repo (latest stable release), type `] add git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`. 
+- To use the code on the current main branch of the repo (latest stable release), type `] add git@github.com:acfr/RobustNeuralNetworks.jl.git`. 
 - We have to use the git link not the package name because it is an unregistered Julia package.
-- You will have to manually update the package as normal with `] update RecurrentEquilibriumNetworks`.
+- You will have to manually update the package as normal with `] update RobustNeuralNetworks`.
 
 If you just want to use the latest version of the package on your computer (useful for rapid development), you may not want to have to manually update the package each time. In this case:
-- Add a development version of the package with: `] dev git@github.com:acfr/RecurrentEquilibriumNetworks.jl.git`
+- Add a development version of the package with: `] dev git@github.com:acfr/RobustNeuralNetworks.jl.git`
 - This replaces the usual `] add` command. 
 - Whenever you use the package, it will access the latest version in your `.julia/dev/` folder rather than the stable release in the `main` branch. 
 
@@ -105,7 +105,7 @@ There are many ways to train a REN, some of which do not involve differentiating
 ```julia
 using LinearAlgebra
 using Random
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 
 batches = 50
 nu, nx, nv, ny = 4, 10, 20, 2

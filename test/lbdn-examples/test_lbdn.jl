@@ -1,5 +1,5 @@
 using Flux
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 # using Plots
 
 

@@ -1,4 +1,4 @@
-# RecurrentEquilibriumNetworks.jl Documentation
+# RobustNeuralNetworks.jl Documentation
 
 *Bringing robust machine learning tools to Julia.*
 
@@ -55,7 +55,7 @@ Most of your examples should be written with the `@jldoctest` macro. I'll give i
 Example:
 ```@jldoctest TESTING
 using Random
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 
 batches = 50
 nu, nx, nv, ny = 4, 10, 20, 2
@@ -85,7 +85,7 @@ println(size(y1))
 
 Work on the presentation of this a bit....
 ```@autodocs
-Modules = [RecurrentEquilibriumNetworks]
+Modules = [RobustNeuralNetworks]
 Private = false
 ```
 

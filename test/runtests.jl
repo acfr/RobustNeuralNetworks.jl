@@ -1,7 +1,7 @@
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 using Test
 
-@testset "RecurrentEquilibriumNetworks.jl" begin
+@testset "RobustNeuralNetworks.jl" begin
   
     # Useful
     include("test_utils.jl")

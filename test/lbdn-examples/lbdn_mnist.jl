@@ -2,7 +2,7 @@
 using Flux
 using Flux:onehotbatch, @epochs, crossentropy,onecold,throttle, OneHotMatrix
 using MLDatasets: MNIST
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 using Statistics
 
 # Get MNIST training and test data
