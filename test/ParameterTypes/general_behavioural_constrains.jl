@@ -1,6 +1,6 @@
 using LinearAlgebra
 using Random
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 using Test
 
 # include("../test_utils.jl")

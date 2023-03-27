@@ -1,4 +1,4 @@
-module RecurrentEquilibriumNetworks
+module RobustNeuralNetworks
 
 ############ Package dependencies ############
 
@@ -86,4 +86,4 @@ export init_states
 export set_output_zero!
 export update_explicit!
 
-end # end RecurrentEquilibriumNetworks
+end # end RobustNeuralNetworks

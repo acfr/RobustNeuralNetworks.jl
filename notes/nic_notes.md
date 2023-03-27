@@ -1,6 +1,6 @@
 # Package Architecture
 
-This document is a work-in-progress. Use it to start our documentation of the `RecurrentEquilibriumNetworks.jl` package. I'm using this document to keep track of how I'm writing the package. It is not necessarily up-to-date or correct.
+This document is a work-in-progress. Use it to start our documentation of the `RobustNeuralNetworks.jl` package. I'm using this document to keep track of how I'm writing the package. It is not necessarily up-to-date or correct.
 
 
 

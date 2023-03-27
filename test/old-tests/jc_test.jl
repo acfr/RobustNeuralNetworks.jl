@@ -6,7 +6,7 @@ Pkg.activate("./..")
 
 using BenchmarkTools
 using LinearAlgebra
-using RecurrentEquilibriumNetworks
+using RobustNeuralNetworks
 # using Distributions
 """
 Johnny's random testing script: 
