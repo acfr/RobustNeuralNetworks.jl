@@ -16,7 +16,4 @@ makedocs(
     doctest = true # Can set to false while testing!
 )
 
-deploydocs(
-    repo = "github.com/acfr/RobustNeuralNetworks.jl.git",
-    versions = nothing # Remove this line when the package has versions!
-)
+deploydocs(repo = "github.com/acfr/RobustNeuralNetworks.jl.git")
