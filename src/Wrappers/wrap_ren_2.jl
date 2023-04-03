@@ -1,3 +1,5 @@
+# TODO: This is slower than wrap_ren.jl. Don't bother using it, should be deleted.
+
 """
 $(TYPEDEF)
 

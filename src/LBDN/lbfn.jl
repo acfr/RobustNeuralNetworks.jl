@@ -1,3 +1,6 @@
+# TODO: All of this is outdated. Update it with the parameterisation from
+# TODO: Ray's most recent LBDN paper (https://arxiv.org/abs/2301.11526)
+
 """
 $(TYPEDEF)
 

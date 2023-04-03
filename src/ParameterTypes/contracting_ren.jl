@@ -14,21 +14,34 @@ mutable struct ContractingRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    ContractingRENParams(nu, nx, nv, ny; ...)
+    ContractingRENParams{T}(nu::Int, nx::Int, nv::Int, ny::Int; ...) where T
 
-Main constructor for `ContractingRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
+Main constructor for `ContractingRENParams`. Main arguments are:
+
+- `nu`: Number of inputs
+- `nx`: Number of states
+- `nv`: Number of neurons
+- `ny`: Number of outputs
+    
+Takes the following keyword arguments:
+
+- `nl` (default `Flux.relu`): Static nonlinearity to use
+
+- `αbar` (default `1`):  `ᾱ ∈ (0,1]` is the upper bound on the contraction rate.
+
+- See documentation for `DirectParams` constructor for arguments `init`, `ϵ`, 
+`bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
 """
 function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-12), 
     αbar = T(1),
-    bx_scale = T(0), 
-    bv_scale = T(1), 
+    init = :random,
     polar_param = true,
     D22_zero = false,
+    bx_scale = T(0), 
+    bv_scale = T(1), 
+    ϵ = T(1e-12), 
     rng = Random.GLOBAL_RNG
 ) where T
 
@@ -48,9 +61,11 @@ end
     ContractingRENParams(nv, A, B, C, D; ...)
 
 Alternative constructor for `ContractingRENParams` that initialises the
-REN from a **stable** discrete-time linear system ss(A,B,C,D).
+REN from a **stable** discrete-time linear system with state-space model
+x(t+1) = Ax(t) + Bu(t), y(t) = Cx(t) + Du(t).
 
-TODO: Make compatible with αbar ≠ 1.0
+TODO: This method will be removed in a later edition of the package.
+TODO: Make compatible with αbar ≠ 1.0.
 """
 function ContractingRENParams(
     nv::Int,
@@ -159,10 +174,14 @@ function Flux.cpu(m::ContractingRENParams{T}) where T
 end
 
 """
-    direct_to_explicit(ps::ContractingRENParams)
+    direct_to_explicit(ps::ContractingRENParams, return_h=false) where T
 
 Convert direct REN parameterisation to explicit parameterisation
-for contracting REN
+for contracting REN.
+
+If `return_h = false` (default), function returns an object of type
+`ExplicitParams{T}`. If `return_h = true`, returns the H matrix directly. 
+Useful for debugging or model analysis.
 """
 function direct_to_explicit(ps::ContractingRENParams{T}, return_h=false) where T
 

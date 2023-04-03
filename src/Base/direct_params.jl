@@ -25,28 +25,45 @@ mutable struct DirectParams{T}
 end
 
 """
-    DirectParams{T}(nu, nx, nv; ...)
+    DirectParams{T}(nu::Int, nx::Int, nv::Int; ...) where T
 
-Constructor for `DirectParams` struct. Allows for the following
-initialisation methods, specified as symbols by `init` argument:
-- `:random`: Random sampling for all parameters
-- `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`
+Constructor for `DirectParams` struct. Main arguments are:
 
-Option `D22_free` specifies whether or not to train D22 as a free
-parameter, or constructed separately from X3, Y3, Z3. Typically use
-`D22_free = true` for a contracting REN. Default is `D22_free = false`.
+- `nu`: Number of inputs
+- `nx`: Number of states
+- `nv`: Number of neurons
+    
+Takes the following keyword arguments:
 
-Option `D22_zero` fixes `D22 = 0` to remove any feedthrough. Default `false`.
+- `init`: Specify an initialisation method for the REN parameters. Options are:
+    - `:random` (default): Random sampling for all parameters.
+    - `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`.
+
+- `polar_param` (default `true`): Whether to use polar parameterisation to construct `H` matrix from `X` in REN parameterisation (recommended).
+
+- `D22_free` (default `false`): Specifies whether to train D22 as a free parameter (`true`), or construct it separately from X3, Y3, Z3 (`false`). Typically use `D22_free = true` only for a contracting REN.
+
+- `D22_zero` (default `false`): If `true`, fixes `D22 = 0` to remove any feedthrough.
+
+- `bx_scale` (default `0`): Set scale of initial state bias vector `bx`.
+
+- `bv_scale` (default `1`): Set scalse of initial neuron input bias vector `bv`.
+
+- `ϵ`: Regularising parameter for positive-definite matrices. Default `1e-12`.
+
+- `rng` (default `Random.GLOBAL_RNG`): random number generator to use for model initialisation.
+
+See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for parameterisation details.
 """
 function DirectParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
     init = :random,
-    ϵ = T(1e-12), 
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = false,
+    polar_param = true,
     D22_free = false,
     D22_zero = false,
+    bx_scale = T(0), 
+    bv_scale = T(1), 
+    ϵ = T(1e-12), 
     rng = Random.GLOBAL_RNG
 ) where T
 

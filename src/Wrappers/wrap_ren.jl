@@ -2,10 +2,11 @@
 $(TYPEDEF)
 
 Wrapper for Recurrent Equilibrium Network type combining
-direct parameters and explicit model into one type.
+direct parameters and explicit model into one struct.
 
 Requires user to manually update explicit params when
-direct params are changed. Not compatible with Flux.jl
+direct params are changed. Faster/more efficient than
+computing explicit parameterisation at each model call.
 """
 mutable struct WrapREN <: AbstractREN
     nl
@@ -19,7 +20,7 @@ mutable struct WrapREN <: AbstractREN
 end
 
 """
-    WrapREN(ps::AbstractRENParams)
+    WrapREN(ps::AbstractRENParams{T}) where T
 
 Construct REN wrapper from direct parameterisation
 """

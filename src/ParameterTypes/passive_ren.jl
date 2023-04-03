@@ -94,10 +94,14 @@ function Flux.cpu(m::PassiveRENParams{T}) where T
 end
 
 """
-    direct_to_explicit(ps::PassiveRENParams)
+    direct_to_explicit(ps::PassiveRENParams, return_h=false) where T
 
 Convert direct REN parameterisation to explicit parameterisation
-using passive behavioural constraints encoded in Q, S, R
+using passive behavioural constraints encoded in Q, S, R.
+
+If `return_h = false` (default), function returns an object of type
+`ExplicitParams{T}`. If `return_h = true`, returns the H matrix directly. 
+Useful for debugging or model analysis.
 """
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 

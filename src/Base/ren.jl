@@ -21,7 +21,7 @@ end
 """
 $(TYPEDEF)
 
-Main Recurrent Equilibrium Network type
+Type for Recurrent Equilibrium Networks
 """
 mutable struct REN <: AbstractREN
     nl
@@ -34,9 +34,13 @@ mutable struct REN <: AbstractREN
 end
 
 """
-    REN(ps::AbstractRENParams)
+    REN(ps::AbstractRENParams{T}) where T
 
-Construct REN from direct parameterisation
+Construct a REN from its direct parameterisation.
+
+This constructor takes a direct parameterisation of REN
+(eg: a `GeneralRENParams` instance) and converts it to an
+explicit parameterisation of the REN for implementation.
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
@@ -46,7 +50,7 @@ end
 """
     (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
-Call the REN given internal states xt and inputs ut. If 
+Call a REN given internal states `xt` and inputs `ut`. If 
 function arguments are matrices, each column must be a 
 vector of states or inputs (allows batch simulations).
 """
@@ -63,7 +67,7 @@ end
 """
     init_states(m::AbstractREN; rng=nothing)
 
-Return state vector initialised as zeros
+Return state vector of a REN initialised as zeros
 """
 function init_states(m::AbstractREN; rng=nothing)
     return zeros(m.T, m.nx)
@@ -72,7 +76,7 @@ end
 """
     init_states(m::AbstractREN, nbatches; rng=nothing)
 
-Return matrix of (nbatches) state vectors initialised as zeros
+Return matrix of (nbatches) state vectors of a REN initialised as zeros
 """
 function init_states(m::AbstractREN, nbatches; rng=nothing)
     return zeros(m.T, m.nx, nbatches)
@@ -81,7 +85,8 @@ end
 """
     set_output_zero!(m::AbstractREN)
 
-Set output map of REN to zero
+Set output map of a REN to zero such that `x1,y = ren(x,u)`
+then `y = 0` for any `x` and `u`.
 """
 function set_output_zero!(m::AbstractREN)
     m.explicit.C2 .*= 0

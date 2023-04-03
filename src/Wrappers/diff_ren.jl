@@ -1,11 +1,10 @@
 """
 $(TYPEDEF)
 
-Wrapper for Recurrent Equilibrium Network type which
-automatically re-computes explicit parameters every
-time the model is called.
+Wrapper for `REN` type which automatically re-computes 
+explicit parameters every time the model is called.
 
-Compatible with Flux.jl
+This is slow, but is compatible with `Flux.jl`
 """
 mutable struct DiffREN <: AbstractREN
     nl
@@ -18,9 +17,9 @@ mutable struct DiffREN <: AbstractREN
 end
 
 """
-    DiffREN(ps::AbstractRENParams)
+    DiffREN(ps::AbstractRENParams{T}) where T
 
-Construct DiffREN wrapper from direct parameterisation
+Construct `DiffREN` wrapper from direct parameterisation
 """
 function DiffREN(ps::AbstractRENParams{T}) where T
     return DiffREN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps, T)
@@ -36,11 +35,11 @@ Flux.trainable(m::DiffREN) = Flux.trainable(m.params)
 """
     (m::DiffREN)(xt::VecOrMat, ut::VecOrMat)
 
-Call the REN given internal states xt and inputs ut. If 
+Call the REN given internal states `xt` and inputs `ut`. If 
 function arguments are matrices, each column must be a 
 vector of states or inputs (allows batch simulations).
 
-Computes explicit parameterisation each time. This may
+Computes explicit parameterisation each time. This will
 be slow if called many times!
 """
 function (m::DiffREN)(xt::VecOrMat, ut::VecOrMat)

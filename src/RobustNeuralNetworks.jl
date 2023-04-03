@@ -18,16 +18,22 @@ import Flux.gpu, Flux.cpu
 
 """
 $(TYPEDEF)
+
+Abstract type for Recurrent Equilibrium Network parameters
 """
 abstract type AbstractRENParams{T} end
 
 """
 $(TYPEDEF)
+
+Abstract type for a Recurrent Equilibrium Network
 """
 abstract type AbstractREN end
 
 """
 $(TYPEDEF)
+
+Abstract type for Lipschitz-bounded deep networks
 """
 abstract type AbstractLBDN end
 

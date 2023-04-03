@@ -18,21 +18,36 @@ mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    GeneralRENParams(nu, nx, nv, ny; ...)
+    GeneralRENParams(nu::Int, nx::Int, nv::Int, ny::Int, 
+                     Q::Matrix{T}, S::Matrix{T}, R::Matrix{T}; ...) where T
 
-Main constructor for `GeneralRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
+Main constructor for `GeneralRENParams`. Main arguments are:
+
+- `nu`: Number of inputs
+- `nx`: Number of states
+- `nv`: Number of neurons
+- `ny`: Number of outputs
+- `Q`, `S`, `R`: Matrices to encode incremental quadratic constraints
+    
+Takes the following keyword arguments:
+
+- `nl` (default `Flux.relu`): Static nonlinearity to use
+
+- `αbar` (default `1`):  `ᾱ ∈ (0,1]` is the upper bound on the contraction rate.
+
+- See documentation for `DirectParams` constructor for arguments `init`, `ϵ`, 
+`bx_scale`, `bv_scale`, `polar_param`, `rng`.
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
     Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
-    init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-12), 
     αbar = T(1),
+    init = :random,
+    polar_param = true,
     bx_scale = T(0), 
     bv_scale = T(1), 
-    polar_param = true,
+    ϵ = T(1e-12), 
     rng = Random.GLOBAL_RNG
 ) where T
 
@@ -98,10 +113,14 @@ function Flux.cpu(m::GeneralRENParams{T}) where T
 end
 
 """
-    direct_to_explicit(ps::GeneralRENParams)
+    direct_to_explicit(ps::GeneralRENParams, return_h=false) where T
 
 Convert direct REN parameterisation to explicit parameterisation
-using behavioural constraints encoded in Q, S, R
+using behavioural constraints encoded in Q, S, R.
+
+If `return_h = false` (default), function returns an object of type
+`ExplicitParams{T}`. If `return_h = true`, returns the H matrix directly. 
+Useful for debugging or model analysis.
 """
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 

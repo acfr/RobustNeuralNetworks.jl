@@ -1,8 +1,20 @@
 """
+    set_output_zero!(m::AbstractRENParams)
+
+Set output map of REN parameters to zero
+"""
+function set_output_zero!(m::AbstractRENParams)
+    m.direct.C2 .*= 0
+    m.direct.D21 .*= 0
+    m.direct.D22 .*= 0
+    m.direct.by .*= 0
+end
+
+"""
     hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T} = zeros(T,0,0)) where T
 
 Convert direct REN parameterisation encoded in H matrix
-to explicit parameterisation. See TAC paper for details
+to explicit parameterisation. See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for details
 """
 function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T} = zeros(T,0,0)) where T
 

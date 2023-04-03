@@ -1,7 +1,10 @@
 # RobustNeuralNetworks.jl
 
 ## Status
-[![Build Status](https://github.com/nic-barbara/RobustNeuralNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/nic-barbara/RobustNeuralNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
+
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/stable/)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/dev)
 
 ## Package Description
 
