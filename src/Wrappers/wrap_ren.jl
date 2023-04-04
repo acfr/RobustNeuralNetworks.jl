@@ -51,11 +51,11 @@ x1, y1 = ren(x0, u0)
 ren.params.direct.B2 .*= rand(rng, size(ren.params.direct.B2)...)
 update_explicit!(ren)
 
-println(ren.explicit.B2[1])
+println(round(ren.explicit.B2[1];digits=4))
 
 # output
 
--0.03346946950264719
+-0.0335
 ```
 
 See also [`REN`](@ref) and [`DiffREN`](@ref).
