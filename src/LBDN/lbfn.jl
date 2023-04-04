@@ -1,11 +1,6 @@
 # TODO: All of this is outdated. Update it with the parameterisation from
 # TODO: Ray's most recent LBDN paper (https://arxiv.org/abs/2301.11526)
 
-"""
-$(TYPEDEF)
-
-Direct parameters for an LBFN
-"""
 mutable struct LBFN{T} <: AbstractLBDN
     As::Tuple
     Bs::Tuple
@@ -57,11 +52,6 @@ end
 # Not exactly sure what this does...?
 Flux.@functor LBFN
 
-"""
-    Flux.trainable(m::LBFN)
-
-Define trainable parameters for an LBFN.
-"""
 Flux.trainable(m::LBFN) = (m.As, m.Bs, m.bs, m.ds)
 
 """

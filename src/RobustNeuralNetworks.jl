@@ -3,7 +3,6 @@ module RobustNeuralNetworks
 ############ Package dependencies ############
 
 using CUDA: CuVector, CuMatrix
-using DocStringExtensions
 using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
@@ -14,26 +13,27 @@ using Zygote: @adjoint
 import Base.:(==)
 import Flux.gpu, Flux.cpu
 
+
 ############ Abstract types ############
 
 """
-$(TYPEDEF)
+    abstract type AbstractRENParams{T} end
 
-Abstract type for Recurrent Equilibrium Network parameters
+Direct parameterisation for recurrent equilibrium networks.
 """
 abstract type AbstractRENParams{T} end
 
 """
-$(TYPEDEF)
+    abstract type AbstractREN end
 
-Abstract type for a Recurrent Equilibrium Network
+Explicit parameterisation for recurrent equilibrium networks.
 """
 abstract type AbstractREN end
 
 """
-$(TYPEDEF)
+    abstract type AbstractLBDN end
 
-Abstract type for Lipschitz-bounded deep networks
+Parameterisation for Lipschitz-bounded deep networks.
 """
 abstract type AbstractLBDN end
 
@@ -51,7 +51,6 @@ include("Base/ren.jl")
 # Wrappers
 include("Wrappers/diff_ren.jl")
 include("Wrappers/wrap_ren.jl")
-include("Wrappers/wrap_ren_2.jl")
 
 # Variations of REN
 include("ParameterTypes/utils.jl")
@@ -81,7 +80,6 @@ export PassiveRENParams
 
 export DiffREN
 export WrapREN
-export WrapREN2
 
 export AbstractLBDN
 export LBFN
@@ -91,5 +89,8 @@ export direct_to_explicit
 export init_states
 export set_output_zero!
 export update_explicit!
+
+# Extended functions
+# TODO: Need to export things like gpu, cpu, ==, etc.
 
 end # end RobustNeuralNetworks

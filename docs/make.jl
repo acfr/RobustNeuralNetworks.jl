@@ -13,7 +13,13 @@ makedocs(
         "Home" => "index.md"
     ],
 
-    doctest = true # Can set to false while testing!
+    doctest = true, # Can set to false while testing!
+    checkdocs=:exports
 )
 
 deploydocs(repo = "github.com/acfr/RobustNeuralNetworks.jl.git")
+
+
+# ] activate docs
+# using LiverServer
+# servedocs()

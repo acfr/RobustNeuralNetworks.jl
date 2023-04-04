@@ -1,20 +1,29 @@
 """
-    set_output_zero!(m::AbstractRENParams)
+    direct_to_explicit(ps::AbstractRENParams, return_h=false) where T
 
-Set output map of REN parameters to zero
+Convert direct parameterisation of RENs to explicit parameterisation.
+
+Uses the parameterisation encoded in `ps` to construct an [`ExplicitParams`](@ref) object that naturally satisfies a set of user-defined behavioural constraints.
+
+# Arguments
+
+- `ps::AbstractRENParams`: Direct parameterisation with behavioural constraints to convert to an explicit parameterisation of REN (eg: [`GeneralRENParams`](@ref)).
+
+- `return_h::Bool=false`: Whether to return the H-matrix directly (see [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)). Useful for debugging or model analysis. If `false`, function returns an object of type `ExplicitParams{T}`. 
+
+See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
-function set_output_zero!(m::AbstractRENParams)
-    m.direct.C2 .*= 0
-    m.direct.D21 .*= 0
-    m.direct.D22 .*= 0
-    m.direct.by .*= 0
-end
+function direct_to_explicit end
 
 """
-    hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T} = zeros(T,0,0)) where T
+    hmatrix_to_explicit(ps, H, D22=zeros(T,0,0)) where T
 
-Convert direct REN parameterisation encoded in H matrix
-to explicit parameterisation. See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for details
+Convert direct parameterisation of REN from H matrix (Eqn. 23 of [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)) to `ExplicitParams{T}`.
+
+# Arguments
+- `ps::AbstractRENParams`: Direct parameterisation of a REN with behavioural constraints
+- `H::Matrix{T}`: H-matrix to convert.
+- `D22::Matrix{T}=zeros(T,0,0))`: Optionally include `D22` matrix. If empty (default), `D22` taken from `ps.direct.D22`. 
 """
 function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T} = zeros(T,0,0)) where T
 

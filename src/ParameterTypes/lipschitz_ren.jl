@@ -1,9 +1,3 @@
-"""
-$(TYPEDEF)
-
-Parameter struct to build an acyclic REN with a guaranteed
-Lipschitz bound of γ ∈ ℝ
-"""
 mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     nl                          # Sector-bounded nonlinearity
     nu::Int
@@ -16,22 +10,38 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    LipschitzRENParams(nu, nx, nv, ny; ...)
+    LipschitzRENParams(nu, nx, nv, ny, γ; <keyword arguments>) where T
 
-Main constructor for `LipschitzRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
+Construct direct parameterisation of a REN with a Lipschitz bound of γ.
+
+# Arguments
+- `nu::Int`: Number of inputs.
+- `nx::Int`: Number of states.
+- `nv::Int`: Number of neurons.
+- `ny::Int`: Number of outputs.
+- `γ::Number`: Lipschitz upper bound.
+    
+# Keyword arguments
+
+- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+
+- `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
+
+See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
+
+See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
-    init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-12), 
-    αbar = T(1),
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = true,
+    αbar::T = T(1),
+    init = :random,
+    polar_param::Bool = true,
+    bx_scale::T = T(0), 
+    bv_scale::T = T(1), 
+    ϵ::T = T(1e-12), 
     D22_zero = false,
-    rng = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
     # If D22 fixed at 0, it should not be constructed from other
@@ -50,47 +60,24 @@ function LipschitzRENParams{T}(
 
 end
 
-"""
-    Flux.trainable(m::LipschitzRENParams)
-
-Define trainable parameters for `LipschitzRENParams` type
-"""
 Flux.trainable(m::LipschitzRENParams) = Flux.trainable(m.direct)
 
-"""
-    Flux.gpu(m::LipschitzRENParams{T}) where T
-
-Add GPU compatibility for `LipschitzRENParams` type
-"""
 function Flux.gpu(m::LipschitzRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.gpu(m.direct)
     return LipschitzRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
     )
 end
 
-"""
-    Flux.cpu(m::LipschitzRENParams{T}) where T
-
-Add CPU compatibility for `LipschitzRENParams` type
-"""
 function Flux.cpu(m::LipschitzRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.cpu(m.direct)
     return LipschitzRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
     )
 end
 
-"""
-    direct_to_explicit(ps::LipschitzRENParams, return_h=false) where T
-
-Convert direct REN parameterisation to explicit parameterisation
-using Lipschitz bounded behavioural constraint.
-
-If `return_h = false` (default), function returns an object of type
-`ExplicitParams{T}`. If `return_h = true`, returns the H matrix directly. 
-Useful for debugging or model analysis.
-"""
 function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
 
     # System sizes

@@ -1,7 +1,32 @@
-"""
-$(TYPEDEF)
+@doc raw"""
+    mutable struct ExplicitParams{T}
 
-Struct containing explicit REN parameters
+Explicit REN parameter struct.
+
+These parameters define a recurrent equilibrium network with model inputs and outputs ``u_t, y_t``, neuron inputs and outputs ``v_t,w_t``, and states `x_t`.
+
+```math
+\begin{equation*}
+\begin{bmatrix}
+x_{t+1} \\ v_t \\ y_t
+\end{bmatrix}
+= 
+\begin{bmatrix}
+A & B_1 & B_2 \\
+C_1 & D_{11} & D_{12} \\
+C_2 & D_{21} & D_{22} \\
+\end{bmatrix}
+\begin{bmatrix}
+x_t \\ w_t \\ u_t
+\end{bmatrix}
++ 
+\begin{bmatrix}
+b_x \\ b_v \\ b_y
+\end{bmatrix}
+\end{equation*}
+```
+
+See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for more details on explicit parameterisations of REN.
 """
 mutable struct ExplicitParams{T}
     A::Matrix{T}
@@ -18,11 +43,6 @@ mutable struct ExplicitParams{T}
     by::Vector{T}
 end
 
-"""
-$(TYPEDEF)
-
-Type for Recurrent Equilibrium Networks
-"""
 mutable struct REN <: AbstractREN
     nl
     nu::Int
@@ -39,8 +59,8 @@ end
 Construct a REN from its direct parameterisation.
 
 This constructor takes a direct parameterisation of REN
-(eg: a `GeneralRENParams` instance) and converts it to an
-explicit parameterisation of the REN for implementation.
+(eg: a [`GeneralRENParams`](@ref) instance) and converts it to a
+**callable** explicit parameterisation of the REN.
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
@@ -50,9 +70,41 @@ end
 """
     (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
-Call a REN given internal states `xt` and inputs `ut`. If 
-function arguments are matrices, each column must be a 
-vector of states or inputs (allows batch simulations).
+Call a REN model given internal states `xt` and inputs `ut`. 
+
+If arguments are matrices, each column must be a vector of states or inputs (allows batch simulations).
+
+# Examples
+
+This example creates a contracting [`REN`](@ref) using [`ContractingRENParams`](@ref) and calls the model with some randomly generated inputs. 
+
+```jldoctest; output = false
+using Random
+using RobustNeuralNetworks
+
+# Setup
+rng = MersenneTwister(42)
+batches = 10
+nu, nx, nv, ny = 4, 2, 20, 1
+
+# Construct a REN
+contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
+ren = REN(contracting_ren_ps)
+
+# Some dummy inputs
+x0 = init_states(ren, batches; rng=rng)
+u0 = randn(rng, ren.nu, batches)
+
+# Evaluate the REN over one timestep
+x1, y1 = ren(x0, u0)
+println(y1)
+
+# output
+
+[-31.41329182406714 0.5721132452239197 -0.5506224426377428 -3.5592833930958423 -34.99904826648171 -18.283132026164406 -25.4822444959725 -7.4887013960355375 -4.139250969761079 15.307872792271244]
+```
+
+See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
 function (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
@@ -65,28 +117,24 @@ function (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 end
 
 """
-    init_states(m::AbstractREN; rng=nothing)
-
-Return state vector of a REN initialised as zeros
-"""
-function init_states(m::AbstractREN; rng=nothing)
-    return zeros(m.T, m.nx)
-end
-
-"""
     init_states(m::AbstractREN, nbatches; rng=nothing)
 
-Return matrix of (nbatches) state vectors of a REN initialised as zeros
+Return matrix of (nbatches) state vectors of a REN initialised as zeros.
 """
 function init_states(m::AbstractREN, nbatches; rng=nothing)
     return zeros(m.T, m.nx, nbatches)
 end
 
+function init_states(m::AbstractREN; rng=nothing)
+    return zeros(m.T, m.nx)
+end
+
 """
     set_output_zero!(m::AbstractREN)
 
-Set output map of a REN to zero such that `x1,y = ren(x,u)`
-then `y = 0` for any `x` and `u`.
+Set output map of a REN to zero.
+
+If the resulting model is called with `x1,y = ren(x,u)` then `y = 0` for any `x` and `u`.
 """
 function set_output_zero!(m::AbstractREN)
     m.explicit.C2 .*= 0

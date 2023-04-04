@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-Parameter struct to build a passive REN where Q = 0, R  = 0, S = I
-"""
 mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     nl                          # Sector-bounded nonlinearity
     nu::Int
@@ -16,23 +11,39 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    PassiveRENParams(nu, nx, nv, ny; ...)
+    PassiveRENParams{T}(nu, nx, nv, ny; <keyword arguments>) where T
 
-Main constructor for `PassiveRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
-ν>0 for incrementally strictly input passive model; v == 0 for incrementally passive model. 
+Construct direct parameterisation of a passive REN.
+
+# Arguments
+- `nu::Int`: Number of inputs.
+- `nx::Int`: Number of states.
+- `nv::Int`: Number of neurons.
+- `ny::Int`: Number of outputs.
+    
+# Keyword arguments
+
+- `ν::T=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
+
+- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+
+- `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
+
+See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
+
+See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref).
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    init = :random,
+    ν::T = T(0),
     nl = Flux.relu, 
-    ν = T(0),
-    ϵ = T(1e-6), 
-    αbar = T(1),
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = true,
-    rng = Random.GLOBAL_RNG
+    αbar::T = T(1),
+    init = :random,
+    polar_param::Bool = true,
+    bx_scale::T = T(0), 
+    bv_scale::T = T(1), 
+    ϵ::T = T(1e-12), 
+    rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
     # Check input output pair dimensions
@@ -51,58 +62,30 @@ function PassiveRENParams{T}(
 
 end
 
-"""
-    passive_trainable(L::DirectParams)
-
-Override Flux.trainable(L::DirectParams) for passive ren. 
-"""
 function passive_trainable(L::DirectParams)
     ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
     !(L.polar_param) && popfirst!(ps)
     return filter(p -> length(p) !=0, ps)
 end
 
-"""
-    Flux.trainable(m::PassiveRENParams)
-
-Define trainable parameters for `PassiveRENParams` type
-"""
 Flux.trainable(m::PassiveRENParams) = passive_trainable(m.direct)
 
-"""
-    Flux.gpu(m::PassiveRENParams{T}) where T
-
-Add GPU compatibility for `PassiveRENParams` type
-"""
 function Flux.gpu(m::PassiveRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.gpu(m.direct)
     return PassiveRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
     )
 end
 
-"""
-    Flux.cpu(m::PassiveRENParams{T}) where T
-
-Add CPU compatibility for `PassiveRENParams` type
-"""
 function Flux.cpu(m::PassiveRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.cpu(m.direct)
     return PassiveRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
     )
 end
 
-"""
-    direct_to_explicit(ps::PassiveRENParams, return_h=false) where T
-
-Convert direct REN parameterisation to explicit parameterisation
-using passive behavioural constraints encoded in Q, S, R.
-
-If `return_h = false` (default), function returns an object of type
-`ExplicitParams{T}`. If `return_h = true`, returns the H matrix directly. 
-Useful for debugging or model analysis.
-"""
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
