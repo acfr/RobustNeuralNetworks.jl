@@ -1,9 +1,3 @@
-"""
-$(TYPEDEF)
-
-Parameter struct to build an acyclic REN with behavioural
-constraints encoded in Q, S, R matrices
-"""
 mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
     nl                          # Sector-bounded nonlinearity
     nu::Int
@@ -18,22 +12,42 @@ mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    GeneralRENParams(nu, nx, nv, ny; ...)
+    GeneralRENParams{T}(nu, nx, nv, ny, Q, S, R; <keyword arguments>) where T
 
-Main constructor for `GeneralRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
+Construct direct parameterisation of a REN satisfying general behavioural constraints.
+
+Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental Integral Quadratic Constraint (IQC). See Equation 4 of [Revay et al. (2021)](https://arxiv.org/abs/2104.05942).
+
+# Arguments
+- `nu::Int`: Number of inputs.
+- `nx::Int`: Number of states.
+- `nv::Int`: Number of neurons.
+- `ny::Int`: Number of outputs.
+- `Q::Matrix{T}`: IQC weight matrix on model outputs
+- `S::Matrix{T}`: IQC coupling matrix on model outputs/inputs
+- `R::Matrix{T}`: IQC weight matrix on model outputs
+    
+# Keyword arguments
+
+- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+
+- `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
+
+See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
+
+See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
     Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
-    init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-12), 
-    αbar = T(1),
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = true,
-    rng = Random.GLOBAL_RNG
+    αbar::T = T(1),
+    init = :random,
+    polar_param::Bool = true,
+    bx_scale::T = T(0), 
+    bv_scale::T = T(1), 
+    ϵ::T = T(1e-12), 
+    rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
     # Check conditions on Q
@@ -66,43 +80,24 @@ function GeneralRENParams{T}(
 
 end
 
-"""
-    Flux.trainable(m::GeneralRENParams)
-
-Define trainable parameters for `GeneralRENParams` type
-"""
 Flux.trainable(m::GeneralRENParams) = Flux.trainable(m.direct)
 
-"""
-    Flux.gpu(m::GeneralRENParams{T}) where T
-
-Add GPU compatibility for `GeneralRENParams` type
-"""
 function Flux.gpu(m::GeneralRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.gpu(m.direct)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
-"""
-    Flux.cpu(m::GeneralRENParams{T}) where T
-
-Add CPU compatibility for `GeneralRENParams` type
-"""
 function Flux.cpu(m::GeneralRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.cpu(m.direct)
     return GeneralRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
     )
 end
 
-"""
-    direct_to_explicit(ps::GeneralRENParams)
-
-Convert direct REN parameterisation to explicit parameterisation
-using behavioural constraints encoded in Q, S, R
-"""
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     # System sizes

@@ -1,11 +1,10 @@
 """
-$(TYPEDEF)
+    mutable struct DiffREN <: AbstractREN
 
-Wrapper for Recurrent Equilibrium Network type which
-automatically re-computes explicit parameters every
-time the model is called.
+Wrapper for `REN` type which automatically re-computes 
+explicit parameters every time the model is called.
 
-Compatible with Flux.jl
+This is slow, but is compatible with `Flux.jl`
 """
 mutable struct DiffREN <: AbstractREN
     nl
@@ -18,31 +17,22 @@ mutable struct DiffREN <: AbstractREN
 end
 
 """
-    DiffREN(ps::AbstractRENParams)
+    DiffREN(ps::AbstractRENParams{T}) where T
 
-Construct DiffREN wrapper from direct parameterisation
+Construct a differentiable REN from its direct parameterisation.
+
+`DiffREN` is an alternative to [`REN`](@ref) that computes the explicit parameterisation every time the model is called. This is slow and computationally inefficient. However, it can be used with [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/) just like any other `Flux` model to do machine learning.
+
+The difference to [`REN`](@ref) and [`WrapREN`](@ref) is that the `ExplicitParams` struct is never stored, so an instance of `DiffREN` never has to be mutated or re-defined after it is created, even when learnable parameters are updated.
+
+See also [`REN`](@ref) and [`WrapREN`](@ref).
 """
 function DiffREN(ps::AbstractRENParams{T}) where T
     return DiffREN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps, T)
 end
 
-"""
-    Flux.trainable(m::DiffREN)
-
-Define trainable parameters for `DiffREN` type
-"""
 Flux.trainable(m::DiffREN) = Flux.trainable(m.params)
 
-"""
-    (m::DiffREN)(xt::VecOrMat, ut::VecOrMat)
-
-Call the REN given internal states xt and inputs ut. If 
-function arguments are matrices, each column must be a 
-vector of states or inputs (allows batch simulations).
-
-Computes explicit parameterisation each time. This may
-be slow if called many times!
-"""
 function (m::DiffREN)(xt::VecOrMat, ut::VecOrMat)
 
     explicit = direct_to_explicit(m.params)

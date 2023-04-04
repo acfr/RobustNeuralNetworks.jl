@@ -1,25 +1,13 @@
 # RobustNeuralNetworks.jl Documentation
 
-*Bringing robust machine learning tools to Julia.*
+*Bringing robust machine learning to Julia.*
 
 ```@contents
 ```
 
-## Types
-
-```@docs
-DirectParams
-```
-
-## Functions
-
-```@docs
-hmatrix_to_explicit
-```
-
 ## Examples
 
-Here's an example. You should not be able to see the import statement of `Random`.
+Here's an example. You should be able to see the import statement of `Random`.
 ```@example test
 using Random
 a = 1

@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-Parameter struct to build a contracting acyclic REN.
-"""
 mutable struct ContractingRENParams{T} <: AbstractRENParams{T}
     nl                          # Sector-bounded nonlinearity
     nu::Int
@@ -14,22 +9,39 @@ mutable struct ContractingRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    ContractingRENParams(nu, nx, nv, ny; ...)
+    ContractingRENParams{T}(nu, nx, nv, ny; <keyword arguments>) where T
 
-Main constructor for `ContractingRENParams`.
-ᾱ ∈ (0,1] is the upper bound on contraction rate.
+Construct direct parameterisation of a contracting REN.
+
+The parameters can be used to construct an explicit [`REN`](@ref) model that has guaranteed, built-in contraction properties.
+
+# Arguments
+- `nu::Int`: Number of inputs.
+- `nx::Int`: Number of states.
+- `nv::Int`: Number of neurons.
+- `ny::Int`: Number of outputs.
+
+# Keyword arguments
+
+- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+
+- `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
+
+See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
+
+See also [`GeneralRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    init = :random,
     nl = Flux.relu, 
-    ϵ = T(1e-12), 
-    αbar = T(1),
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = true,
-    D22_zero = false,
-    rng = Random.GLOBAL_RNG
+    αbar::T = T(1),
+    init = :random,
+    polar_param::Bool = true,
+    D22_zero::Bool = false,
+    bx_scale::T = T(0), 
+    bv_scale::T = T(1), 
+    ϵ::T = T(1e-12), 
+    rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
     # Direct (implicit) params
@@ -44,13 +56,21 @@ function ContractingRENParams{T}(
 
 end
 
-"""
+@doc raw"""
     ContractingRENParams(nv, A, B, C, D; ...)
 
 Alternative constructor for `ContractingRENParams` that initialises the
-REN from a **stable** discrete-time linear system ss(A,B,C,D).
+REN from a **stable** discrete-time linear system with state-space model
 
-TODO: Make compatible with αbar ≠ 1.0
+```math
+\begin{align*}
+x_{t+1} &= Ax_t + Bu_t \\
+y_t &= Cx_t + Du_t.
+\end{align*}
+```
+
+TODO: This method may be removed in a later edition of the package.
+TODO: Make compatible with αbar ≠ 1.0.
 """
 function ContractingRENParams(
     nv::Int,
@@ -127,44 +147,25 @@ function ContractingRENParams(
 
 end
 
-"""
-    Flux.trainable(m::ContractingRENParams)
-
-Define trainable parameters for `ContractingRENParams` type
-"""
 Flux.trainable(m::ContractingRENParams) = Flux.trainable(m.direct)
 
-"""
-    Flux.gpu(m::ContractingRENParams{T}) where T
-
-Add GPU compatibility for `ContractingRENParams` type
-"""
 function Flux.gpu(m::ContractingRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.gpu(m.direct)
     return ContractingRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
     )
 end
 
-"""
-    Flux.cpu(m::ContractingRENParams{T}) where T
-
-Add CPU compatibility for `ContractingRENParams` type
-"""
 function Flux.cpu(m::ContractingRENParams{T}) where T
+    # TODO: Test and complete this
     direct_ps = Flux.cpu(m.direct)
     return ContractingRENParams{T}(
         m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
     )
 end
 
-"""
-    direct_to_explicit(ps::ContractingRENParams)
-
-Convert direct REN parameterisation to explicit parameterisation
-for contracting REN
-"""
-function direct_to_explicit(ps::ContractingRENParams{T}, return_h=false) where T
+function direct_to_explicit(ps::ContractingRENParams{T}, return_h::Bool=false) where T
 
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ
