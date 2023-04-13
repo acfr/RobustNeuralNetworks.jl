@@ -61,6 +61,8 @@ Construct a REN from its direct parameterisation.
 This constructor takes a direct parameterisation of REN
 (eg: a [`GeneralRENParams`](@ref) instance) and converts it to a
 **callable** explicit parameterisation of the REN.
+
+See also [`AbstractREN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
@@ -68,9 +70,13 @@ function REN(ps::AbstractRENParams{T}) where T
 end
 
 """
+    abstract type AbstractREN end
+
+Explicit parameterisation for recurrent equilibrium networks.
+
     (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
-Call a REN model given internal states `xt` and inputs `ut`. 
+Call an  `AbstractREN` model given internal states `xt` and inputs `ut`. 
 
 If arguments are matrices, each column must be a vector of states or inputs (allows batch simulations).
 

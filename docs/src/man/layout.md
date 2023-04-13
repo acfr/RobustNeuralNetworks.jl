@@ -1,0 +1,3 @@
+# Package Structure
+
+Go into a bit of detail regarding the package structure here...

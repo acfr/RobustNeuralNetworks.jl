@@ -23,11 +23,7 @@ Direct parameterisation for recurrent equilibrium networks.
 """
 abstract type AbstractRENParams{T} end
 
-"""
-    abstract type AbstractREN end
 
-Explicit parameterisation for recurrent equilibrium networks.
-"""
 abstract type AbstractREN end
 
 """

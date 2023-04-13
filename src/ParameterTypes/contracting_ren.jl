@@ -69,8 +69,9 @@ y_t &= Cx_t + Du_t.
 \end{align*}
 ```
 
-TODO: This method may be removed in a later edition of the package.
-TODO: Make compatible with αbar ≠ 1.0.
+[TODO:] This method may be removed in a later edition of the package.
+
+[TODO:] Make compatible with αbar ≠ 1.0.
 """
 function ContractingRENParams(
     nv::Int,
