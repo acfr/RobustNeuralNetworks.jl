@@ -11,13 +11,13 @@ Modern machine learning relies heavily on rapidly training and evaluating neural
 [*TODO: Add comments on LBDN here.*]
 Recently, we proposed the Recurrent Equilibrium Network (REN) architecture as computationally efficient solutions to these problems. The REN architecture is flexible in that it includes all commonly used neural network models, such as fully-connected networks, convolutional neural networks, and recurrent neural networks. The weight matrices and bias vectors in a REN are directly parameterised to **naturally satisfy** behavioural constraints chosen by the user. For example, the user can build a REN with a given Lipschitz constant to ensure the output of the network is quantifiably less sensitive to unexpected input perturbations. 
 
-The direct parameterisation of RENs means that we can train RENs with standard, unconstrained optimization methods (such as gradient descent) while also guaranteeing their robustness. Achieving the “best of both worlds” in this way is unique to our REN/LBDN model classes, and allows us to freely train them for common machine learning problems as well as more difficult applications where safety and robustness are critical.
+The direct parameterisation of RENs means that we can train RENs with standard, unconstrained optimization methods (such as gradient descent) while also guaranteeing their robustness. Achieving the “best of both worlds” in this way is the main advantage of our REN/LBDN model classes, and allows us to freely train them for common machine learning problems as well as more difficult applications where safety and robustness are critical.
 
 
 ## Introduction
 
 ```@contents
-Pages = ["man/getting_started.md", "man/layout.md", "man/developing.md"]
+Pages = ["introduction/getting_started.md", "introduction/layout.md", "introduction/developing.md"]
 Depth = 1
 ```
 
@@ -49,4 +49,4 @@ The REN parameterisation was extended to continuous-time systems in:
 
 See below for a collection of projects and papers using `RobustNeuralNetworks.jl`.
 
-> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over All Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: []().
+> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over All Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: [https://arxiv.org/abs/2304.06193](https://arxiv.org/abs/2304.06193).

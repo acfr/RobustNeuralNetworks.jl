@@ -84,7 +84,7 @@ If arguments are matrices, each column must be a vector of states or inputs (all
 
 This example creates a contracting [`REN`](@ref) using [`ContractingRENParams`](@ref) and calls the model with some randomly generated inputs. 
 
-```jldoctest; output = false
+```jldoctest
 using Random
 using RobustNeuralNetworks
 
