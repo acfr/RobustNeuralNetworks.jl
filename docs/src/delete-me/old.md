@@ -55,13 +55,3 @@ println(size(y1))
 
 (2, 50)
 ```
-
-<!-- ## Docstrings -->
-
-<!-- ```@index
-```
-
-```@autodocs
-Modules = [RobustNeuralNetworks]
-Private = false
-``` -->

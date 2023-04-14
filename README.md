@@ -1,135 +1,50 @@
 # RobustNeuralNetworks.jl
 
-## Status
 [![Build Status](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/stable/)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/dev)
 
-## Package Description
 
-Julia package for Recurrent Equilibrium Networks.
+A Julia package for robust neural networks built from the [Recurrent Equilibrium Network (REN)](https://arxiv.org/abs/2104.05942) and [Lipschitz-Bounded Deep Network (LBDN)](https://arxiv.org/abs/2301.11526) model classes. Please visit [the docs page](https://acfr.github.io/RobustNeuralNetworks.jl/dev/) for detailed documentation
 
-[NOTE] This package is a work-in-progress. For now, you may find the following links useful:
-- Tutorial on [developing Julia packages](https://julialang.org/contribute/developing_package/) by Chris Rackauckas (MIT)
-- Documentation on [managing Julia packages](https://pkgdocs.julialang.org/v1/managing-packages/) and developing unregistered packages with `Pkg.jl`
+## Installation
 
-
-## Installation for Development
-
-To install the package for development, clone the repository into your Julia dev folder:
-- For Linux/Mac, use `git clone git@github.com:acfr/RobustNeuralNetworks.jl.git RobustNeuralNetworks` inside your `~/.julia/dev/` directory.
-- Note that the repo is `RobustNeuralNetworks.jl`, but the folder is `RobustNeuralNetworks`. This is convention for Julia packages.
-
-Navigate to the repository directory, start the Julia REPL, and type `] activate .` to activate the package. You can now test out some basic functionality:
+To install the package, start a new Julia session and type the following into the REPL.
 
 ```julia
+using Pkg
+Pkg.add("git@github.com:acfr/RobustNeuralNetworks.jl.git")
+```
+
+You should now be able to construct robust neural network models. The following example constructs a contracting REN and evalutates it given a batch of random initial states `x0` and inputs `u0`.
+
+```jldoctest
 using Random
 using RobustNeuralNetworks
 
-batches = 50
-nu, nx, nv, ny = 4, 10, 20, 2
+# Setup
+rng = MersenneTwister(42)
+batches = 10
+nu, nx, nv, ny = 4, 2, 20, 1
 
-contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny)
-contracting_ren = REN(contracting_ren_ps)
+# Construct a REN
+contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
+ren = REN(contracting_ren_ps)
 
-x0 = init_states(contracting_ren, batches)
-u0 = randn(contracting_ren.nu, batches)
+# Some random inputs
+x0 = init_states(ren, batches; rng=rng)
+u0 = randn(rng, ren.nu, batches)
 
-x1, y1 = contracting_ren(x0, u0)  # Evaluates the REN over one timestep
+# Evaluate the REN over one timestep
+x1, y1 = ren(x0, u0)
 
-println(x1)
-println(y1)
+println(round.(y1;digits=2))
+
+# output
+
+[-31.41 0.57 -0.55 -3.56 -35.0 -18.28 -25.48 -7.49 -4.14 15.31]
 ```
-
-
-## Contributing to the Package
-
-The main file is `src/RobustNeuralNetworks.jl`. This imports all relevant packages, defines abstract types, includes code from other files, and exports the necessary components of our package. All `using PackageName` statements should be included in this file. As a general guide:
-- Only import packages you really need
-- If you only need one function from a package, import it explicitly (not the whole package)
-
-When including files in our `src/` folder, the order often matters. I have tried to structure the `include` statements in `RobustNeuralNetworks.jl` so that we only ever have to include code once, in the main file. Please follow the conventioned outlined in the comments.
-
-The source files for our package are al in the `src/` folder, and are split between `src/Base/` and `src/ParameterTypes/`. The `Base/` folder should contain code relevant to the core functionality of this package. The `ParameterTypes/` is where to add different versions of REN (eg: contracting REN, Lipschitz-bounded REN, etc.). See below for further documentation.
-
-Once you have written any code for this package, be sure to test it thoroughly. Write testing scripts for the package in `test/`:
-- See [`Test.jl`](https://docs.julialang.org/en/v1/stdlib/Test/) documentation for writing tests
-- Run all tests for the package with `] test`
-
-Use git to pull/push changes to the package as normal while developing it.
-
-
-## Using the package
-
-Once the package is functional, it can be used in other Julia workspaces like any normal package by following these instructions:
-
-- To use the code on the current main branch of the repo (latest stable release), type `] add git@github.com:acfr/RobustNeuralNetworks.jl.git`. 
-- We have to use the git link not the package name because it is an unregistered Julia package.
-- You will have to manually update the package as normal with `] update RobustNeuralNetworks`.
-
-If you just want to use the latest version of the package on your computer (useful for rapid development), you may not want to have to manually update the package each time. In this case:
-- Add a development version of the package with: `] dev git@github.com:acfr/RobustNeuralNetworks.jl.git`
-- This replaces the usual `] add` command. 
-- Whenever you use the package, it will access the latest version in your `.julia/dev/` folder rather than the stable release in the `main` branch. 
-
-This is easiest for development while we frequently change the package, but you risk breaking your code if someone changes something important during deveopment!
-
-
-## Some Early Documentation
-The package is structured around the `REN <: AbstractREN` type. An object of type `REN` has the following attributes:
-- explicit model struct
-- in/out, state/nl sizes
-- nonlinearity
-
-and functions to build/use it as follows:
-- A constructor
-- A self-call method
-- A function to initialise a state vector, `x0 = init_state(batches)`
-- A function to set the output to zero, `set_output_zero!(ren)`
-
-Each `REN` is constructed from a direct (implicit) parameterisation of the REN architecture. Each variation of REN (eg: contracting, passive, Lipschitz bounded) is a subtype of `AbstractRENParams`, an abstract type. This encodes all information required to build a `REN` satisfying some set of behavioural constraints. Each subtype must include the following attributes:
-- in/out, state/nl sizes `nu, ny, nx, nv`
-- direct (implicit) parameters of type `DirectParams`
-- Any other attributes relevant to the parameterisation. Eg: `Q, S, R, alpha_bar` for a general REN
-
-The output layer and implicit parameters are structs defined in `src/Base/direct_params.jl`. Each subtype of `AbstractRENParams` must also have the following methods:
-- A constructor
-- A definition of `Flux.trainable()` specifying the trainable parameters
-- A definition of `direct_to_explicit()` to convert the direct paramterisation to its explicit form
-
-See `src/ParameterTypes/general_ren.jl` for an example.
-
-
-### Non-differentiable REN Wrapper
-
-There are many ways to train a REN, some of which do not involve differentiating the model. In these cases, it is convenient to have a wrapper `WrapREN <: AbstractREN` for the `REN` type that does not need to be destroyed an recreated whenever the direct parameters change. `WrapREN` is structured exactly the same as `REN`, but also holds the `AbstractRENParams` used to construct its explicit model. The explicit model can be updated in-place following any changes to the direct parameters. See below for an example.
-
-```julia
-using LinearAlgebra
-using Random
-using RobustNeuralNetworks
-
-batches = 50
-nu, nx, nv, ny = 4, 10, 20, 2
-
-Q = Matrix{Float64}(-I(ny))
-R = 0.1^2 * Matrix{Float64}(I(nu))
-S = zeros(Float64, nu, ny)
-
-ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R)
-ren = WrapREN(ren_ps)
-
-x0 = init_states(ren, batches)
-u0 = randn(ren.nu, batches)
-
-x1, y1 = ren(x0, u0)  # Evaluates the REN over one timestep
-
-# Update the model after changing a parameter
-ren.params.direct.B2 .*= rand(size(ren.params.direct.B2)...)
-update_explicit!(ren)
-```
-[NOTE] This operation is not compatible with Flux differentiation because the explicit parameters are mutated during the update.
 
 ## Contact
-Nic Barbara (nicholas.barbara@sydney.edu.au) for any questions/concerns.
+Please contact Nic Barbara (nicholas.barbara@sydney.edu.au) with any questions.

@@ -10,8 +10,9 @@ makedocs(
     pages = [
         "Home" => "index.md",
         "Introduction" => Any[
-            "Getting Started" => "man/introduction.md",
-            "Package Layout" => "man/layout.md",
+            "Getting Started" => "man/getting_started.md",
+            "Package Overview" => "man/layout.md",
+            "Contributing to the Package" => "man/developing.md",
         ],
         "Examples" => Any[
             "Image Classification" => "examples/lbdn.md",

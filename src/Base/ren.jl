@@ -97,7 +97,7 @@ nu, nx, nv, ny = 4, 2, 20, 1
 contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
 ren = REN(contracting_ren_ps)
 
-# Some dummy inputs
+# Some random inputs
 x0 = init_states(ren, batches; rng=rng)
 u0 = randn(rng, ren.nu, batches)
 
