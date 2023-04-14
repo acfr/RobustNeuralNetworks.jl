@@ -14,6 +14,7 @@ function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Ma
     end
     return z_eq
 end
+# TODO: Speed up this function with @inbounds, for i in axes(b,1), and anything else you can think of.
 
 """
     solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
@@ -35,8 +36,8 @@ function solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
     return z_eq
 end
 
-# TODO: Add documentation for everything below here. This is all from Max's code, untouched so far
 # TODO: Can also speed things up by specifying function argument types
+# TODO: This code needs documentation and tidying up. Has not been touched since Max's thesis
 
 """
     tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq; tol=1E-9)

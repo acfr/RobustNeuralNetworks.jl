@@ -1,95 +1,52 @@
 # RobustNeuralNetworks.jl Documentation
 
-*Bringing robust machine learning tools to Julia.*
+*Bringing robust machine learning to Julia.*
+
+Welcome to the documentation for `RobustNeuralNetworks.jl`! This package contains neural network models that are constructed to naturally satisfy robustness constraints, all in native Julia.
+
+## Why Robust Learning?
+
+Modern machine learning relies heavily on rapidly training and evaluating neural networks in problems ranging from image classification to robotic control. Most existing neural network architectures have no robustness certificates, making them sensitive to poor data quality, adversarial attacks, and other input perturbations. The few neural network architectures proposed in recent years that offer solutions to this brittle behaviour rely on explicitly enforcing constraints during training to “smooth” the network response. These methods are computationally expensive, making them slow and difficult to scale up to complex real-world problems.
+
+[*TODO: Add comments on LBDN here.*]
+Recently, we proposed the Recurrent Equilibrium Network (REN) architecture as computationally efficient solutions to these problems. The REN architecture is flexible in that it includes all commonly used neural network models, such as fully-connected networks, convolutional neural networks, and recurrent neural networks. The weight matrices and bias vectors in a REN are directly parameterised to **naturally satisfy** behavioural constraints chosen by the user. For example, the user can build a REN with a given Lipschitz constant to ensure the output of the network is quantifiably less sensitive to unexpected input perturbations. 
+
+The direct parameterisation of RENs means that we can train RENs with standard, unconstrained optimization methods (such as gradient descent) while also guaranteeing their robustness. Achieving the “best of both worlds” in this way is the main advantage of our REN/LBDN model classes, and allows us to freely train them for common machine learning problems as well as more difficult applications where safety and robustness are critical.
+
+
+## Introduction
 
 ```@contents
-```
-
-## Types
-
-```@docs
-DirectParams
-```
-
-## Functions
-
-```@docs
-hmatrix_to_explicit
+Pages = ["introduction/getting_started.md", "introduction/layout.md", "introduction/developing.md"]
+Depth = 1
 ```
 
 ## Examples
 
-Here's an example. You should not be able to see the import statement of `Random`.
-```@example test
-using Random
-a = 1
-b = 2*rand()
-2a + b
-```
-Can we continue using variables from this example?
-```@example test
-println(a+b)
-```
-We can even make things look like the REPL.
-```@repl
-a = 1
-b = 2
-a + b
+```@contents
+Pages = ["examples/lbdn.md", "examples/rl.md", "examples/nonlinear_ctrl.md", "examples/pde_obsv.md"]
+Depth = 1
 ```
 
-We can even delay execution of an example over a few different example blocks. Start a for loop here...
-```@example half-loop; continued = true
-for i in 1:3
-    j = i^2
-```
-Then write something insightful and finish it below...
-```@example half-loop
-    println(j)
-end
+## Library
+
+```@contents
+Pages = ["lib/lbdn.md", "lib/ren.md", "lib/ren_params.md", "lib/functions.md"]
+Depth = 1
 ```
 
-It's worth having a look at the `@setup` macro as well when you can. It will make it much easier to write examples that include a number of lines of setup which should be hidden. Having said that, it might be useful to show the reader how you set up the example!
+## Research Papers
 
-Most of your examples should be written with the `@jldoctest` macro. I'll give it a go below, but have a look at how `ControlSystems.jl` does things too.
+`RobustNeurlaNetworks.jl` is built on the REN and LBDN model parameterisations described in the following two papers (respectively):
 
-Example:
-```@jldoctest TESTING
-using Random
-using RobustNeuralNetworks
+> M. Revay, R. Wang, and I. R. Manchester, "Recurrent equilibrium networks: Flexible dynamic models with guaranteed stability and robustness," April 2021. doi: [https://doi.org/10.48550/arXiv.2104.05942](https://doi.org/10.48550/arXiv.2104.05942).
 
-batches = 50
-nu, nx, nv, ny = 4, 10, 20, 2
+> R. Wang and I. R. Manchester, "Direct parameterization of Lipschitz-bounded deep networks," January 2023. doi: [https://doi.org/10.48550/arXiv.2301.11526](https://doi.org/10.48550/arXiv.2301.11526).
 
-contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny)
-contracting_ren = REN(contracting_ren_ps)
+The REN parameterisation was extended to continuous-time systems in:
 
-x0 = init_states(contracting_ren, batches)
-u0 = randn(contracting_ren.nu, batches)
+> D. Martinelli, C. L. Galimberti, I. R. Manchester, L. Furieri, and G. Ferrari-Trecate, "Unconstrained Parametrization of Dissipative and Contracting Neural Ordinary Differential Equations," April 2023. doi: [https://doi.org/10.48550/arXiv.2304.02976](https://doi.org/10.48550/arXiv.2304.02976).
 
-x1, y1 = contracting_ren(x0, u0)  # Evaluates the REN over one timestep
+See below for a collection of projects and papers using `RobustNeuralNetworks.jl`.
 
-println(size(y1))
-
-# output
-
-(2, 50)
-```
-
-
-## Index
-
-```@index
-```
-
-## Docstrings
-
-Work on the presentation of this a bit....
-```@autodocs
-Modules = [RobustNeuralNetworks]
-Private = false
-```
-
-## TODO:
-- Add a logo
-- Fill out this main documentation page
-- See [ControlSystems.jl](https://juliacontrol.github.io/ControlSystems.jl/stable/) for a good example of how to structure this page.
+> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over All Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: [https://arxiv.org/abs/2304.06193](https://arxiv.org/abs/2304.06193).
