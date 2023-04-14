@@ -148,4 +148,6 @@ function set_output_zero!(m::AbstractREN)
     m.explicit.D21 .*= 0
     m.explicit.D22 .*= 0
     m.explicit.by .*= 0
+
+    return nothing
 end
