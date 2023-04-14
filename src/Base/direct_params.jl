@@ -1,8 +1,3 @@
-"""
-$(TYPEDEF)
-
-Direct (implicit) parameters used to construct a REN.
-"""
 mutable struct DirectParams{T}
     ρ::Union{Vector{T},CuVector{T}}     # used in polar param
     X::Union{Matrix{T},CuMatrix{T}}
@@ -25,29 +20,52 @@ mutable struct DirectParams{T}
 end
 
 """
-    DirectParams{T}(nu, nx, nv; ...)
+    DirectParams{T}(nu, nx, nv; <keyword arguments>) where T
 
-Constructor for `DirectParams` struct. Allows for the following
-initialisation methods, specified as symbols by `init` argument:
-- `:random`: Random sampling for all parameters
-- `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`
+Construct direct parameterisation for an (acyclic) recurrent equilibrium network.
 
-Option `D22_free` specifies whether or not to train D22 as a free
-parameter, or constructed separately from X3, Y3, Z3. Typically use
-`D22_free = true` for a contracting REN. Default is `D22_free = false`.
+This is typically used by higher-level constructors when defining a REN, which take the direct parameterisation and define rules for converting it to an explicit parameterisation. See for example [`GeneralRENParams`](@ref).
+    
+# Arguments
 
-Option `D22_zero` fixes `D22 = 0` to remove any feedthrough. Default `false`.
+- `nu::Int`: Number of inputs.
+- `nx::Int`: Number of states.
+- `nv::Int`: Number of neurons.
+    
+# Keyword arguments
+
+- `init=:random`: Initialisation method. Options are:
+    - `:random`: Random sampling for all parameters.
+    - `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`.
+
+- `polar_param::Bool=true`: Use polar parameterisation to construct `H` matrix from `X` in REN parameterisation (recommended).
+
+- `D22_free::Bool=false`: Specify whether to train `D22` as a free parameter (`true`), or construct it separately from `X3, Y3, Z3` (`false`). Typically use `D22_free = true` only for a contracting REN.
+
+- `D22_zero::Bool=false`: Fix `D22 = 0` to remove any feedthrough.
+
+- `bx_scale::T=0`: Set scale of initial state bias vector `bx`.
+
+- `bv_scale::T=1`: Set scalse of initial neuron input bias vector `bv`.
+
+- `ϵ::T=1e-12`: Regularising parameter for positive-definite matrices.
+
+- `rng::AbstractRNG=Random.GLOBAL_RNG`: rng for model initialisation.
+
+See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for parameterisation details.
+
+See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function DirectParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
     init = :random,
-    ϵ = T(1e-12), 
-    bx_scale = T(0), 
-    bv_scale = T(1), 
-    polar_param = false,
-    D22_free = false,
-    D22_zero = false,
-    rng = Random.GLOBAL_RNG
+    polar_param::Bool = true,
+    D22_free::Bool = false,
+    D22_zero::Bool = false,
+    bx_scale::T = T(0), 
+    bv_scale::T = T(1), 
+    ϵ::T = T(1e-12), 
+    rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
     # Check options
@@ -130,13 +148,9 @@ function DirectParams{T}(
 )
 end
 
-"""
-    Flux.trainable(L::DirectParams)
-
-Define trainable parameters for `DirectParams` type.
-Filter empty ones (handy when nx=0)
-"""
 function Flux.trainable(L::DirectParams)
+
+    # Different cases for D22 free/zero
     if L.D22_free
         if L.D22_zero
             ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
@@ -149,16 +163,16 @@ function Flux.trainable(L::DirectParams)
         ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2,
               L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
     end
+
+    # Don't need ρ if not polar param
     !(L.polar_param) && popfirst!(ps)
+
+    # Removes empty params, useful when nx=0
     return filter(p -> length(p) !=0, ps)
 end
 
-"""
-    Flux.gpu(M::DirectParams{T}) where T
-
-Add GPU compatibility for `DirectParams` type
-"""
 function Flux.gpu(M::DirectParams{T}) where T
+    # TODO: Test and complete this
     if T != Float32
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
     end
@@ -170,12 +184,8 @@ function Flux.gpu(M::DirectParams{T}) where T
     )
 end
 
-"""
-    Flux.cpu(M::DirectParams{T}) where T
-
-Add CPU compatibility for `DirectParams` type
-"""
 function Flux.cpu(M::DirectParams{T}) where T
+    # TODO: Test and complete this
     return DirectParams{T}(
         cpu(M.ρ), cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
         cpu(M.Z3), cpu(M.B2), cpu(M.C2), cpu(M.D12), cpu(M.D21),
@@ -187,7 +197,9 @@ end
 """
     ==(ps1::DirectParams, ps2::DirectParams)
 
-Define equality for two objects of type `DirectParams`
+Define equality for two objects of type `DirectParams`.
+    
+Checks if all *relevant* parameters are equal. For example, if `D22` is fixed to `0` then the values of `X3, Y3, Z3` are not important and are ignored.
 """
 function ==(ps1::DirectParams, ps2::DirectParams)
 
