@@ -61,6 +61,8 @@ Construct a REN from its direct parameterisation.
 This constructor takes a direct parameterisation of REN
 (eg: a [`GeneralRENParams`](@ref) instance) and converts it to a
 **callable** explicit parameterisation of the REN.
+
+See also [`AbstractREN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
@@ -68,9 +70,13 @@ function REN(ps::AbstractRENParams{T}) where T
 end
 
 """
+    abstract type AbstractREN end
+
+Explicit parameterisation for recurrent equilibrium networks.
+
     (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
 
-Call a REN model given internal states `xt` and inputs `ut`. 
+Call an  `AbstractREN` model given internal states `xt` and inputs `ut`. 
 
 If arguments are matrices, each column must be a vector of states or inputs (allows batch simulations).
 
@@ -78,7 +84,7 @@ If arguments are matrices, each column must be a vector of states or inputs (all
 
 This example creates a contracting [`REN`](@ref) using [`ContractingRENParams`](@ref) and calls the model with some randomly generated inputs. 
 
-```jldoctest; output = false
+```jldoctest
 using Random
 using RobustNeuralNetworks
 
@@ -91,7 +97,7 @@ nu, nx, nv, ny = 4, 2, 20, 1
 contracting_ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
 ren = REN(contracting_ren_ps)
 
-# Some dummy inputs
+# Some random inputs
 x0 = init_states(ren, batches; rng=rng)
 u0 = randn(rng, ren.nu, batches)
 
@@ -142,4 +148,6 @@ function set_output_zero!(m::AbstractREN)
     m.explicit.D21 .*= 0
     m.explicit.D22 .*= 0
     m.explicit.by .*= 0
+
+    return nothing
 end

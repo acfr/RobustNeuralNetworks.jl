@@ -58,7 +58,7 @@ println(round(ren.explicit.B2[1];digits=4))
 -0.0335
 ```
 
-See also [`REN`](@ref) and [`DiffREN`](@ref).
+See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
 """
 function WrapREN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
