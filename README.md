@@ -19,7 +19,7 @@ Pkg.add("git@github.com:acfr/RobustNeuralNetworks.jl.git")
 
 You should now be able to construct robust neural network models. The following example constructs a contracting REN and evalutates it given a batch of random initial states `x0` and inputs `u0`.
 
-```jldoctest
+```julia
 using Random
 using RobustNeuralNetworks
 
@@ -40,9 +40,11 @@ u0 = randn(rng, ren.nu, batches)
 x1, y1 = ren(x0, u0)
 
 println(round.(y1;digits=2))
+```
 
-# output
+The output should be:
 
+```julia
 [-31.41 0.57 -0.55 -3.56 -35.0 -18.28 -25.48 -7.49 -4.14 15.31]
 ```
 
