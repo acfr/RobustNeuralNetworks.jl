@@ -12,9 +12,8 @@ A Julia package for robust neural networks built from the [Recurrent Equilibrium
 
 To install the package, start a new Julia session and type the following into the REPL.
 
-```julia
-using Pkg
-Pkg.add("git@github.com:acfr/RobustNeuralNetworks.jl.git")
+```
+] add "git@github.com:acfr/RobustNeuralNetworks.jl.git"
 ```
 
 You should now be able to construct robust neural network models. The following example constructs a contracting REN and evalutates it given a batch of random initial states `x0` and inputs `u0`.
