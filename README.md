@@ -10,7 +10,7 @@ A Julia package for robust neural networks built from the [Recurrent Equilibrium
 
 ## Installation
 
-To install the package, start a new Julia session and type the following into the REPL.
+To install the package, type the following into the REPL.
 
 ```
 ] add "git@github.com:acfr/RobustNeuralNetworks.jl.git"
