@@ -6,7 +6,7 @@
 
 To add the package, type the following into the REPL.
 ```
-] add "git@github.com:acfr/RobustNeuralNetworks.jl.git"
+] add git@github.com:acfr/RobustNeuralNetworks.jl.git
 ```
 
 ## Basic Usage

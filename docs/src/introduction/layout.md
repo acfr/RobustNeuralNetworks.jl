@@ -2,6 +2,12 @@
 
 The `RobustNeuralNetwork.jl` package is divided into Recurrent Equilibrium Network (REN) and Lipschitz-Bounded Deep Network (LBDN) models.
 
+
+## LBDN Overview
+
+*[To be written once LBDN has been properly added to the package.]*
+
+
 ## REN Overview
 
 The REN models are defined by two fundamental types:
@@ -10,7 +16,37 @@ The REN models are defined by two fundamental types:
 
 - Any subtype of [`AbstractREN`](@ref) represents the REN in its explicit form so that it can be called and evaluated.
 
-These are described in more detail below.
+!!! info "Separate Objects for Parameters and Model"
+    When working with most models (eg: [RNN](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.RNN) and [LSTM](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.LSTM)) the typical workflow is to create a single instance of a model. Its parameters are updated during training, but the model object is only created once. For example:
+
+    ```julia
+    using Flux
+
+    # Define a model
+    model = Flux.RNNCell(2,5)
+
+    # Train the model
+    for k in 1:num_training_epochs
+        ...                     # Run some code and compute gradients
+        Flux.update!(...)       # Update model parameters
+    ```
+
+    When working with RENs, it is much more efficient to split up the model parameterisation and the model implementation into subtypes of [`AbstractRENParams`](@ref) and [`AbstractREN`](@ref). Converting our direct parameterisation to an explicit model for evaluation can be slow, so we only do it when the model parameters are updated:
+
+    ```julia
+    using Flux
+    using RobustNeuralNetworks
+
+    # Define a model parameterisation
+    params = ContractingRENParams{Float64}(2, 5, 10, 1)
+
+    # Train the model
+    for k in 1:num_training_epochs
+        model = REN(params)     # Create explicit model for evaluation
+        ...                     # Run some code and compute gradients
+        Flux.update!(...)       # Update model parameters
+    ```
+    See the section on [REN Wrappers](@ref) for more details.
 
 ### (Direct) Parameter Types
 
@@ -50,16 +86,49 @@ An *explicit* REN model must be created to call and use the network for computat
 
 Each subtype of `AbstractRENParams` has a method [`direct_to_explicit`](@ref) associated with it that converts the `DirectParams` struct to an instance of `ExplicitParams` satisfying the specified behavioural constraints.
 
-There are three explicit REN wrappers currently implemented in this package. Each of them constructs a REN from a direct parameterisation `ps::AbstractRENParams` and can be used to evaluate REN models.
 
-- [`REN`](@ref) is the basic and most commonly-used wrapper. A new instance of [`REN`](@ref) must be created whenever the parameters `ps` are changed.
+#### REN Wrappers
 
-- [`WrapREN`](@ref) includes both the `DirectParams` and `ExplicitParams` as part of the REN wrapper. When any of the direct parameters are changed, the explicit model can be updated by calling [`update_explicit!`](@ref).
+There are three explicit REN wrappers currently implemented in this package. Each of them constructs a REN from a direct parameterisation `params::AbstractRENParams` and can be used to evaluate REN models.
 
-!!! warning "`WrapREN` incompatible with Flux.jl"
+- [`REN`](@ref) is the basic and most commonly-used wrapper. A new instance of [`REN`](@ref) must be created whenever the parameters `params` are changed.
+
+!!! tip "REN is recommended"
+    We strongly recommend using `REN` to train your models with `Flux.jl`. It is the most efficient subtype of `AbstractREN` that is compatible with automatic differentiation.
+
+- [`WrapREN`](@ref) includes both the `DirectParams` and `ExplicitParams` as part of the REN wrapper. When any of the direct parameters are changed, the explicit model can be updated by calling [`update_explicit!`](@ref). This can be useful when not using automatic differentiation to train the model. For example:
+
+```julia
+using RobustNeuralNetworks
+
+# Define a model parameterisation AND a model
+params = ContractingRENParams{Float64}(2, 5, 10, 1)
+model  = WrapREN(params)
+
+# Train the model
+for k in 1:num_training_epochs
+    ...                     # Run some code and compute gradients
+    ...                     # Update model parameters
+    update_explicit!(model) # Update explicit model parameters
+```
+
+!!! warning "WrapREN incompatible with Flux.jl"
     Since the explicit parameters are stored in an instance of `WrapREN`, changing them with `update_explicit!` directly mutates the model. This will cause errors if the model is to be trained with [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/). Use [`REN`](@ref) or [`DiffREN`](@ref) to avoid this issue.
 
-- [`DiffREN`](@ref) also includes `DirectParams`, but never stores the `ExplicitParams`. Instead, the explicit parameters are computed every time the model is evaluated. This is slow, but does not require creating a new object when the parameters are updated, and is still compatible with `Flux.jl`.
+- [`DiffREN`](@ref) also includes `DirectParams`, but never stores the `ExplicitParams`. Instead, the explicit parameters are computed every time the model is evaluated. This is slow, but does not require creating a new object when the parameters are updated, and is still compatible with `Flux.jl`. For example:
+
+```julia
+using Flux
+
+# Define a model parameterisation AND a model
+params = ContractingRENParams{Float64}(2, 5, 10, 1)
+model  = DiffREN(params)
+
+# Train the model
+for k in 1:num_training_epochs
+    ...                     # Run some code and compute gradients
+    Flux.update!(...)       # Update model parameters
+```
 
 See the docstring of each wrapper and the examples (eg: [PDE Observer Design with REN](@ref)) for more details.
 
@@ -114,8 +183,3 @@ yout = round.(y1; digits=2)
 println(yout[1,:])
 println(yout[2,:])
 ```
-
-
-## LBDN Overview
-
-*[To be written once LBDN has been properly added to the package.]*
