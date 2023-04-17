@@ -3,11 +3,6 @@
 The `RobustNeuralNetwork.jl` package is divided into Recurrent Equilibrium Network (REN) and Lipschitz-Bounded Deep Network (LBDN) models.
 
 
-## LBDN Overview
-
-*[To be written once LBDN has been properly added to the package.]*
-
-
 ## REN Overview
 
 The REN models are defined by two fundamental types:
@@ -133,6 +128,11 @@ for k in 1:num_training_epochs
 See the docstring of each wrapper and the examples (eg: [PDE Observer Design with REN](@ref)) for more details.
 
 
+## LBDN Overview
+
+*[To be written once LBDN has been properly added to the package.]*
+
+
 ## Walkthrough
 
 Let's step through the example from [Getting Started](@ref), which constructs and evaluates a Lipschitz-bounded REN. Start by importing packages and setting a random seed.
@@ -183,3 +183,5 @@ yout = round.(y1; digits=2)
 println(yout[1,:])
 println(yout[2,:])
 ```
+
+
