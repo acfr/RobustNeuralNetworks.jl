@@ -4,7 +4,7 @@
 
 Welcome to the documentation for `RobustNeuralNetworks.jl`! This package contains neural network models that are constructed to naturally satisfy robustness constraints, all in native Julia.
 
-## Why Robust Learning?
+## Why Robust Models?
 
 Modern machine learning relies heavily on rapidly training and evaluating neural networks in problems ranging from image classification to robotic control. Most existing neural network architectures have no robustness certificates, making them sensitive to poor data quality, adversarial attacks, and other input perturbations. The few neural network architectures proposed in recent years that offer solutions to this brittle behaviour rely on explicitly enforcing constraints during training to “smooth” the network response. These methods are computationally expensive, making them slow and difficult to scale up to complex real-world problems.
 
