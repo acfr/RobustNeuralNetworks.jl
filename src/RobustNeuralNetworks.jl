@@ -27,6 +27,13 @@ abstract type AbstractRENParams{T} end
 abstract type AbstractREN end
 
 """
+    abstract type AbstractLBDNParams{T} end
+
+Direct parameterisation for Lipschitz-bounded deep networks.
+"""
+abstract type AbstractLBDNParams{T} end
+
+"""
     abstract type AbstractLBDN end
 
 Parameterisation for Lipschitz-bounded deep networks.
@@ -56,29 +63,32 @@ include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
 
 # LBDN
-include("LBDN/lbfn.jl")
+# include("LBDN/lbfn.jl")
 
 
 ############ Exports ############
 
-# Types
-export AbstractREN
+# Abstract types
 export AbstractRENParams
+export AbstractREN
 
+export AbstractLBDNParams
+export AbstractLBDN
+
+# Basic types
 export DirectParams
 export ExplicitParams
-export REN
 
+# Parameter types
 export ContractingRENParams
 export GeneralRENParams
 export LipschitzRENParams
 export PassiveRENParams
 
+# Wrappers
+export REN
 export DiffREN
 export WrapREN
-
-export AbstractLBDN
-export LBFN
 
 # Functions
 export direct_to_explicit
