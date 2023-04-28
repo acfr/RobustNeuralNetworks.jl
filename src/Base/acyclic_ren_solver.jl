@@ -5,12 +5,14 @@ Solves z = ϕ.(W*z .+ b) for lower-triangular W, where
 ϕ is a either a ReLU or tanh activation function.
 """
 function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Matrix, b::VecOrMat)
-    z_eq = typeof(b)(zeros(size(b)))
-    for i in 1:size(b,1)
+    z_eq = similar(b)
+    Wi_zi=similar(z_eq,1,size(b,2))
+    for i::Int64 in (1:size(b,1))
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+        LinearAlgebra.mul!(Wi_zi,Wi,zi)
+        @inbounds z_eq[i:i,:] .= ϕ.(Wi_zi .+ bi)       
     end
     return z_eq
 end
@@ -26,12 +28,14 @@ function solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
 
     # Slower to not specify typeof(ϕ), which is why this is separate
     println("Using non-ReLU/tanh version of solve_tril_layer()")
-    z_eq = typeof(b)(zeros(size(b)))
-    for i in 1:size(b,1)
+    z_eq = similar(b)
+    Wi_zi=similar(z_eq,1,size(b,2))
+    for i::Int64 in (1:size(b,1))
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+        LinearAlgebra.mul!(Wi_zi,Wi,zi)
+        @inbounds z_eq[i:i,:] .= ϕ.(Wi_zi .+ bi)       
     end
     return z_eq
 end
