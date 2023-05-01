@@ -51,17 +51,21 @@ include("Base/acyclic_ren_solver.jl")
 include("Base/ren_params.jl")
 include("Base/lbdn_params.jl")
 
-# Wrappers
-include("Wrappers/ren.jl")
-include("Wrappers/diff_ren.jl")
-include("Wrappers/wrap_ren.jl")
-
 # Variations of REN
 include("ParameterTypes/utils.jl")
 include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
+
+include("ParameterTypes/dense_lbdn.jl")
+
+# Wrappers
+include("Wrappers/REN/ren.jl")
+include("Wrappers/REN/diff_ren.jl")
+include("Wrappers/REN/wrap_ren.jl")
+
+include("Wrappers/LBDN/lbdn.jl")
 
 
 ############ Exports ############
@@ -77,16 +81,23 @@ export AbstractLBDN
 export DirectRENParams
 export ExplicitRENParams
 
+export DirectLBDNParams
+export ExplicitLBDNParams
+
 # Parameter types
 export ContractingRENParams
 export GeneralRENParams
 export LipschitzRENParams
 export PassiveRENParams
 
+export DenseLBDNParams
+
 # Wrappers
 export REN
 export DiffREN
 export WrapREN
+
+export LBDN
 
 # Functions
 export direct_to_explicit
