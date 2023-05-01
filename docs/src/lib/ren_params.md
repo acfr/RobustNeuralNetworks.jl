@@ -7,8 +7,8 @@ Pages = ["ren_params.md"]
 ```@docs
 AbstractRENParams
 ContractingRENParams
-DirectParams
-ExplicitParams
+DirectRENParams
+ExplicitRENParams
 GeneralRENParams
 LipschitzRENParams
 PassiveRENParams

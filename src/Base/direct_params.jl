@@ -1,4 +1,4 @@
-mutable struct DirectParams{T}
+mutable struct DirectRENParams{T}
     ρ::Union{Vector{T},CuVector{T}}     # used in polar param
     X::Union{Matrix{T},CuMatrix{T}}
     Y1::Union{Matrix{T},CuMatrix{T}}
@@ -20,7 +20,7 @@ mutable struct DirectParams{T}
 end
 
 """
-    DirectParams{T}(nu, nx, nv; <keyword arguments>) where T
+    DirectRENParams{T}(nu, nx, nv; <keyword arguments>) where T
 
 Construct direct parameterisation for an (acyclic) recurrent equilibrium network.
 
@@ -56,7 +56,7 @@ See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for parameterisation
 
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
-function DirectParams{T}(
+function DirectRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
     init = :random,
     polar_param::Bool = true,
@@ -139,7 +139,7 @@ function DirectParams{T}(
     bx = T(bx_scale) * glorot_normal(nx; T=T, rng=rng)
     by = glorot_normal(ny; rng=rng)
 
-    return DirectParams(
+    return DirectRENParams(
         ρ ,X, 
         Y1, X3, Y3, Z3, 
         B2, C2, D12, D21, D22,
@@ -148,7 +148,7 @@ function DirectParams{T}(
 )
 end
 
-function Flux.trainable(L::DirectParams)
+function Flux.trainable(L::DirectRENParams)
 
     # Different cases for D22 free/zero
     if L.D22_free
@@ -171,12 +171,12 @@ function Flux.trainable(L::DirectParams)
     return filter(p -> length(p) !=0, ps)
 end
 
-function Flux.gpu(M::DirectParams{T}) where T
+function Flux.gpu(M::DirectRENParams{T}) where T
     # TODO: Test and complete this
     if T != Float32
         println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
     end
-    return DirectParams{T}(
+    return DirectRENParams{T}(
         gpu(M.ρ), gpu(M.X), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
         gpu(M.Z3), gpu(M.B2), gpu(M.C2), gpu(M.D12), gpu(M.D21),
         gpu(M.D22), gpu(M.bx), gpu(M.bv), gpu(M.by),
@@ -184,9 +184,9 @@ function Flux.gpu(M::DirectParams{T}) where T
     )
 end
 
-function Flux.cpu(M::DirectParams{T}) where T
+function Flux.cpu(M::DirectRENParams{T}) where T
     # TODO: Test and complete this
-    return DirectParams{T}(
+    return DirectRENParams{T}(
         cpu(M.ρ), cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
         cpu(M.Z3), cpu(M.B2), cpu(M.C2), cpu(M.D12), cpu(M.D21),
         cpu(M.D22), cpu(M.bx), cpu(M.bv), cpu(M.by),
@@ -195,13 +195,13 @@ function Flux.cpu(M::DirectParams{T}) where T
 end
 
 """
-    ==(ps1::DirectParams, ps2::DirectParams)
+    ==(ps1::DirectRENParams, ps2::DirectRENParams)
 
-Define equality for two objects of type `DirectParams`.
+Define equality for two objects of type `DirectRENParams`.
     
 Checks if all *relevant* parameters are equal. For example, if `D22` is fixed to `0` then the values of `X3, Y3, Z3` are not important and are ignored.
 """
-function ==(ps1::DirectParams, ps2::DirectParams)
+function ==(ps1::DirectRENParams, ps2::DirectRENParams)
 
     # Compare the options
     (ps1.D22_zero != ps2.D22_zero) && (return false)

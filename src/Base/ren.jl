@@ -1,5 +1,5 @@
 @doc raw"""
-    mutable struct ExplicitParams{T}
+    mutable struct ExplicitRENParams{T}
 
 Explicit REN parameter struct.
 
@@ -28,7 +28,7 @@ b_x \\ b_v \\ b_y
 
 See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for more details on explicit parameterisations of REN.
 """
-mutable struct ExplicitParams{T}
+mutable struct ExplicitRENParams{T}
     A::Matrix{T}
     B1::Matrix{T}
     B2::Matrix{T}
@@ -49,7 +49,7 @@ mutable struct REN <: AbstractREN
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitParams
+    explicit::ExplicitRENParams
     T::DataType
 end
 

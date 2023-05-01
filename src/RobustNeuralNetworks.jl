@@ -76,8 +76,8 @@ export AbstractLBDNParams
 export AbstractLBDN
 
 # Basic types
-export DirectParams
-export ExplicitParams
+export DirectRENParams
+export ExplicitRENParams
 
 # Parameter types
 export ContractingRENParams

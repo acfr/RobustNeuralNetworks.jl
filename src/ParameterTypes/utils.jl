@@ -3,13 +3,13 @@
 
 Convert direct parameterisation of RENs to explicit parameterisation.
 
-Uses the parameterisation encoded in `ps` to construct an [`ExplicitParams`](@ref) object that naturally satisfies a set of user-defined behavioural constraints.
+Uses the parameterisation encoded in `ps` to construct an [`ExplicitRENParams`](@ref) object that naturally satisfies a set of user-defined behavioural constraints.
 
 # Arguments
 
 - `ps::AbstractRENParams`: Direct parameterisation with behavioural constraints to convert to an explicit parameterisation of REN (eg: [`GeneralRENParams`](@ref)).
 
-- `return_h::Bool=false`: Whether to return the H-matrix directly (see [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)). Useful for debugging or model analysis. If `false`, function returns an object of type `ExplicitParams{T}`. 
+- `return_h::Bool=false`: Whether to return the H-matrix directly (see [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)). Useful for debugging or model analysis. If `false`, function returns an object of type `ExplicitRENParams{T}`. 
 
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
@@ -18,7 +18,7 @@ function direct_to_explicit end
 """
     hmatrix_to_explicit(ps, H, D22=zeros(T,0,0)) where T
 
-Convert direct parameterisation of REN from H matrix (Eqn. 23 of [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)) to `ExplicitParams{T}`.
+Convert direct parameterisation of REN from H matrix (Eqn. 23 of [Revay et al. (2021)](https://arxiv.org/abs/2104.05942)) to `ExplicitRENParams{T}`.
 
 # Arguments
 - `ps::AbstractRENParams`: Direct parameterisation of a REN with behavioural constraints
@@ -72,6 +72,6 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T}
     bv = ps.direct.bv
     by = ps.direct.by
     
-    return ExplicitParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
+    return ExplicitRENParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
 
 end
