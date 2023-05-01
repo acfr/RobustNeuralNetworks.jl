@@ -48,10 +48,11 @@ include("Base/utils.jl")
 include("Base/acyclic_ren_solver.jl")
 
 # Common structures
-include("Base/direct_params.jl")
-include("Base/ren.jl")
+include("Base/ren_params.jl")
+include("Base/lbdn_params.jl")
 
 # Wrappers
+include("Wrappers/ren.jl")
 include("Wrappers/diff_ren.jl")
 include("Wrappers/wrap_ren.jl")
 
@@ -61,9 +62,6 @@ include("ParameterTypes/contracting_ren.jl")
 include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
-
-# LBDN
-# include("LBDN/lbfn.jl")
 
 
 ############ Exports ############
