@@ -1,5 +1,5 @@
 mutable struct ContractingRENParams{T} <: AbstractRENParams{T}
-    nl                          # Sector-bounded nonlinearity
+    nl::Function                # Sector-bounded nonlinearity
     nu::Int
     nx::Int
     nv::Int
@@ -33,7 +33,7 @@ See also [`GeneralRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENP
 """
 function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    nl = Flux.relu, 
+    nl::Function = Flux.relu, 
     αbar::T = T(1),
     init = :random,
     polar_param::Bool = true,

@@ -1,5 +1,5 @@
 mutable struct REN <: AbstractREN
-    nl
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
