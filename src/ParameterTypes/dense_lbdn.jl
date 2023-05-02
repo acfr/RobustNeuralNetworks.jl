@@ -9,7 +9,7 @@ end
 
 # Constructor
 function DenseLBDNParams{T}(
-    nu::Int, nh::Vector{Int}, ny::Int, γ::Number;
+    nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
     nl::Function = Flux.relu, 
     initW::Function = Flux.glorot_normal,
     initb::Function = Flux.glorot_normal,
@@ -60,6 +60,3 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
     return ExplicitLBDNParams{T}(A, B, Ψ, b)
 
 end
-
-
-
