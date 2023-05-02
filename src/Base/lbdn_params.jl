@@ -49,6 +49,6 @@ function DirectLBDNParams{T}(
 
 end
 
-Flux.trainable(m::DirectLBDNParams) = (m.X, m.Y, m.d, m.b)
-
 Flux.@functor DirectLBDNParams
+
+Flux.trainable(m::DirectLBDNParams) = (m.X, m.Y, m.d, m.b)

@@ -29,7 +29,7 @@ end
 
 Explicit parameterisation for recurrent equilibrium networks.
 
-    (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
+    (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
 
 Call an  `AbstractREN` model given internal states `xt` and inputs `ut`. 
 
@@ -68,7 +68,7 @@ println(round.(y1;digits=2))
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
-function (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
+function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
 
     b = m.explicit.C1 * xt + m.explicit.D12 * ut .+ m.explicit.bv
     wt = tril_eq_layer(m.nl, m.explicit.D11, b)
