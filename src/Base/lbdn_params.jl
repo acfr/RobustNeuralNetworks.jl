@@ -1,4 +1,5 @@
 # Some documentation here...
+# TODO: Are tuples faster than vectors here?
 mutable struct ExplicitLBDNParams{T}
     A::Vector{Matrix{T}}    # A^T in the paper
     B::Vector{Matrix{T}}
@@ -6,11 +7,11 @@ mutable struct ExplicitLBDNParams{T}
     b::Vector{Vector{T}}
 end
 
-mutable struct DirectLBDNParams{T}
-    X::Vector{Matrix{T}}    # TODO: Should these be a tuple?
-    Y::Vector{Matrix{T}}    # TODO: Can probably combine X and Y
-    d::Vector{Vector{T}}
-    b::Vector{Vector{T}}
+mutable struct DirectLBDNParams{T, N, M}
+    X::NTuple{N, Matrix{T}}
+    Y::NTuple{N, Matrix{T}}    # TODO: Can probably combine X and Y
+    d::NTuple{N, Vector{T}}
+    b::NTuple{M, Vector{T}}
 end
 
 # TODO: Should add compatibility for layer-wise options
@@ -45,10 +46,9 @@ function DirectLBDNParams{T}(
         (k<L+1) && (d[k] = initW(rng, n[k+1]))
     end
 
-    return DirectLBDNParams{T}(X, Y, d, b)
+    # TODO: Nicer way of creating tuples here would be nice
+    return DirectLBDNParams{T,L+1,L}(tuple(X...), tuple(Y...), tuple(d...), tuple(b...))
 
 end
-
-Flux.@functor DirectLBDNParams
 
 Flux.trainable(m::DirectLBDNParams) = (m.X, m.Y, m.d, m.b)

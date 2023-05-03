@@ -1,11 +1,13 @@
 # TODO: All of this is outdated. Update it with the parameterisation from
 # TODO: Ray's most recent LBDN paper (https://arxiv.org/abs/2301.11526)
 
-mutable struct LBFN{T} <: AbstractLBDN
-    As::Tuple
-    Bs::Tuple
-    bs::Tuple
-    ds::Tuple
+using LinearAlgebra
+
+mutable struct LBFN{T, N, M}
+    As::NTuple{N, Matrix{T}}
+    Bs::NTuple{N, Matrix{T}}
+    bs::NTuple{N, Vector{T}}
+    ds::NTuple{M, Vector{T}}
     γ::T
     nl::Union{typeof(relu), typeof(tanh)}
 end
@@ -46,11 +48,8 @@ function LBFN{T}(
     end
 
     # Return params in tuple (immutable, nicer with Flux)
-    return LBFN{T}(tuple(As...), tuple(Bs...), tuple(bs...), tuple(ds...), γ, nl)
+    return LBFN{T,L-1,L-2}(tuple(As...), tuple(Bs...), tuple(bs...), tuple(ds...), γ, nl)
 end
-
-# Not exactly sure what this does...?
-Flux.@functor LBFN
 
 Flux.trainable(m::LBFN) = (m.As, m.Bs, m.bs, m.ds)
 
@@ -59,7 +58,7 @@ Flux.trainable(m::LBFN) = (m.As, m.Bs, m.bs, m.ds)
 
 Evaluate an LBFN given some input u.
 """
-function (m::LBFN)(u::Union{T,AbstractVecOrMat{T}}) where T
+function (m::LBFN)(u::AbstractVecOrMat{T}) where T
 
     # Set up
     L = length(m.As)

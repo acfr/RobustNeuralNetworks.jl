@@ -5,21 +5,20 @@ mutable struct LBDN <: AbstractLBDN
     ny::Int
     sqrt_γ::Number                       # TODO: More explicit type setting here
     explicit::ExplicitLBDNParams
-    T::DataType
 end
 
 # Constructor
 function LBDN(ps::AbstractLBDNParams{T}) where T
     sqrt_γ = T(sqrt(ps.γ))
     explicit = direct_to_explicit(ps)
-    return LBDN(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, explicit, T)
+    return LBDN(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, explicit)
 end
 
 # Call the model
 # TODO: Improve efficiency
-function (m::AbstractLBDN)(u::AbstractVecOrMat)
+function (m::AbstractLBDN)(u::AbstractVecOrMat{T}) where T
 
-    r2 = m.T(√2)
+    r2 = T(√2)
     h = m.sqrt_γ * u
 
     for k in 1:m.L
