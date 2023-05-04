@@ -43,10 +43,11 @@ function evalcb(α)
     println()
 end
 
+# TODO: Potential bug????
 
 # Set up training loop
-num_epochs = 5
-lrs = [1e-3] #, 1e-4, 1e-5]
+num_epochs = 50
+lrs = [1e-3, 1e-4, 1e-5]
 for k in eachindex(lrs)
     opt = NADAM(lrs[k])
     for i in 1:num_epochs

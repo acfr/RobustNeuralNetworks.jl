@@ -32,7 +32,6 @@ Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
 # Flux.cpu() ...
 # Flux.gpu() ...
 
-# TODO: Improve speed here
 function cayley(X, Y)
     Z = X - X' + Y'*Y
     IZ = (I + Z)
@@ -49,6 +48,7 @@ _get_Ψ(d_k) = exp.(d_k)
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
     # Easy ones
+    L = length(ps.nh)
     b = ps.direct.b
     Ψ = _get_Ψ.(ps.direct.d)
 
@@ -57,6 +57,6 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
     A = _get_A.(AB)
     B = _get_B.(AB)
 
-    return ExplicitLBDNParams{T}(A, B, Ψ, b)
+    return ExplicitLBDNParams{T,L+1,L}(A, B, Ψ, b)
 
 end

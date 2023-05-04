@@ -1,17 +1,17 @@
 # Some documentation here...
 # TODO: Are tuples faster than vectors here?
-mutable struct ExplicitLBDNParams{T}
-    A::Vector{Matrix{T}}    # A^T in the paper
-    B::Vector{Matrix{T}}
-    Ψ::Vector{Vector{T}}    # Just the diagonal component of Ψ from the paper
-    b::Vector{Vector{T}}
+mutable struct ExplicitLBDNParams{T, N, M}
+    A::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
+    B::NTuple{N, AbstractMatrix{T}}
+    Ψ::NTuple{M, AbstractVector{T}}    # Just the diagonal component of Ψ from the paper
+    b::NTuple{N, AbstractVector{T}}
 end
 
 mutable struct DirectLBDNParams{T, N, M}
-    X::NTuple{N, Matrix{T}}
-    Y::NTuple{N, Matrix{T}}    # TODO: Can probably combine X and Y
-    d::NTuple{N, Vector{T}}
-    b::NTuple{M, Vector{T}}
+    X::NTuple{N, AbstractMatrix{T}}
+    Y::NTuple{N, AbstractMatrix{T}}    # TODO: Can probably combine X and Y
+    d::NTuple{M, AbstractVector{T}}
+    b::NTuple{N, AbstractVector{T}}
 end
 
 # TODO: Should add compatibility for layer-wise options
@@ -46,7 +46,7 @@ function DirectLBDNParams{T}(
         (k<L+1) && (d[k] = initW(rng, n[k+1]))
     end
 
-    # TODO: Nicer way of creating tuples here would be nice
+    # TODO: Nicer way of creating tuples here would be good
     return DirectLBDNParams{T,L+1,L}(tuple(X...), tuple(Y...), tuple(d...), tuple(b...))
 
 end
