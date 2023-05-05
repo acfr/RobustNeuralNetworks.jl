@@ -12,18 +12,19 @@ Random.seed!(0)
 
 # Set up model
 nu, ny   = 1, 1
-nh       = [10,5,5,15]
+# nh       = [10,5,5,15]
+nh       = fill(90,8)
 γ        = 1
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
 ps       = Flux.params(model_ps)
 
 # Function to estimate
-f(x) = sin(x)+(1/N)*sin.(N*x)
+f(x) = sin(x)+(1/N)*sin(N*x)
 
 # Training data
-N  = 10
-dx = 0.05
-xs = -π:dx:π
+N  = 5
+dx = 0.12
+xs = 0:dx:2π
 ys = f.(xs)
 T  = length(xs)
 data = zip(xs,ys)
@@ -43,14 +44,15 @@ function evalcb(α)
     println()
 end
 
-# TODO: Potential bug????
 
 # Set up training loop
-num_epochs = 50
-lrs = [1e-3, 1e-4, 1e-5]
+num_epochs = 100
+lrs = [2e-3, 8e-4, 5e-4]#, 1e-4, 5e-5]
 for k in eachindex(lrs)
     opt = NADAM(lrs[k])
     for i in 1:num_epochs
+
+        # Flux.train!(loss, ps, data, opt)
 
         for d in data
             J, back = pullback(() -> loss(d[1],d[2]), ps)

@@ -2,31 +2,37 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate("../../")
 
+using CairoMakie
 using Flux
 using Random
-using Revise
 using RobustNeuralNetworks
-using CairoMakie
 using Zygote: pullback
-
-includet("./lbfn_OLD.jl")
 
 Random.seed!(0)
 
 # Set up model
-nu, ny = 1, 1
-nh     = [10,5,5,15]
-# nh       = fill(90,8)
-model  = LBFN{Float64}(nu, nh, ny)
-ps     = Flux.params(model)
+nu, ny   = 1, 1
+nh       = [10,5,5,15]
+γ        = 1
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
+model    = DiffLBDN(model_ps)
+ps       = Flux.params(model)
+
+p1 = deepcopy(ps)
+
+u1 = rand(nu,10)
+y1 = model(u1)
+
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
-
+# f(x) = ((x > -1 && x < 0) || x > 1) ? 1 : 0
+     
 # Training data
 N  = 5
-dx = 0.05
+dx = 0.1
 xs = 0:dx:2π
+# xs = -2:dx:2
 ys = f.(xs)
 T  = length(xs)
 data = zip(xs,ys)
@@ -43,13 +49,11 @@ function evalcb(α)
 end
 
 # Set up training loop
-num_epochs = 50
-lrs = [1e-3, 1e-4, 1e-5]
+num_epochs = 200
+lrs = [1e-3, 1e-4, 5e-5]
 for k in eachindex(lrs)
-    opt = NADAM(lrs[k])
+    opt = ADAM(lrs[k])
     for i in 1:num_epochs
-
-        # Flux.train!(loss, ps, data, opt)
 
         for d in data
             J, back = pullback(() -> loss(d[1],d[2]), ps)
@@ -57,7 +61,8 @@ for k in eachindex(lrs)
             Flux.update!(opt, ps, ∇J)   
         end
 
-        (i % 2 == 0) && evalcb(lrs[k])
+        # Flux.train!(loss, ps, data, opt)
+        (i % 10 == 0) && evalcb(lrs[k])
     end
 end
 
@@ -74,3 +79,6 @@ display(f1)
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = maximum(abs.(diff(model(xs'),dims=2)))/dx
 println("Empirical lower Lipschitz bound: ", round(Empirical_Lipschitz; digits=2))
+
+p2 = deepcopy(ps)
+println(p1 .== p2)

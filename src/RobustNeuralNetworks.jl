@@ -7,7 +7,7 @@ using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
 using Random
-using Zygote: pullback
+using Zygote: pullback, Buffer
 using Zygote: @adjoint
 
 import Base.:(==)
@@ -66,6 +66,7 @@ include("Wrappers/REN/diff_ren.jl")
 include("Wrappers/REN/wrap_ren.jl")
 
 include("Wrappers/LBDN/lbdn.jl")
+include("Wrappers/LBDN/diff_lbdn.jl")
 
 
 ############ Exports ############
@@ -98,6 +99,7 @@ export DiffREN
 export WrapREN
 
 export LBDN
+export DiffLBDN
 
 # Functions
 export direct_to_explicit
