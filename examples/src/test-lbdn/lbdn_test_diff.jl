@@ -48,20 +48,13 @@ function evalcb(α)
     println()
 end
 
-# Set up training loop
+# Training loop
 num_epochs = 200
 lrs = [1e-3, 1e-4, 5e-5]
 for k in eachindex(lrs)
     opt = ADAM(lrs[k])
     for i in 1:num_epochs
-
-        for d in data
-            J, back = pullback(() -> loss(d[1],d[2]), ps)
-            ∇J = back(one(J)) 
-            Flux.update!(opt, ps, ∇J)   
-        end
-
-        # Flux.train!(loss, ps, data, opt)
+        Flux.train!(loss, ps, data, opt)
         (i % 10 == 0) && evalcb(lrs[k])
     end
 end

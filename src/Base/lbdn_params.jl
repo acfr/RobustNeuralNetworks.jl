@@ -1,14 +1,14 @@
 # Some documentation here...
-mutable struct ExplicitLBDNParams{T, N, M}
-    A_T::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
-    B  ::NTuple{N, AbstractMatrix{T}}
-    Ψd ::NTuple{M, AbstractVector{T}}    # Just the diagonal component of Ψ from the paper
-    b  ::NTuple{N, AbstractVector{T}}
+mutable struct ExplicitLBDNParams{T}
+    A_T::Vector{AbstractMatrix{T}}    # A^T in the paper
+    B  ::Vector{AbstractMatrix{T}}
+    Ψd ::Vector{AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
+    b  ::Vector{AbstractVector{T}}
 end
 
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
-    α ::NTuple{N, AbstractVector{T}}                    # Polar parameterisation
+    α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
 end
@@ -26,7 +26,7 @@ function DirectLBDNParams{T}(
 
     XY = fill(zeros(T,0,0), L+1)
     b  = fill(zeros(T,0), L+1)
-    α  = fill(zeros(T,0), L+1)
+    α  = fill(zeros(T,0), L+1) # TODO: Does this need to be a vector for training?
     d  = fill(zeros(T,0), L)
 
     for k in 1:L+1

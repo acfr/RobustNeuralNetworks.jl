@@ -25,20 +25,16 @@ Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
-    # Easy ones
-    L = length(ps.nh)
-    b = _get_b.(ps.direct.b)
-    Ψd = _get_Ψ.(ps.direct.d)
-
-    # Normalise weights with polar param 
+    # TODO: Normalise weights with polar param first?
     # XY = ps.direct.α .* ps.direct.XY ./ norm.(ps.direct.XY)
 
-    # Cayley for A and B
-    AB = cayley.(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
-    B = _get_B.(AB)
-    A_T = _get_A.(AB)
+    L = length(ps.nh)
 
-    return ExplicitLBDNParams{T,L+1,L}(A_T, B, Ψd, b)
+    b = get_b(ps.direct.b, L+1)
+    Ψd = get_Ψ(ps.direct.d,L)
+    A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny), L+1)
+
+    return ExplicitLBDNParams{T}(A_T, B, Ψd, b)
 
 end
 
@@ -59,10 +55,44 @@ function cayley(XY, α, n)
 
 end
 
-_get_b(b_k) = b_k
-_get_Ψ(d_k) = exp.(d_k)
-_get_A(AB_k) = AB_k[1]
-_get_B(AB_k) = AB_k[2]'
+# Vector operations
+# TODO: Can I speed these up? See: https://discourse.julialang.org/t/how-to-use-initialize-zygote-buffer/87653
+function get_b(b::NTuple{N, AbstractVector{T}}) where {T, N}
+
+    buf = Buffer([zeros(T,0)], N)
+    for k in 1:N
+        buf[k] = b[k]
+    end
+    return copy(buf)
+
+end
+
+function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
+
+    buf = Buffer([zeros(T,0)], N)
+    for k in 1:N
+        buf[k] = exp.(d[k])
+    end
+    return copy(buf)
+
+end
+
+function get_AB(
+    XY::NTuple{N, AbstractMatrix{T}}, 
+    α ::NTuple{N, AbstractVector{T}},
+    n ::NTuple{N, Int}
+) where {T, N}
+
+    buf_A = Buffer([zeros(T,0,0)], N)
+    buf_B = Buffer([zeros(T,0,0)], N)
+    for k in 1:N
+        AB_k = cayley(XY[k], α[k], n[k])
+        buf_A[k] = AB_k[1]
+        buf_B[k] = AB_k[2]'
+    end
+    return copy(buf_A), copy(buf_B)
+    
+end
 
 
 # TODO: Add GPU compatibility
