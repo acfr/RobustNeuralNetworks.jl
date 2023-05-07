@@ -6,7 +6,6 @@ using CairoMakie
 using Flux
 using Random
 using RobustNeuralNetworks
-using Zygote: pullback
 
 Random.seed!(0)
 
@@ -19,10 +18,6 @@ model    = DiffLBDN(model_ps)
 ps       = Flux.params(model)
 
 p1 = deepcopy(ps)
-
-u1 = rand(nu,10)
-y1 = model(u1)
-
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
@@ -49,25 +44,25 @@ function evalcb(α)
 end
 
 # Training loop
-num_epochs = 200
-lrs = [1e-3, 1e-4, 5e-5]
+num_epochs = [400, 200]
+lrs = [2e-4, 5e-5]
 for k in eachindex(lrs)
     opt = ADAM(lrs[k])
-    for i in 1:num_epochs
+    for i in 1:num_epochs[k]
         Flux.train!(loss, ps, data, opt)
         (i % 10 == 0) && evalcb(lrs[k])
     end
 end
 
-# Create a figure
-f1 = Figure()
-ax = Axis(f1[1,1], xlabel="x", ylabel="y")
+# # Create a figure
+# f1 = Figure()
+# ax = Axis(f1[1,1], xlabel="x", ylabel="y")
 
-ŷ = map(x -> model([x])[1], xs)
-lines!(xs, ys, label = "Data")
-lines!(xs, ŷ, label = "LBDN")
-axislegend(ax)
-display(f1)
+# ŷ = map(x -> model([x])[1], xs)
+# lines!(xs, ys, label = "Data")
+# lines!(xs, ŷ, label = "LBDN")
+# axislegend(ax)
+# display(f1)
 
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = maximum(abs.(diff(model(xs'),dims=2)))/dx

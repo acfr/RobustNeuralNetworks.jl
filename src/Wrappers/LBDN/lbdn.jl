@@ -18,12 +18,12 @@ end
 # TODO: Improve efficiency
 function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams) where T
 
-    r2 = m.T(√2)
+    sqrt2 = m.T(√2)
     h = m.sqrt_γ * u
 
     for k in 1:m.L
-        h = r2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
-            r2 ./explicit.Ψd[k] .* explicit.B[k] * h .+ explicit.b[k]
+        h = sqrt2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
+            sqrt2 ./explicit.Ψd[k] .* explicit.B[k] * h .+ explicit.b[k]
         )
     end
 

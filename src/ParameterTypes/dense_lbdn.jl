@@ -28,11 +28,9 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
     # TODO: Normalise weights with polar param first?
     # XY = ps.direct.α .* ps.direct.XY ./ norm.(ps.direct.XY)
 
-    L = length(ps.nh)
-
-    b = get_b(ps.direct.b, L+1)
-    Ψd = get_Ψ(ps.direct.d,L)
-    A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny), L+1)
+    b = get_b(ps.direct.b)
+    Ψd = get_Ψ(ps.direct.d)
+    A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
 
     return ExplicitLBDNParams{T}(A_T, B, Ψd, b)
 

@@ -5,6 +5,7 @@ mutable struct ExplicitLBDNParams{T}
     Ψd ::Vector{AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
     b  ::Vector{AbstractVector{T}}
 end
+# TODO: Is converting to a tuple then looping over a tuple faster?
 
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
@@ -26,7 +27,7 @@ function DirectLBDNParams{T}(
 
     XY = fill(zeros(T,0,0), L+1)
     b  = fill(zeros(T,0), L+1)
-    α  = fill(zeros(T,0), L+1) # TODO: Does this need to be a vector for training?
+    α  = fill(zeros(T,0), L+1)
     d  = fill(zeros(T,0), L)
 
     for k in 1:L+1
@@ -47,4 +48,4 @@ Flux.trainable(m::DirectLBDNParams) = (m.XY, m.α, m.d, m.b)
 # Eg:
 #   - initialisation functions
 #   - Activation functions
-#   - Whether to include bias or not (this should be added!)
+#   - Whether to include bias or not

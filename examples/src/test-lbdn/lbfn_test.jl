@@ -16,7 +16,6 @@ Random.seed!(0)
 # Set up model
 nu, ny = 1, 1
 nh     = [10,5,5,15]
-# nh       = fill(90,8)
 model  = LBFN{Float64}(nu, nh, ny)
 ps     = Flux.params(model)
 
@@ -25,7 +24,7 @@ f(x) = sin(x)+(1/N)*sin(N*x)
 
 # Training data
 N  = 5
-dx = 0.05
+dx = 0.1
 xs = 0:dx:2π
 ys = f.(xs)
 T  = length(xs)
@@ -42,22 +41,14 @@ function evalcb(α)
     println()
 end
 
-# Set up training loop
-num_epochs = 50
-lrs = [1e-3, 1e-4, 1e-5]
+# Training loop
+num_epochs = [400, 200]
+lrs = [2e-4, 5e-5]
 for k in eachindex(lrs)
-    opt = NADAM(lrs[k])
-    for i in 1:num_epochs
-
-        # Flux.train!(loss, ps, data, opt)
-
-        for d in data
-            J, back = pullback(() -> loss(d[1],d[2]), ps)
-            ∇J = back(one(J)) 
-            Flux.update!(opt, ps, ∇J)   
-        end
-
-        (i % 2 == 0) && evalcb(lrs[k])
+    opt = ADAM(lrs[k])
+    for i in 1:num_epochs[k]
+        Flux.train!(loss, ps, data, opt)
+        (i % 10 == 0) && evalcb(lrs[k])
     end
 end
 
