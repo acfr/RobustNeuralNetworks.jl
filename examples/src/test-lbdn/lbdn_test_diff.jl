@@ -54,15 +54,15 @@ for k in eachindex(lrs)
     end
 end
 
-# # Create a figure
-# f1 = Figure()
-# ax = Axis(f1[1,1], xlabel="x", ylabel="y")
+# Create a figure
+f1 = Figure()
+ax = Axis(f1[1,1], xlabel="x", ylabel="y")
 
-# ŷ = map(x -> model([x])[1], xs)
-# lines!(xs, ys, label = "Data")
-# lines!(xs, ŷ, label = "LBDN")
-# axislegend(ax)
-# display(f1)
+ŷ = map(x -> model([x])[1], xs)
+lines!(xs, ys, label = "Data")
+lines!(xs, ŷ, label = "LBDN")
+axislegend(ax)
+display(f1)
 
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = maximum(abs.(diff(model(xs'),dims=2)))/dx

@@ -14,8 +14,6 @@ mutable struct DirectLBDNParams{T, N, M}
     b ::NTuple{N, AbstractVector{T}}
 end
 
-# TODO: Faster to use static arrays or NTuples with flux?
-
 # Constructor for direct params
 function DirectLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int;

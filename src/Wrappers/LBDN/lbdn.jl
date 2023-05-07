@@ -15,7 +15,6 @@ function LBDN(ps::AbstractLBDNParams{T}) where T
 end
 
 # Call the model
-# TODO: Improve efficiency
 function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     sqrt2 = T(√2)
@@ -23,7 +22,7 @@ function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{
 
     for k in 1:M
         h = sqrt2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
-            sqrt2 ./explicit.Ψd[k] .* explicit.B[k] * h .+ explicit.b[k]
+            sqrt2 ./explicit.Ψd[k] .* (explicit.B[k] * h) .+ explicit.b[k]
         )
     end
 

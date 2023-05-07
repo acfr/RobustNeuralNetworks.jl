@@ -25,9 +25,6 @@ Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
-    # TODO: Normalise weights with polar param first?
-    # XY = ps.direct.α .* ps.direct.XY ./ norm.(ps.direct.XY)
-
     b = get_b(ps.direct.b)
     Ψd = get_Ψ(ps.direct.d)
     A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
@@ -41,7 +38,7 @@ end
 # TODO: Improve speed
 function cayley(XY, α, n)
 
-    XY = α[1] * XY ./ norm(XY)
+    XY = α[1] .* XY ./ norm(XY)
 
     X = XY[1:n, :]
     Y = XY[(n+1):end, :]
