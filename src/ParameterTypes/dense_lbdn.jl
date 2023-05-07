@@ -35,15 +35,15 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
 end
 
-# TODO: Improve speed
-function cayley(XY, α, n)
+function norm_cayley(XY, α, n)
 
-    XY = α[1] .* XY ./ norm(XY)
+    # Normalise XY with polar param and extract
+    XY = (α[1] / norm(XY)) * XY
+    X  = XY[1:n, :]
+    Y  = XY[(n+1):end, :]
 
-    X = XY[1:n, :]
-    Y = XY[(n+1):end, :]
-
-    Z = X - X' + Y'*Y
+    # Cayley transform
+    Z = (X - X') + (Y'*Y)
     IZ = (I + Z)
     A_T = IZ \ (I - Z)
     B_T = -2Y / IZ
@@ -52,8 +52,6 @@ function cayley(XY, α, n)
 
 end
 
-# Vector operations
-# TODO: Can I speed these up? See: https://discourse.julialang.org/t/how-to-use-initialize-zygote-buffer/87653
 function get_b(b::NTuple{N, AbstractVector{T}}) where {T, N}
 
     buf = Buffer([zeros(T,0)], N)
@@ -83,14 +81,13 @@ function get_AB(
     buf_A = Buffer([zeros(T,0,0)], N)
     buf_B = Buffer([zeros(T,0,0)], N)
     for k in 1:N
-        AB_k = cayley(XY[k], α[k], n[k])
+        AB_k = norm_cayley(XY[k], α[k], n[k])
         buf_A[k] = AB_k[1]
         buf_B[k] = AB_k[2]'
     end
     return copy(buf_A), copy(buf_B)
     
 end
-
 
 # TODO: Add GPU compatibility
 # Flux.cpu() ...

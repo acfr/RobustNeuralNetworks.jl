@@ -15,6 +15,7 @@ function LBDN(ps::AbstractLBDNParams{T}) where T
 end
 
 # Call the model
+# TODO: Backpropagation might be faster with Flux.Chain object? For loop usually slow with Zygote autograd
 function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     sqrt2 = T(√2)
