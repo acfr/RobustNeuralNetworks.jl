@@ -1,24 +1,24 @@
-mutable struct LBDN <: AbstractLBDN
+mutable struct LBDN{T} <: AbstractLBDN{T}
     nl::Function
     L ::Int                         # Number of hidden layers
     nu::Int
     ny::Int
-    sqrt_γ::Number                  # TODO: More explicit type setting here
-    explicit::ExplicitLBDNParams
+    sqrt_γ::T
+    explicit::ExplicitLBDNParams{T}
 end
 
 # Constructor
 function LBDN(ps::AbstractLBDNParams{T}) where T
     sqrt_γ = T(sqrt(ps.γ))
     explicit = direct_to_explicit(ps)
-    return LBDN(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, explicit)
+    return LBDN{T}(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, explicit)
 end
 
 # Call the model
 # TODO: Improve efficiency
-function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams) where T
+function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T}) where T
 
-    sqrt2 = m.T(√2)
+    sqrt2 = T(√2)
     h = m.sqrt_γ * u
 
     for k in 1:m.L

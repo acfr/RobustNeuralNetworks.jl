@@ -34,11 +34,11 @@ Direct parameterisation for Lipschitz-bounded deep networks.
 abstract type AbstractLBDNParams{T} end
 
 """
-    abstract type AbstractLBDN end
+    abstract type AbstractLBDN{T} end
 
 Parameterisation for Lipschitz-bounded deep networks.
 """
-abstract type AbstractLBDN end
+abstract type AbstractLBDN{T} end
 
 
 ############ Includes ############
