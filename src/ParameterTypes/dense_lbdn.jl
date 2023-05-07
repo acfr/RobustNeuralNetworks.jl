@@ -32,7 +32,9 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
     Ψd = get_Ψ(ps.direct.d)
     A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
 
-    return ExplicitLBDNParams{T}(A_T, B, Ψd, b)
+    # Faster to backpropagate with tuples than vectors
+    L = length(ps.nh)
+    return ExplicitLBDNParams{T,L+1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), tuple(b...))
 
 end
 

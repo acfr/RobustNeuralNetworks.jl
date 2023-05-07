@@ -1,11 +1,11 @@
 # Some documentation here...
-mutable struct ExplicitLBDNParams{T}
-    A_T::Vector{AbstractMatrix{T}}    # A^T in the paper
-    B  ::Vector{AbstractMatrix{T}}
-    Ψd ::Vector{AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
-    b  ::Vector{AbstractVector{T}}
+# Note: Faster to work with tuples than vec of vecs
+mutable struct ExplicitLBDNParams{T, N, M}
+    A_T::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
+    B  ::NTuple{N, AbstractMatrix{T}}
+    Ψd ::NTuple{M, AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
+    b  ::NTuple{N, AbstractVector{T}}
 end
-# TODO: Is converting to a tuple then looping over a tuple faster?
 
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
@@ -13,6 +13,8 @@ mutable struct DirectLBDNParams{T, N, M}
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
 end
+
+# TODO: Faster to use static arrays or NTuples with flux?
 
 # Constructor for direct params
 function DirectLBDNParams{T}(

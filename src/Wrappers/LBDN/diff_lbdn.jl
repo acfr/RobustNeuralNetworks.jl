@@ -1,16 +1,16 @@
 mutable struct DiffLBDN{T} <: AbstractLBDN{T}
     nl::Function
-    L ::Int                         # Number of hidden layers
     nu::Int
+    nh::Vector{Int}
     ny::Int
-    sqrt_γ::T                  # TODO: More explicit type setting here
+    sqrt_γ::T
     params::AbstractLBDNParams{T}
 end
 
 # Constructor
 function DiffLBDN(ps::AbstractLBDNParams{T}) where T
     sqrt_γ = T(sqrt(ps.γ))
-    return DiffLBDN{T}(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, ps)
+    return DiffLBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, ps)
 end
 
 # Call the model

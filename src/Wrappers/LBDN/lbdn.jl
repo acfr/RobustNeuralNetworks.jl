@@ -1,7 +1,7 @@
 mutable struct LBDN{T} <: AbstractLBDN{T}
     nl::Function
-    L ::Int                         # Number of hidden layers
     nu::Int
+    nh::Vector{Int}
     ny::Int
     sqrt_γ::T
     explicit::ExplicitLBDNParams{T}
@@ -11,23 +11,23 @@ end
 function LBDN(ps::AbstractLBDNParams{T}) where T
     sqrt_γ = T(sqrt(ps.γ))
     explicit = direct_to_explicit(ps)
-    return LBDN{T}(ps.nl, length(ps.nh), ps.nu, ps.ny, sqrt_γ, explicit)
+    return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, explicit)
 end
 
 # Call the model
 # TODO: Improve efficiency
-function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T}) where T
+function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     sqrt2 = T(√2)
     h = m.sqrt_γ * u
 
-    for k in 1:m.L
+    for k in 1:M
         h = sqrt2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
             sqrt2 ./explicit.Ψd[k] .* explicit.B[k] * h .+ explicit.b[k]
         )
     end
 
-    return m.sqrt_γ * explicit.B[m.L+1] * h .+ explicit.b[m.L+1]
+    return m.sqrt_γ * explicit.B[N] * h .+ explicit.b[N]
 end
 
 function (m::AbstractLBDN)(u::AbstractVecOrMat) 
