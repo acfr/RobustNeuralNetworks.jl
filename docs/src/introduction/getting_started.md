@@ -2,11 +2,10 @@
 
 ## Installation
 
-`RobustNeuralNetworks.jl` is written in Julia and can be installed with the in-built package manager. It is not currently a registered package and must be installed directly from our GitHub repository.
+`RobustNeuralNetworks.jl` is written in Julia and can be installed with the in-built package manager. To add the package, type the following into the REPL.
 
-To add the package, type the following into the REPL.
 ```
-] add git@github.com:acfr/RobustNeuralNetworks.jl.git
+] add RobustNeuralNetworks
 ```
 
 ## Basic Usage

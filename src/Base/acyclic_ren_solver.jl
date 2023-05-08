@@ -10,7 +10,8 @@ function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Ma
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+        LinearAlgebra.mul!(Wi_zi,Wi,zi)
+        @inbounds z_eq[i:i,:] .= ϕ.(Wi_zi .+ bi)       
     end
     return z_eq
 end
@@ -30,7 +31,8 @@ function solve_tril_layer(ϕ::Function, W::Matrix, b::VecOrMat)
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+        LinearAlgebra.mul!(Wi_zi,Wi,zi)
+        @inbounds z_eq[i:i,:] .= ϕ.(Wi_zi .+ bi)       
     end
     return z_eq
 end
