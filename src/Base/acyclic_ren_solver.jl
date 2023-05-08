@@ -6,7 +6,7 @@ Solves z = ϕ.(W*z .+ b) for lower-triangular W, where
 """
 function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Matrix, b::VecOrMat)
     z_eq = similar(b)
-    for i in (1:size(b,1))
+    for i in axes(b,1)
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
@@ -26,7 +26,7 @@ function solve_tril_layer(ϕ::Function, W::Matrix, b::VecOrMat)
     # Slower to not specify typeof(ϕ), which is why this is separate
     println("Using non-ReLU/tanh version of solve_tril_layer()")
     z_eq = similar(b)
-    for i::Int64 in (1:size(b,1))
+    for i in axes(b,1)
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
