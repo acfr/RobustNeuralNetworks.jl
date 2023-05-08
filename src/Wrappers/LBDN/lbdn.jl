@@ -18,16 +18,22 @@ end
 # Note: backpropagation is similarly fast with for loops as with Flux chains (tested)
 function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
+    # Extract explicit params
+    σ   = m.nl
+    A_T = explicit.A_T
+    B   = explicit.B
+    Ψd  = explicit.Ψd
+    b   = explicit.b
+
     sqrt2 = T(√2)
-    h = m.sqrt_γ * u
+    sqrtγ = m.sqrt_γ
 
+    # Evaluate LBDN
+    h = sqrtγ * u
     for k in 1:M
-        h = sqrt2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
-            sqrt2 ./explicit.Ψd[k] .* (explicit.B[k] * h) .+ explicit.b[k]
-        )
+        h = (sqrt2 * Ψd[k]) .* A_T[k] * σ.(sqrt2 ./ Ψd[k] .* (B[k] * h) .+ b[k])
     end
-
-    return m.sqrt_γ * explicit.B[N] * h .+ explicit.b[N]
+    return sqrtγ * B[N] * h .+ b[N]
 end
 
 function (m::AbstractLBDN)(u::AbstractVecOrMat) 

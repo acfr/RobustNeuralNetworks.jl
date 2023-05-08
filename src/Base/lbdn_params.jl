@@ -7,6 +7,7 @@ mutable struct ExplicitLBDNParams{T, N, M}
     b  ::NTuple{N, AbstractVector{T}}
 end
 
+# Need docs
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation

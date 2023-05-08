@@ -12,12 +12,10 @@ Random.seed!(0)
 # Set up model
 nu, ny   = 1, 1
 nh       = [10,5,5,15]
-γ        = 1
+γ        = 1.0
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
 model    = DiffLBDN(model_ps)
 ps       = Flux.params(model)
-
-p1 = deepcopy(ps)
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
@@ -67,6 +65,3 @@ display(f1)
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = maximum(abs.(diff(model(xs'),dims=2)))/dx
 println("Empirical lower Lipschitz bound: ", round(Empirical_Lipschitz; digits=2))
-
-p2 = deepcopy(ps)
-println(p1 .== p2)

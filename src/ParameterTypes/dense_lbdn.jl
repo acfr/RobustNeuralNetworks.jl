@@ -25,13 +25,23 @@ Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
-    b = get_b(ps.direct.b)
-    Ψd = get_Ψ(ps.direct.d)
-    A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
+    # Direct parameterisation
+    nh = ps.nh
+    ny = ps.ny
+    L  = length(nh)
+    L1 = L + 1
+
+    XY = ps.direct.XY
+    α  = ps.direct.α
+    d  = ps.direct.d
+    b  = ps.direct.b
+
+    # Build explicit model
+    Ψd     = get_Ψ(d)
+    A_T, B = get_AB(XY, α, vcat(nh, ny))
 
     # Faster to backpropagate with tuples than vectors
-    L = length(ps.nh)
-    return ExplicitLBDNParams{T,L+1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), tuple(b...))
+    return ExplicitLBDNParams{T,L1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), b)
 
 end
 
@@ -52,16 +62,6 @@ function norm_cayley(XY, α, n)
 
 end
 
-function get_b(b::NTuple{N, AbstractVector{T}}) where {T, N}
-
-    buf = Buffer([zeros(T,0)], N)
-    for k in 1:N
-        buf[k] = b[k]
-    end
-    return copy(buf)
-
-end
-
 function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
 
     buf = Buffer([zeros(T,0)], N)
@@ -75,7 +75,7 @@ end
 function get_AB(
     XY::NTuple{N, AbstractMatrix{T}}, 
     α ::NTuple{N, AbstractVector{T}},
-    n ::NTuple{N, Int}
+    n ::Vector{Int}
 ) where {T, N}
 
     buf_A = Buffer([zeros(T,0,0)], N)
