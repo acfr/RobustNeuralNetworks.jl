@@ -83,6 +83,7 @@ export DirectRENParams
 export ExplicitRENParams
 
 export DirectLBDNParams
+export ExplicitLBDNParams
 
 # Parameter types
 export ContractingRENParams
@@ -91,9 +92,6 @@ export LipschitzRENParams
 export PassiveRENParams
 
 export DenseLBDNParams
-export Scale
-export DenseLBDNLayer
-export DenseLBDNOutput
 
 # Wrappers
 export REN
