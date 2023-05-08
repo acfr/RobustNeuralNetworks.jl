@@ -36,12 +36,13 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     Y1 = ps.direct.Y1
     
     # Extract sections of H matrix 
-    H11 = @view H[1:nx, 1:nx]
-    H22 = @view H[nx + 1:nx + nv, nx + 1:nx + nv]
-    H33 = @view H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
-    H21 = @view H[nx + 1:nx + nv, 1:nx]
-    H31 = @view H[nx + nv + 1:2nx + nv, 1:nx]
-    H32 = @view H[nx + nv + 1:2nx + nv, nx + 1:nx + nv]
+    # Using @view is faster but not supported by CUDA
+    H11 = H[1:nx, 1:nx]
+    H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
+    H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
+    H21 = H[nx + 1:nx + nv, 1:nx]
+    H31 = H[nx + nv + 1:2nx + nv, 1:nx]
+    H32 = H[nx + nv + 1:2nx + nv, nx + 1:nx + nv]
 
     # Construct implicit model parameters
     P_imp = H33
