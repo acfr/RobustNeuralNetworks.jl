@@ -16,7 +16,7 @@ end
 # Call the model
 function (m::DiffLBDN)(u::AbstractVecOrMat)
     explicit = direct_to_explicit(m.params)
-    return m(u, explicit)
+    return explicit(u)
 end
 
 Flux.trainable(m::DiffLBDN) = Flux.trainable(m.params)

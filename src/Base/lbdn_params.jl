@@ -1,12 +1,4 @@
 # Some documentation here...
-# Note: Faster to work with tuples than vec of vecs
-mutable struct ExplicitLBDNParams{T, N, M}
-    A_T::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
-    B  ::NTuple{N, AbstractMatrix{T}}
-    Ψd ::NTuple{M, AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
-    b  ::NTuple{N, AbstractVector{T}}
-end
-
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation

@@ -7,7 +7,7 @@ mutable struct DenseLBDNParams{T} <: AbstractLBDNParams{T}
     direct::DirectLBDNParams{T}
 end
 
-# Constructor
+# Constructor for dense LBDN params
 function DenseLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
     nl::Function = Flux.relu, 
@@ -23,15 +23,79 @@ end
 
 Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
 
+# Scaling layer
+mutable struct Scale{T}
+    scale::T
+end
+(m::Scale)(u::AbstractVecOrMat) = m.scale .* u
+
+# Output layer
+mutable struct DenseLBDNOutput{T}
+    B::AbstractMatrix{T}
+    b::AbstractVector{T}
+end
+(m::DenseLBDNOutput)(u::AbstractVecOrMat) = m.B * u .+ m.b
+
+# Dense LBDN layer (explicit model)
+mutable struct DenseLBDNLayer{T}
+    nl ::Function
+    A_T::AbstractMatrix{T}              # A^T in the paper
+    B  ::AbstractMatrix{T}
+    Ψd ::AbstractVector{T}              # Diagonal of matrix Ψ from the paper
+    b  ::AbstractVector{T}
+end
+
+# Default constructor
+function DenseLBDNLayer{T}() where T
+    DenseLBDNLayer{T}(Flux.relu, zeros(T,0,0), zeros(T,0,0), zeros(T,0), zeros(T,0))
+end
+
+# Call the dense LBDN layer
+function (m::DenseLBDNLayer)(u::AbstractVecOrMat{T}) where T
+    sqrt2 = T(√2)
+    return sqrt2 * m.A_T .* m.Ψd * m.nl.(sqrt2 ./ m.Ψd .* (m.B * u) .+ m.b)
+end
+
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
-    b = get_b(ps.direct.b)
-    Ψd = get_Ψ(ps.direct.d)
-    A_T, B = get_AB(ps.direct.XY, ps.direct.α, (ps.nh..., ps.ny))
+    # Direct parameterisation
+    γ  = ps.γ
+    σ  = ps.nl
+    nh = ps.nh
+    ny = ps.ny
+    L  = length(nh)
+    L1 = L + 1
 
-    # Faster to backpropagate with tuples than vectors
-    L = length(ps.nh)
-    return ExplicitLBDNParams{T,L+1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), tuple(b...))
+    XY = ps.direct.XY
+    α  = ps.direct.α
+    d  = ps.direct.d
+    b  = ps.direct.b
+
+    # Build up a list of explicit sandwich layers
+    # Use Zygote buffer to avoid issues with array mutation
+    buf = Buffer([DenseLBDNLayer{T}()], L)
+    for k in 1:L
+        bk       = b[k]
+        Ψd       = exp.(d[k])
+        A_T, B_T = norm_cayley(XY[k], α[k], nh[k])
+        buf[k]   = DenseLBDNLayer{T}(σ, A_T, B_T', Ψd, bk)
+    end
+    dense_layers = copy(buf)
+
+    # Define the scaling and output layers
+    scale_in   = Scale{T}(sqrt(γ))
+    scale_out  = Scale{T}(sqrt(γ))
+
+    AB         = norm_cayley(XY[L1], α[L1], ny)
+    linear_out = DenseLBDNOutput{T}(AB[2]', b[L1])
+
+    # Build a chain for LBDN model
+    return Flux.Chain(
+        scale_in, 
+        dense_layers..., 
+        scale_out, 
+        linear_out
+    )
 
 end
 
@@ -50,43 +114,6 @@ function norm_cayley(XY, α, n)
 
     return A_T, B_T
 
-end
-
-function get_b(b::NTuple{N, AbstractVector{T}}) where {T, N}
-
-    buf = Buffer([zeros(T,0)], N)
-    for k in 1:N
-        buf[k] = b[k]
-    end
-    return copy(buf)
-
-end
-
-function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
-
-    buf = Buffer([zeros(T,0)], N)
-    for k in 1:N
-        buf[k] = exp.(d[k])
-    end
-    return copy(buf)
-
-end
-
-function get_AB(
-    XY::NTuple{N, AbstractMatrix{T}}, 
-    α ::NTuple{N, AbstractVector{T}},
-    n ::NTuple{N, Int}
-) where {T, N}
-
-    buf_A = Buffer([zeros(T,0,0)], N)
-    buf_B = Buffer([zeros(T,0,0)], N)
-    for k in 1:N
-        AB_k = norm_cayley(XY[k], α[k], n[k])
-        buf_A[k] = AB_k[1]
-        buf_B[k] = AB_k[2]'
-    end
-    return copy(buf_A), copy(buf_B)
-    
 end
 
 # TODO: Add GPU compatibility

@@ -4,7 +4,7 @@ mutable struct LBDN{T} <: AbstractLBDN{T}
     nh::Vector{Int}
     ny::Int
     sqrt_γ::T
-    explicit::ExplicitLBDNParams{T}
+    explicit::Chain
 end
 
 # Constructor
@@ -15,21 +15,6 @@ function LBDN(ps::AbstractLBDNParams{T}) where T
 end
 
 # Call the model
-# TODO: Backpropagation might be faster with Flux.Chain object? For loop usually slow with Zygote autograd
-function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
-
-    sqrt2 = T(√2)
-    h = m.sqrt_γ * u
-
-    for k in 1:M
-        h = sqrt2 * explicit.A_T[k] .* explicit.Ψd[k] * m.nl.(
-            sqrt2 ./explicit.Ψd[k] .* (explicit.B[k] * h) .+ explicit.b[k]
-        )
-    end
-
-    return m.sqrt_γ * explicit.B[N] * h .+ explicit.b[N]
-end
-
 function (m::AbstractLBDN)(u::AbstractVecOrMat) 
-    return m(u, m.explicit)
+    return m.explicit(u)
 end
