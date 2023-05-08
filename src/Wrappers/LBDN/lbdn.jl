@@ -28,10 +28,11 @@ function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{
     sqrt2 = T(√2)
     sqrtγ = m.sqrt_γ
 
-    # Evaluate LBDN
+    # Evaluate LBDN (extracting Ψd[k] is faster for backprop)
     h = sqrtγ * u
     for k in 1:M
-        h = (sqrt2 * Ψd[k]) .* A_T[k] * σ.(sqrt2 ./ Ψd[k] .* (B[k] * h) .+ b[k])
+        Ψdk = Ψd[k]
+        h = (sqrt2 * Ψdk) .* A_T[k] * σ.(sqrt2 ./ Ψdk .* (B[k] * h) .+ b[k])
     end
     return sqrtγ * B[N] * h .+ b[N]
 end
