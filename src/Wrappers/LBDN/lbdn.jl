@@ -32,7 +32,7 @@ function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{
     h = sqrtγ * u
     for k in 1:M
         Ψdk = Ψd[k]
-        h = (sqrt2 * Ψdk) .* A_T[k] * σ.(sqrt2 ./ Ψdk .* (B[k] * h) .+ b[k])
+        h = sqrt2 * (A_T[k] .* Ψdk') * σ.(sqrt2 * (B[k] ./ Ψdk) * h .+ b[k])
     end
     return sqrtγ * B[N] * h .+ b[N]
 end

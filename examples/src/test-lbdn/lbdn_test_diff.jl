@@ -12,20 +12,18 @@ Random.seed!(0)
 # Set up model
 nu, ny   = 1, 1
 nh       = [10,5,5,15]
-γ        = 1.0
+γ        = 1
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
 model    = DiffLBDN(model_ps)
 ps       = Flux.params(model)
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
-# f(x) = ((x > -1 && x < 0) || x > 1) ? 1 : 0
      
 # Training data
 N  = 5
 dx = 0.1
 xs = 0:dx:2π
-# xs = -2:dx:2
 ys = f.(xs)
 T  = length(xs)
 data = zip(xs,ys)

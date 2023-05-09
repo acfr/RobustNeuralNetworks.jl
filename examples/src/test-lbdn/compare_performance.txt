@@ -1,0 +1,89 @@
+  47.315 μs (201 allocations: 64.95 KiB)
+  471.006 μs (1688 allocations: 489.53 KiB)
+  
+  # Tidied up code a little
+  45.865 μs (201 allocations: 64.95 KiB)
+  437.112 μs (1634 allocations: 484.25 KiB)
+
+  # Extracted ps.nl as sigma... wow
+  45.408 μs (201 allocations: 64.95 KiB)
+  439.018 μs (1627 allocations: 483.95 KiB)
+  
+  
+  ######## When using nh = fill(100,8) ########
+  
+  # Chain method
+  2.503 ms (489 allocations: 10.23 MiB)
+  11.912 ms (3314 allocations: 42.15 MiB)
+  
+  # For loop method
+  2.620 ms (464 allocations: 10.76 MiB)
+  11.815 ms (3876 allocations: 42.02 MiB)
+  
+  ######## When using nh = fill(1000,8) ########
+  
+  # Chain method
+  342.747 ms (522 allocations: 1001.63 MiB)
+  1.962 s (3322 allocations: 3.74 GiB)
+  
+  # For loop method
+  364.800 ms (496 allocations: 1.03 GiB)
+  1.683 s (3892 allocations: 3.73 GiB)
+  
+  # Decision: Go with the for-loop method. It uses more allocations but less memory...
+  
+  
+  ####### Back to testing #######
+  
+  42.770 μs (189 allocations: 65.42 KiB)
+  459.216 μs (1987 allocations: 445.75 KiB)
+  
+  # Using vcat instead of (nh..., ny)
+  41.851 μs (188 allocations: 65.45 KiB)
+  457.428 μs (1982 allocations: 445.17 KiB)
+  
+  # Using the exact copy of bias vector
+  41.471 μs (184 allocations: 65.19 KiB)
+  438.631 μs (1924 allocations: 442.69 KiB)
+  
+  # Extracting params before for loop in model eval
+  41.291 μs (184 allocations: 65.19 KiB)
+  405.463 μs (1694 allocations: 434.56 KiB)
+  
+  41.714 μs (184 allocations: 65.19 KiB)
+  399.084 μs (1684 allocations: 434.33 KiB)
+  
+  41.180 μs (184 allocations: 62.33 KiB)
+  403.223 μs (1684 allocations: 428.55 KiB)
+  
+  42.056 μs (184 allocations: 62.33 KiB)
+  396.030 μs (1648 allocations: 427.75 KiB)
+  
+  # After bugfix
+  40.510 μs (176 allocations: 62.86 KiB)
+  386.150 μs (1625 allocations: 386.22 KiB)
+  
+  # With nh = fill(1000, 8)
+  368.903 ms (466 allocations: 1.02 GiB)
+  1.925 s (3169 allocations: 3.76 GiB)
+  
+  # Using Diagonal() instead of just vector for \Psi
+  36.594 μs (175 allocations: 62.84 KiB)
+  376.609 μs (1573 allocations: 390.97 KiB)
+  
+  # ... also with nh = fill(1000, 8)
+  394.414 ms (465 allocations: 1.02 GiB)
+  1.997 s (3093 allocations: 3.88 GiB)
+  
+  
+  # Using Diagonal() with nh = fill(100, 8)
+  2.539 ms (441 allocations: 10.68 MiB)
+  12.102 ms (3093 allocations: 42.51 MiB)
+  
+  # Using vector with nh = fill(100, 8)
+  2.442 ms (442 allocations: 10.68 MiB)
+  11.547 ms (3169 allocations: 41.30 MiB)
+  
+  # Better to not create matrices at all.
+  
+  
