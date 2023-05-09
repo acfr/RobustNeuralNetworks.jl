@@ -76,3 +76,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     return ExplicitParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
 
 end
+
+function x_to_h(X::AbstractMatrix{T}, ϵ::T, polar_param::Bool, ρ::T) where T
+    polar_param ? (ρ^2)*(X'*X) / norm(X)^2 + ϵ*I : X'*X + ϵ*I
+end
