@@ -96,8 +96,9 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
         
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ
+    ρ = ps.direct.ρ[1]
     X = ps.direct.X
+    polar_param = ps.direct.polar_param
 
     X3 = ps.direct.X3
     Y3 = ps.direct.Y3
@@ -121,12 +122,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     Γ2 = [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
 
-    if ps.direct.polar_param 
-        # See Eqns 29 of TAC paper 
-        H = exp(ρ[1])*X'*X / norm(X)^2 + Γ2
-    else
-        H = X'*X + ϵ*I + Γ2
-    end
+    H = x_to_h(X, ϵ, polar_param, ρ) + Γ2
 
     # Get explicit parameterisation
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
