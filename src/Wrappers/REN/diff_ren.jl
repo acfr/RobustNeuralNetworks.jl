@@ -24,15 +24,7 @@ end
 
 Flux.trainable(m::DiffREN) = Flux.trainable(m.params)
 
-function (m::DiffREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
-
+function (m::DiffREN{T})(xt::AbstractVecOrMat{T}, ut::AbstractVecOrMat{T}) where T
     explicit = direct_to_explicit(m.params)
-
-    b = explicit.C1 * xt + explicit.D12 * ut .+ explicit.bv
-    wt = tril_eq_layer(m.nl, explicit.D11, b)
-    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ explicit.bx
-    yt = explicit.C2 * xt + explicit.D21 * wt + explicit.D22 * ut .+ explicit.by
-
-    return xt1, yt
-    
+    return m(xt, ut, explicit) 
 end

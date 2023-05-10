@@ -67,11 +67,11 @@ println(round.(y; digits=2))
 ```
 
 """
-function (m::AbstractLBDN)(u::AbstractVecOrMat) 
+function (m::AbstractLBDN{T})(u::AbstractVecOrMat{T}) where T
     return m(u, m.explicit)
 end
 
-function (m::AbstractLBDN)(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
+function (m::AbstractLBDN{T})(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     # Extract explicit params
     σ   = m.nl

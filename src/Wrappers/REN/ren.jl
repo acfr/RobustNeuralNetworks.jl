@@ -67,12 +67,20 @@ println(round.(y1;digits=2))
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
-function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
+function (m::AbstractREN{T})(xt::AbstractVecOrMat{T}, ut::AbstractVecOrMat{T}) where T
+    return m(xt, ut, m.explicit)
+end
 
-    b = m.explicit.C1 * xt + m.explicit.D12 * ut .+ m.explicit.bv
-    wt = tril_eq_layer(m.nl, m.explicit.D11, b)
-    xt1 = m.explicit.A * xt + m.explicit.B1 * wt + m.explicit.B2 * ut .+ m.explicit.bx
-    yt = m.explicit.C2 * xt + m.explicit.D21 * wt + m.explicit.D22 * ut .+ m.explicit.by
+function (m::AbstractREN{T})(
+    xt::AbstractVecOrMat{T}, 
+    ut::AbstractVecOrMat{T},
+    explicit::ExplicitRENParams{T}
+) where T
+
+    b = explicit.C1 * xt + explicit.D12 * ut .+ explicit.bv
+    wt = tril_eq_layer(m.nl, explicit.D11, b)
+    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ explicit.bx
+    yt = explicit.C2 * xt + explicit.D21 * wt + explicit.D22 * ut .+ explicit.by
 
     return xt1, yt
 end

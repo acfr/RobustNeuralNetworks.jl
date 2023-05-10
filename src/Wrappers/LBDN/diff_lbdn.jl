@@ -23,7 +23,7 @@ function DiffLBDN(ps::AbstractLBDNParams{T}) where T
     return DiffLBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, ps)
 end
 
-function (m::DiffLBDN)(u::AbstractVecOrMat)
+function (m::DiffLBDN{T})(u::AbstractVecOrMat{T}) where T
     explicit = direct_to_explicit(m.params)
     return m(u, explicit)
 end
