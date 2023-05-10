@@ -11,7 +11,7 @@ Random.seed!(0)
 
 # Set up model
 nu, ny  = 1, 1
-nh = fill(100,4)
+nh = fill(10,4)
 
 b(n_out) = Flux.glorot_normal(n_out)
 model = Chain(
@@ -22,6 +22,25 @@ model = Chain(
     Dense(nh[4] => ny,    bias=b(ny), init=Flux.glorot_normal),
 )
 ps = Flux.params(model)
+
+# TODO: All of the following...
+"""
+If the model is the following, setting up an optimiser with the new method doesn't seem to work. Try the following:
+
+    model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
+    model    = DiffLBDN(model_ps)
+    Flux.setup(Adam(0.01), model)
+
+However, if it's a dense model, it works. Eg, running this:
+
+    model = Dense(nu => ny, bias=b(ny), Flux.relu, init=Flux.glorot_normal)
+    Flux.setup(Adam(0.01), model)
+
+It might be because the model is not specified as @functor. Need to be careful with how we do this, only certain fields (the params) are learnable...
+
+Try to figure out what the difference is in setup between Flux.Dense and a DiffLBDN model, see if there's something obvious we're missing. Might be worth making your own model (independent of the repository) and seeing what is required to make it Flux-compatible.
+"""
+
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
@@ -49,7 +68,7 @@ end
 num_epochs = [200, 200]
 lrs = [1e-3, 1e-4]
 for k in eachindex(lrs)
-    opt = ADAM(lrs[k])
+    opt = Adam(lrs[k])
     for i in 1:num_epochs[k]
         Flux.train!(loss, ps, data, opt)
         (i % 10 == 0) && evalcb(lrs[k])
