@@ -67,7 +67,7 @@ println(round.(y1;digits=2))
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
-function (m::AbstractREN{T})(xt::AbstractVecOrMat{T}, ut::AbstractVecOrMat{T}) where T
+function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     return m(xt, ut, m.explicit)
 end
 

@@ -24,7 +24,7 @@ end
 
 Flux.trainable(m::DiffREN) = Flux.trainable(m.params)
 
-function (m::DiffREN{T})(xt::AbstractVecOrMat{T}, ut::AbstractVecOrMat{T}) where T
+function (m::DiffREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     explicit = direct_to_explicit(m.params)
     return m(xt, ut, explicit) 
 end

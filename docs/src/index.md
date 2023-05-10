@@ -32,7 +32,7 @@ Depth = 1
 ## Library
 
 ```@contents
-Pages = ["lib/lbdn.md", "lib/ren.md", "lib/ren_params.md", "lib/functions.md"]
+Pages = ["lib/models.md", "lib/model_params.md", "lib/functions.md"]
 Depth = 1
 ```
 

@@ -21,9 +21,8 @@ makedocs(
             "PDE Observer" => "examples/pde_obsv.md",
         ],
         "Library" => Any[
-            "Lipschitz-Bounded Deep Networks" => "lib/lbdn.md",
-            "Recurrent Equilibrium Networks" => "lib/ren.md",
-            "REN Parameterisations" => "lib/ren_params.md",
+            "Model Wrappers" => "lib/models.md",
+            "Model Parameterisations" => "lib/model_params.md",
             "Functions" => "lib/functions.md",
         ],
         "API" => "api.md"

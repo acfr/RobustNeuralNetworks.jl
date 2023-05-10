@@ -65,9 +65,8 @@ println(round.(y; digits=2))
 
 [-0.69 -1.89 -9.68 3.47 -11.65 -4.48 -4.53 3.61 1.37 -0.68]
 ```
-
 """
-function (m::AbstractLBDN{T})(u::AbstractVecOrMat{T}) where T
+function (m::AbstractLBDN)(u::AbstractVecOrMat)
     return m(u, m.explicit)
 end
 
