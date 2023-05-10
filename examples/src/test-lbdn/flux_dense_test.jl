@@ -10,16 +10,21 @@ using RobustNeuralNetworks
 Random.seed!(0)
 
 # Set up model
-nu, ny   = 1, 1
-nh       = [10,5,5,15]
-γ        = 1
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
-model    = DiffLBDN(model_ps)
-ps       = Flux.params(model)
+nu, ny  = 1, 1
+nh = fill(100,4)
+
+b(n_out) = Flux.glorot_normal(n_out)
+model = Chain(
+    Dense(nu    => nh[1], bias=b(nh[1]), Flux.relu, init=Flux.glorot_normal),
+    Dense(nh[1] => nh[2], bias=b(nh[2]), Flux.relu, init=Flux.glorot_normal),
+    Dense(nh[2] => nh[3], bias=b(nh[3]), init=Flux.glorot_normal),
+    Dense(nh[3] => nh[4], bias=b(nh[4]), Flux.relu, init=Flux.glorot_normal),
+    Dense(nh[4] => ny,    bias=b(ny), init=Flux.glorot_normal),
+)
+ps = Flux.params(model)
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
-# f(x) = (x < π/2 || (x > π && x < 3π/2)) ? 1 : 0
      
 # Training data
 N  = 5
@@ -41,9 +46,8 @@ function evalcb(α)
 end
 
 # Training loop
-# TODO: This training method sucks, makes much more sense to train on batches.
-num_epochs = [400, 200]
-lrs = [2e-4, 5e-5]
+num_epochs = [200, 200]
+lrs = [1e-3, 1e-4]
 for k in eachindex(lrs)
     opt = ADAM(lrs[k])
     for i in 1:num_epochs[k]
