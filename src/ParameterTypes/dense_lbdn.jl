@@ -7,7 +7,26 @@ mutable struct DenseLBDNParams{T} <: AbstractLBDNParams{T}
     direct::DirectLBDNParams{T}
 end
 
-# Constructor
+"""
+    DenseLBDNParams{T}(nu, nh, ny, γ; <keyword arguments>) where T
+
+Construct direct parameterisation of a dense (fully-connected) LBDN.
+
+This is the equivalent of a multi-layer perceptron (eg: `Flux.Dense`) with a guaranteed Lipschitz bound of `γ`.
+
+# Arguments
+- `nu::Int`: Number of inputs.
+- `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `ny::Int`: Number of outputs.
+- `γ::Number=T(1)`: Lipschitz upper bound.
+
+# Keyword arguments:
+
+- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+
+See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `initb`, `rng`.
+
+"""
 function DenseLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
     nl::Function = Flux.relu, 
@@ -64,6 +83,7 @@ end
 
 function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
 
+    # Use Zygote buffer to avoid problems with array mutation
     buf = Buffer([zeros(T,0)], N)
     for k in 1:N
         buf[k] = exp.(d[k])
@@ -78,6 +98,7 @@ function get_AB(
     n ::Vector{Int}
 ) where {T, N}
 
+    # Use Zygote buffer to avoid problems with array mutation
     buf_A = Buffer([zeros(T,0,0)], N)
     buf_B = Buffer([zeros(T,0,0)], N)
     for k in 1:N

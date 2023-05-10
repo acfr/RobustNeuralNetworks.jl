@@ -1,5 +1,12 @@
-# Some documentation here...
-# Note: Faster to work with tuples than vec of vecs
+"""
+    mutable struct ExplicitLBDNParams{T, N, M}
+
+Explicit LBDN parameter struct.
+
+These parameters define the explicit form of a Lipschitz-bounded deep network used for model evaluation. Parameters are stored in `NTuple`s, where each element of an `NTuple` is the parameter for a single layer of the network. Tuples are faster to work with than vectors of arrays.
+
+See [Wang et al. (2023)](https://doi.org/10.48550/arXiv.2301.11526) for more details on explicit parameterisations of LBDN.
+"""
 mutable struct ExplicitLBDNParams{T, N, M}
     A_T::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
     B  ::NTuple{N, AbstractMatrix{T}}
@@ -7,7 +14,6 @@ mutable struct ExplicitLBDNParams{T, N, M}
     b  ::NTuple{N, AbstractVector{T}}
 end
 
-# Need docs
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
@@ -15,7 +21,31 @@ mutable struct DirectLBDNParams{T, N, M}
     b ::NTuple{N, AbstractVector{T}}
 end
 
-# Constructor for direct params
+"""
+    DirectLBDNParams{T}(nu, nh, ny; <keyword arguments>) where T
+
+Construct direct parameterisation for a Lipschitz-bounded deep network.
+
+This is typically used by a higher-level constructor to define an LBDN model, which takes the direct parameterisation in `DirectLBDNParams` and defines rules for converting it to an explicit parameterisation. See for example [`DenseLBDNParams`](@ref).
+
+# Arguments
+
+- `nu::Int`: Number of inputs.
+- `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `ny::Int`: Number of outputs.
+
+# Keyword arguments
+
+- `initW::Function=Flux.glorot_normal`: Initialisation function for implicit params `X,Y,d`.
+
+- `initb::Function=Flux.glorot_normal`: Initialisation function for bias vectors.
+
+- `rng::AbstractRNG = Random.GLOBAL_RNG`: rng for model initialisation.
+
+See [Wang et al. (2023)](https://doi.org/10.48550/arXiv.2301.11526) for parameterisation details.
+
+See also [`DenseLBDNParams`](@ref).
+"""
 function DirectLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int;
     initW::Function = Flux.glorot_normal,

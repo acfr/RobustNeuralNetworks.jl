@@ -1,4 +1,4 @@
-mutable struct WrapREN <: AbstractREN
+mutable struct WrapREN{T} <: AbstractREN{T}
     nl
     nu::Int
     nx::Int
@@ -6,7 +6,6 @@ mutable struct WrapREN <: AbstractREN
     ny::Int
     explicit::ExplicitRENParams
     params::AbstractRENParams
-    T::DataType
 end
 
 """
@@ -62,7 +61,7 @@ See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
 """
 function WrapREN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
-    return WrapREN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, ps, T)
+    return WrapREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, ps)
 end
 
 """

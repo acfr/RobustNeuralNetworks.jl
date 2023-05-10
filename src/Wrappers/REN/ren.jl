@@ -1,11 +1,10 @@
-mutable struct REN <: AbstractREN
+mutable struct REN{T} <: AbstractREN{T}
     nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
     explicit::ExplicitRENParams
-    T::DataType
 end
 
 """
@@ -21,7 +20,7 @@ See also [`AbstractREN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
-    return REN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, T)
+    return REN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit)
 end
 
 """
@@ -83,12 +82,12 @@ end
 
 Return matrix of (nbatches) state vectors of a REN initialised as zeros.
 """
-function init_states(m::AbstractREN, nbatches; rng=nothing)
-    return zeros(m.T, m.nx, nbatches)
+function init_states(m::AbstractREN{T}, nbatches; rng=nothing) where T
+    return zeros(T, m.nx, nbatches)
 end
 
-function init_states(m::AbstractREN; rng=nothing)
-    return zeros(m.T, m.nx)
+function init_states(m::AbstractREN{T}; rng=nothing) where T
+    return zeros(T, m.nx)
 end
 
 """

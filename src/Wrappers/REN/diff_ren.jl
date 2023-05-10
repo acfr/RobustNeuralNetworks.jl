@@ -1,11 +1,10 @@
-mutable struct DiffREN <: AbstractREN
+mutable struct DiffREN{T} <: AbstractREN{T}
     nl
     nu::Int
     nx::Int
     nv::Int
     ny::Int
     params::AbstractRENParams
-    T::DataType
 end
 
 """
@@ -13,14 +12,14 @@ end
 
 Construct a differentiable REN from its direct parameterisation.
 
-`DiffREN` is an alternative to [`REN`](@ref) and [`WrapREN`](@ref) that computes the explicit parameterisation every time the model is called. This is slow and computationally inefficient. However, it can be trained with [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/)  (unlike [`WrapREN`](@ref)) and does not need to re-created if the parameters are updated (unlike [`REN`](@ref)).
+`DiffREN` is an alternative to [`REN`](@ref) and [`WrapREN`](@ref) that computes the explicit parameterisation `ExplicitRENParams`](@ref) every time the model is called, rather than storing it in the `REN` object.
 
-The key feature is that the `ExplicitRENParams` struct is never stored, so an instance of `DiffREN` never has to be mutated or re-defined after it is created, even when learnable parameters are updated.
+This is slow and computationally inefficient if the model is called many times before updating the parameters (eg: in reinforcement learning). However, it can be trained just like any other [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/) model (unlike [`WrapREN`](@ref)) and does not need to re-created if the trainable parameters are updated (unlike [`REN`](@ref)).
 
 See also [`AbstractREN`](@ref), [`REN`](@ref), and [`WrapREN`](@ref).
 """
 function DiffREN(ps::AbstractRENParams{T}) where T
-    return DiffREN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps, T)
+    return DiffREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps)
 end
 
 Flux.trainable(m::DiffREN) = Flux.trainable(m.params)

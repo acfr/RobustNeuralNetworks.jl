@@ -23,8 +23,7 @@ Direct parameterisation for recurrent equilibrium networks.
 """
 abstract type AbstractRENParams{T} end
 
-
-abstract type AbstractREN end
+abstract type AbstractREN{T} end
 
 """
     abstract type AbstractLBDNParams{T} end
@@ -33,11 +32,6 @@ Direct parameterisation for Lipschitz-bounded deep networks.
 """
 abstract type AbstractLBDNParams{T} end
 
-"""
-    abstract type AbstractLBDN{T} end
-
-Parameterisation for Lipschitz-bounded deep networks.
-"""
 abstract type AbstractLBDN{T} end
 
 

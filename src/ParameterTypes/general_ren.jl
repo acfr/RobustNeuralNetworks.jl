@@ -29,11 +29,11 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
     
 # Keyword arguments
 
-- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
-See [`DirectRENParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
+See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
 
 See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
