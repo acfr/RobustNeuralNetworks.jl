@@ -1,56 +1,10 @@
-@doc raw"""
-    mutable struct ExplicitParams{T}
-
-Explicit REN parameter struct.
-
-These parameters define a recurrent equilibrium network with model inputs and outputs ``u_t, y_t``, neuron inputs and outputs ``v_t,w_t``, and states `x_t`.
-
-```math
-\begin{equation*}
-\begin{bmatrix}
-x_{t+1} \\ v_t \\ y_t
-\end{bmatrix}
-= 
-\begin{bmatrix}
-A & B_1 & B_2 \\
-C_1 & D_{11} & D_{12} \\
-C_2 & D_{21} & D_{22} \\
-\end{bmatrix}
-\begin{bmatrix}
-x_t \\ w_t \\ u_t
-\end{bmatrix}
-+ 
-\begin{bmatrix}
-b_x \\ b_v \\ b_y
-\end{bmatrix}
-\end{equation*}
-```
-
-See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for more details on explicit parameterisations of REN.
-"""
-mutable struct ExplicitParams{T}
-    A::Matrix{T}
-    B1::Matrix{T}
-    B2::Matrix{T}
-    C1::Matrix{T}
-    C2::Matrix{T}
-    D11::Matrix{T}
-    D12::Matrix{T}
-    D21::Matrix{T}
-    D22::Matrix{T}
-    bx::Vector{T}
-    bv::Vector{T}
-    by::Vector{T}
-end
-
-mutable struct REN <: AbstractREN
-    nl
+mutable struct REN{T} <: AbstractREN{T}
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitParams
-    T::DataType
+    explicit::ExplicitRENParams
 end
 
 """
@@ -66,7 +20,7 @@ See also [`AbstractREN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
 function REN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
-    return REN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, T)
+    return REN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit)
 end
 
 """
@@ -74,7 +28,7 @@ end
 
 Explicit parameterisation for recurrent equilibrium networks.
 
-    (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
+    (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
 
 Call an  `AbstractREN` model given internal states `xt` and inputs `ut`. 
 
@@ -113,12 +67,20 @@ println(round.(y1;digits=2))
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
 """
-function (m::AbstractREN)(xt::VecOrMat, ut::VecOrMat)
+function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
+    return m(xt, ut, m.explicit)
+end
 
-    b = m.explicit.C1 * xt + m.explicit.D12 * ut .+ m.explicit.bv
-    wt = tril_eq_layer(m.nl, m.explicit.D11, b)
-    xt1 = m.explicit.A * xt + m.explicit.B1 * wt + m.explicit.B2 * ut .+ m.explicit.bx
-    yt = m.explicit.C2 * xt + m.explicit.D21 * wt + m.explicit.D22 * ut .+ m.explicit.by
+function (m::AbstractREN{T})(
+    xt::AbstractVecOrMat{T}, 
+    ut::AbstractVecOrMat{T},
+    explicit::ExplicitRENParams{T}
+) where T
+
+    b = explicit.C1 * xt + explicit.D12 * ut .+ explicit.bv
+    wt = tril_eq_layer(m.nl, explicit.D11, b)
+    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ explicit.bx
+    yt = explicit.C2 * xt + explicit.D21 * wt + explicit.D22 * ut .+ explicit.by
 
     return xt1, yt
 end
@@ -128,12 +90,12 @@ end
 
 Return matrix of (nbatches) state vectors of a REN initialised as zeros.
 """
-function init_states(m::AbstractREN, nbatches; rng=nothing)
-    return zeros(m.T, m.nx, nbatches)
+function init_states(m::AbstractREN{T}, nbatches; rng=nothing) where T
+    return zeros(T, m.nx, nbatches)
 end
 
-function init_states(m::AbstractREN; rng=nothing)
-    return zeros(m.T, m.nx)
+function init_states(m::AbstractREN{T}; rng=nothing) where T
+    return zeros(T, m.nx)
 end
 
 """

@@ -1,10 +1,10 @@
 mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
-    nl                          # Sector-bounded nonlinearity
+    nl::Function                # Sector-bounded nonlinearity
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    direct::DirectParams{T}
+    direct::DirectRENParams{T}
     αbar::T
     γ::T
 end
@@ -23,17 +23,17 @@ Construct direct parameterisation of a REN with a Lipschitz bound of γ.
     
 # Keyword arguments
 
-- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
-See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
+See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
 
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
-    nl = Flux.relu, 
+    nl::Function = Flux.relu, 
     αbar::T = T(1),
     init = :random,
     polar_param::Bool = true,
@@ -49,7 +49,7 @@ function LipschitzRENParams{T}(
     D22_free = D22_zero ? true : false
 
     # Direct (implicit) params
-    direct_ps = DirectParams{T}(
+    direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
         polar_param=polar_param, D22_free=D22_free, D22_zero=D22_zero,

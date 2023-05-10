@@ -1,10 +1,10 @@
 mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
-    nl                          # Sector-bounded nonlinearity
+    nl::Function                # Sector-bounded nonlinearity
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    direct::DirectParams{T}
+    direct::DirectRENParams{T}
     αbar::T
     Q::Matrix{T}
     S::Matrix{T}
@@ -29,18 +29,18 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
     
 # Keyword arguments
 
-- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
-See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
+See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
 
 See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
     Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
-    nl = Flux.relu, 
+    nl::Function = Flux.relu, 
     αbar::T = T(1),
     init = :random,
     polar_param::Bool = true,
@@ -70,7 +70,7 @@ function GeneralRENParams{T}(
     end
 
     # Direct (implicit) params
-    direct_ps = DirectParams{T}(
+    direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
         polar_param=polar_param, D22_free=false, rng=rng

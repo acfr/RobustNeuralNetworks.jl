@@ -1,12 +1,11 @@
-mutable struct WrapREN <: AbstractREN
+mutable struct WrapREN{T} <: AbstractREN{T}
     nl
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitParams
+    explicit::ExplicitRENParams
     params::AbstractRENParams
-    T::DataType
 end
 
 """
@@ -14,7 +13,7 @@ end
 
 Construct REN wrapper from its direct parameterisation.
 
-`WrapREN` is an alternative to [`REN`](@ref) that stores the [`AbstractRENParams`](@ref) and [`ExplicitParams`](@ref) within the same object. This means that a new `REN` object does not have to be created each time the parameters are updated. Explicit REN parameters must be updated by the user if the direct parameters have changed.
+`WrapREN` is an alternative to [`REN`](@ref) that stores the [`AbstractRENParams`](@ref) and [`ExplicitRENParams`](@ref) within the same object. This means that a new `REN` object does not have to be created each time the parameters are updated. Explicit REN parameters must be updated by the user if the direct parameters have changed.
 
 Note that `WrapREN` cannot be used with [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/), since it relies on mutating the `WrapREN` instance.
 
@@ -62,7 +61,7 @@ See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
 """
 function WrapREN(ps::AbstractRENParams{T}) where T
     explicit = direct_to_explicit(ps)
-    return WrapREN(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, ps, T)
+    return WrapREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, ps)
 end
 
 """

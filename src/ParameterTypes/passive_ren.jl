@@ -1,10 +1,10 @@
 mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
-    nl                          # Sector-bounded nonlinearity
+    nl::Function                # Sector-bounded nonlinearity
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    direct::DirectParams{T}
+    direct::DirectRENParams{T}
     αbar::T
     ν::T
     # TODO: Add a field for incrementally strictly output passive model (ρ)
@@ -25,18 +25,18 @@ Construct direct parameterisation of a passive REN.
 
 - `ν::T=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
 
-- `nl=Flux.relu`: Static nonlinearity (eg: `Flux.relu` or `Flux.tanh`).
+- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
-See [`DirectParams`](@ref) documentation for arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
+See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `rng`.
 
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref).
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     ν::T = T(0),
-    nl = Flux.relu, 
+    nl::Function = Flux.relu, 
     αbar::T = T(1),
     init = :random,
     polar_param::Bool = true,
@@ -52,7 +52,7 @@ function PassiveRENParams{T}(
     end
 
     # Direct (implicit) params
-    direct_ps = DirectParams{T}(
+    direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
         init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
         polar_param=polar_param, D22_free=false, rng=rng
@@ -62,7 +62,7 @@ function PassiveRENParams{T}(
 
 end
 
-function passive_trainable(L::DirectParams)
+function passive_trainable(L::DirectRENParams)
     ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
     !(L.polar_param) && popfirst!(ps)
     return filter(p -> length(p) !=0, ps)

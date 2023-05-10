@@ -63,7 +63,7 @@ Each of these parameter types has the following collection of attributes:
 
 - Model sizes `nu`, `nx`, `nv`, `ny` defining the number of inputs, states, neurons, and outputs (respectively).
 
-- An instance of [`DirectParams`](@ref) containing the direct parameters of the REN, including all **trainable** parameters.
+- An instance of [`DirectRENParams`](@ref) containing the direct parameters of the REN, including all **trainable** parameters.
 
 - Other attributes used to define how the direct parameterisation should be converted to the implicit model. These parameters encode the user-tunable behavioural constraints. Eg: $\gamma$ for a Lipschitz-bounded REN.
 
@@ -77,9 +77,9 @@ An *explicit* REN model must be created to call and use the network for computat
 
 - A static nonlinearity `nl` and model sizes `nu`, `nx`, `nv`, `ny` (same as `AbstractRENParams`.
 
-- An instance of `ExplicitParams` containing all REN parameters in explicit form for model evaluation (see the [`ExplicitParams`](@ref) docs for more detail).
+- An instance of `ExplicitRENParams` containing all REN parameters in explicit form for model evaluation (see the [`ExplicitRENParams`](@ref) docs for more detail).
 
-Each subtype of `AbstractRENParams` has a method [`direct_to_explicit`](@ref) associated with it that converts the `DirectParams` struct to an instance of `ExplicitParams` satisfying the specified behavioural constraints.
+Each subtype of `AbstractRENParams` has a method [`direct_to_explicit`](@ref) associated with it that converts the `DirectRENParams` struct to an instance of `ExplicitRENParams` satisfying the specified behavioural constraints.
 
 
 #### REN Wrappers
@@ -91,7 +91,7 @@ There are three explicit REN wrappers currently implemented in this package. Eac
 !!! tip "REN is recommended"
     We strongly recommend using `REN` to train your models with `Flux.jl`. It is the most efficient subtype of `AbstractREN` that is compatible with automatic differentiation.
 
-- [`WrapREN`](@ref) includes both the `DirectParams` and `ExplicitParams` as part of the REN wrapper. When any of the direct parameters are changed, the explicit model can be updated by calling [`update_explicit!`](@ref). This can be useful when not using automatic differentiation to train the model. For example:
+- [`WrapREN`](@ref) includes both the `DirectRENParams` and `ExplicitRENParams` as part of the REN wrapper. When any of the direct parameters are changed, the explicit model can be updated by calling [`update_explicit!`](@ref). This can be useful when not using automatic differentiation to train the model. For example:
 
 ```julia
 using RobustNeuralNetworks
@@ -110,7 +110,7 @@ for k in 1:num_training_epochs
 !!! warning "WrapREN incompatible with Flux.jl"
     Since the explicit parameters are stored in an instance of `WrapREN`, changing them with `update_explicit!` directly mutates the model. This will cause errors if the model is to be trained with [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/). Use [`REN`](@ref) or [`DiffREN`](@ref) to avoid this issue.
 
-- [`DiffREN`](@ref) also includes `DirectParams`, but never stores the `ExplicitParams`. Instead, the explicit parameters are computed every time the model is evaluated. This is slow, but does not require creating a new object when the parameters are updated, and is still compatible with `Flux.jl`. For example:
+- [`DiffREN`](@ref) also includes `DirectRENParams`, but never stores the `ExplicitRENParams`. Instead, the explicit parameters are computed every time the model is evaluated. This is slow, but does not require creating a new object when the parameters are updated, and is still compatible with `Flux.jl`. For example:
 
 ```julia
 using Flux

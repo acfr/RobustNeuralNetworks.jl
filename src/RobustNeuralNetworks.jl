@@ -7,7 +7,7 @@ using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
 using Random
-using Zygote: pullback
+using Zygote: pullback, Buffer
 using Zygote: @adjoint
 
 import Base.:(==)
@@ -23,15 +23,16 @@ Direct parameterisation for recurrent equilibrium networks.
 """
 abstract type AbstractRENParams{T} end
 
-
-abstract type AbstractREN end
+abstract type AbstractREN{T} end
 
 """
-    abstract type AbstractLBDN end
+    abstract type AbstractLBDNParams{T} end
 
-Parameterisation for Lipschitz-bounded deep networks.
+Direct parameterisation for Lipschitz-bounded deep networks.
 """
-abstract type AbstractLBDN end
+abstract type AbstractLBDNParams{T} end
+
+abstract type AbstractLBDN{T} end
 
 
 ############ Includes ############
@@ -41,12 +42,8 @@ include("Base/utils.jl")
 include("Base/acyclic_ren_solver.jl")
 
 # Common structures
-include("Base/direct_params.jl")
-include("Base/ren.jl")
-
-# Wrappers
-include("Wrappers/diff_ren.jl")
-include("Wrappers/wrap_ren.jl")
+include("Base/ren_params.jl")
+include("Base/lbdn_params.jl")
 
 # Variations of REN
 include("ParameterTypes/utils.jl")
@@ -55,30 +52,48 @@ include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
 
-# LBDN
-include("LBDN/lbfn.jl")
+include("ParameterTypes/dense_lbdn.jl")
+
+# Wrappers
+include("Wrappers/REN/ren.jl")
+include("Wrappers/REN/diff_ren.jl")
+include("Wrappers/REN/wrap_ren.jl")
+
+include("Wrappers/LBDN/lbdn.jl")
+include("Wrappers/LBDN/diff_lbdn.jl")
 
 
 ############ Exports ############
 
-# Types
-export AbstractREN
+# Abstract types
 export AbstractRENParams
+export AbstractREN
 
-export DirectParams
-export ExplicitParams
-export REN
+export AbstractLBDNParams
+export AbstractLBDN
 
+# Basic types
+export DirectRENParams
+export ExplicitRENParams
+
+export DirectLBDNParams
+export ExplicitLBDNParams
+
+# Parameter types
 export ContractingRENParams
 export GeneralRENParams
 export LipschitzRENParams
 export PassiveRENParams
 
+export DenseLBDNParams
+
+# Wrappers
+export REN
 export DiffREN
 export WrapREN
 
-export AbstractLBDN
-export LBFN
+export LBDN
+export DiffLBDN
 
 # Functions
 export direct_to_explicit
