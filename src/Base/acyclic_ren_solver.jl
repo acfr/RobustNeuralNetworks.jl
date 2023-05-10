@@ -5,8 +5,8 @@ Solves z = ϕ.(W*z .+ b) for lower-triangular W, where
 ϕ is a either a ReLU or tanh activation function.
 """
 function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Matrix, b::VecOrMat)
-    z_eq = typeof(b)(zeros(size(b)))
-    for i in 1:size(b,1)
+    z_eq = similar(b)
+    for i in axes(b,1)
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
@@ -14,7 +14,6 @@ function solve_tril_layer(ϕ::Union{typeof(Flux.relu), typeof(Flux.tanh)}, W::Ma
     end
     return z_eq
 end
-# TODO: Speed up this function with @inbounds, for i in axes(b,1), and anything else you can think of.
 
 """
     solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
@@ -22,12 +21,12 @@ end
 Solves z = ϕ.(W*z .+ b) for lower-triangular W, where
 ϕ is a generic static nonlinearity.
 """
-function solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
+function solve_tril_layer(ϕ::Function, W::Matrix, b::VecOrMat)
 
     # Slower to not specify typeof(ϕ), which is why this is separate
     println("Using non-ReLU/tanh version of solve_tril_layer()")
-    z_eq = typeof(b)(zeros(size(b)))
-    for i in 1:size(b,1)
+    z_eq = similar(b)
+    for i in axes(b,1)
         Wi = @view W[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]

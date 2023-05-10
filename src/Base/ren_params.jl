@@ -125,8 +125,6 @@ function DirectRENParams{T}(
         B2  = glorot_normal(nx, nu; T=T, rng=rng)
         D12 = glorot_normal(nv, nu; T=T, rng=rng)
         
-        ρ = zeros(1)
-        
         # Make orthogonal X
         X = glorot_normal(2nx + nv, 2nx + nv; T=T, rng=rng)
         X = Matrix(qr(X).Q)
@@ -152,12 +150,14 @@ function DirectRENParams{T}(
                  -C1 H22 B1'
                  F  B1  P] + ϵ * I
         
-        ρ = zeros(T, 1)
         X = Matrix{T}(cholesky(Htild).U) # H = X'*X
 
     else
         error("Undefined initialisation method ", init)
     end
+
+    # Polar parameter
+    ρ = [norm(X)]
 
     # Free parameter for E
     Y1 = glorot_normal(nx, nx; T=T, rng=rng)

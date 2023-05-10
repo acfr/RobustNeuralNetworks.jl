@@ -40,7 +40,7 @@ Convert direct parameterisation of REN from H matrix (Eqn. 23 of [Revay et al. (
 - `H::Matrix{T}`: H-matrix to convert.
 - `D22::Matrix{T}=zeros(T,0,0))`: Optionally include `D22` matrix. If empty (default), `D22` taken from `ps.direct.D22`. 
 """
-function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T} = zeros(T,0,0)) where T
+function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::AbstractMatrix{T} = zeros(T,0,0)) where T<:Real
 
     # System sizes
     nx = ps.nx
@@ -51,7 +51,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T}
     Y1 = ps.direct.Y1
     
     # Extract sections of H matrix 
-    # Note: using @view slightly faster, but not supported by CUDA
+    # Using @view is faster but not supported by CUDA
     H11 = H[1:nx, 1:nx]
     H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
     H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
@@ -67,20 +67,21 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T}
     # Equilibrium network parameters
     B1_imp = H32
     C1_imp = -H21
-    Λ_inv = (1 ./ diag(H22)) * 2
-    D11_imp = -tril(H22, -1)
+    Λ_inv = ( (1 ./ diag(H22)) * 2)
+    D11_imp = (-tril(H22, -1))
 
     # Construct the explicit model
     A = E \ F
     B1 = E \ B1_imp
     B2 = E \ ps.direct.B2
-    
-    C1 = Λ_inv .* C1_imp
-    D11 = Λ_inv .* D11_imp
-    D12 = Λ_inv .* ps.direct.D12
+
+    C1 = broadcast(*, Λ_inv, C1_imp)
+    D11 = broadcast(*, Λ_inv, D11_imp)
+    D12 = broadcast(*, Λ_inv, ps.direct.D12)
 
     C2 = ps.direct.C2
     D21 = ps.direct.D21
+
     isempty(D22) && (D22 = ps.direct.D22)
 
     bx = ps.direct.bx
@@ -89,4 +90,8 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::Matrix{T}, D22::Matrix{T}
     
     return ExplicitRENParams{T}(A, B1, B2, C1, C2, D11, D12, D21, D22, bx, bv, by)
 
+end
+
+function x_to_h(X::AbstractMatrix{T}, ϵ::T, polar_param::Bool, ρ::T) where T
+    polar_param ? (ρ^2)*(X'*X) / norm(X)^2 + ϵ*I : X'*X + ϵ*I
 end
