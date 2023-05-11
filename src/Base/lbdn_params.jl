@@ -72,7 +72,7 @@ function DirectLBDNParams{T}(
 
 end
 
-Flux.trainable(m::DirectLBDNParams) = (m.XY, m.α, m.d, m.b)
+Flux.@functor DirectLBDNParams (XY, α, d, b)
 
 
 # TODO: Should add compatibility for layer-wise options

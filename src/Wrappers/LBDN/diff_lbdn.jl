@@ -28,4 +28,4 @@ function (m::DiffLBDN)(u::AbstractVecOrMat)
     return m(u, explicit)
 end
 
-Flux.trainable(m::DiffLBDN) = Flux.trainable(m.params)
+Flux.@functor DiffLBDN (params, )
