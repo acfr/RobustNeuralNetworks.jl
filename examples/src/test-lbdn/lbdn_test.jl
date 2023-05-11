@@ -46,19 +46,9 @@ end
 num_epochs = [400, 200]
 lrs = [2e-4, 5e-5]
 for k in eachindex(lrs)
-
     opt_state = Flux.setup(Adam(lrs[k]), model_ps)
-    
     for i in 1:num_epochs[k]
-
         Flux.train!(loss, model_ps, data, opt_state)
-
-        # for d in data
-        #     J, back = pullback(() -> loss(d[1],d[2]), ps)
-        #     ∇J = back(one(J)) 
-        #     Flux.update!(opt, ps, ∇J)   
-        # end
-
         (i % 10 == 0) && evalcb(model_ps, lrs[k])
     end
 end

@@ -68,6 +68,7 @@ function passive_trainable(L::DirectRENParams)
     return filter(p -> length(p) !=0, ps)
 end
 
+# TODO: Change with @functor. Won't be compatible with Flux v0.14
 Flux.trainable(m::PassiveRENParams) = passive_trainable(m.direct)
 
 function Flux.gpu(m::PassiveRENParams{T}) where T

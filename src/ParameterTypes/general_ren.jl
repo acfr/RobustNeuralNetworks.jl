@@ -80,7 +80,7 @@ function GeneralRENParams{T}(
 
 end
 
-Flux.trainable(m::GeneralRENParams) = Flux.trainable(m.direct)
+Flux.@functor GeneralRENParams (direct, )
 
 function Flux.gpu(m::GeneralRENParams{T}) where T
     # TODO: Test and complete this

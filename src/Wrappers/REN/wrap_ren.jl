@@ -74,4 +74,4 @@ function update_explicit!(m::WrapREN)
     return nothing
 end
 
-Flux.trainable(m::WrapREN) = Flux.params(m.params)
+Flux.@functor WrapREN (params, )

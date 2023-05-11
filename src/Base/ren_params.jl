@@ -193,6 +193,7 @@ function DirectRENParams{T}(
 )
 end
 
+# TODO: Need to use @functor. Won't be compatible with Flux v0.14
 function Flux.trainable(L::DirectRENParams)
 
     # Different cases for D22 free/zero

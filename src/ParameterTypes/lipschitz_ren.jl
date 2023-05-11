@@ -60,7 +60,7 @@ function LipschitzRENParams{T}(
 
 end
 
-Flux.trainable(m::LipschitzRENParams) = Flux.trainable(m.direct)
+Flux.@functor LipschitzRENParams (direct,)
 
 function Flux.gpu(m::LipschitzRENParams{T}) where T
     # TODO: Test and complete this
