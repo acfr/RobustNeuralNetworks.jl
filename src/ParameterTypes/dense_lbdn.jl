@@ -40,7 +40,7 @@ function DenseLBDNParams{T}(
 
 end
 
-Flux.trainable(m::DenseLBDNParams) = Flux.trainable(m.direct)
+Flux.@functor DenseLBDNParams (direct, )
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
