@@ -42,6 +42,14 @@ end
 
 Flux.@functor DenseLBDNParams (direct, )
 
+# TODO: This isn't right. Are we sure we can't use Flux.trainable anymore...?
+# function Flux.functor(::Type{DenseLBDNParams{T}}, x) where T
+#     return (
+#         (;direct = x.direct),
+#         y -> DenseLBDNParams{T}(x.nl, x.nu, x.nh, x.ny, x.γ, y)
+#     )
+# end
+
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
     # Direct parameterisation
