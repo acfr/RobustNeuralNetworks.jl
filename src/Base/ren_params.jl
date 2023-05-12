@@ -44,7 +44,6 @@ mutable struct ExplicitRENParams{T}
 end
 
 mutable struct DirectRENParams{T}
-    ρ  ::AbstractVector{T}              # TODO: CHANGE ORDER Used in polar param (if specified)
     X  ::AbstractMatrix{T}
     Y1 ::AbstractMatrix{T}
     X3 ::AbstractMatrix{T}
@@ -59,6 +58,7 @@ mutable struct DirectRENParams{T}
     bv ::AbstractVector{T}
     by ::AbstractVector{T}
     ϵ  ::T
+    ρ  ::AbstractVector{T}              # Used in polar param (if specified)
     polar_param::Bool                   # Whether or not to use polar parameterisation
     D22_free   ::Bool                   # Is D22 free or parameterised by (X3,Y3,Z3)?
     D22_zero   ::Bool                   # Option to remove feedthrough.
@@ -185,10 +185,10 @@ function DirectRENParams{T}(
     by = glorot_normal(ny; rng=rng)
 
     return DirectRENParams(
-        ρ ,X, 
+        X, 
         Y1, X3, Y3, Z3, 
         B2, C2, D12, D21, D22,
-        bx, bv, by, T(ϵ), 
+        bx, bv, by, T(ϵ), ρ,
         polar_param, D22_free, D22_zero
 )
 end
@@ -200,14 +200,14 @@ function Flux.trainable(m::DirectRENParams)
     # Field names of trainable params, exclude ρ if needed
     if m.D22_free
         if m.D22_zero
-            fs = [:ρ, :X, :Y1, :B2, :C2, :D12, :D21, :bx, :bv, :by]
+            fs = [:X, :Y1, :B2, :C2, :D12, :D21, :bx, :bv, :by, :ρ]
         else
-            fs = [:ρ, :X, :Y1, :B2, :C2, :D12, :D21, :D22, :bx, :bv, :by]
+            fs = [:X, :Y1, :B2, :C2, :D12, :D21, :D22, :bx, :bv, :by, :ρ]
         end
     else
-        fs = [:ρ, :X, :Y1, :X3, :Y3, :Z3, :B2, :C2, :D12, :D21, :bx, :bv, :by]
+        fs = [:X, :Y1, :X3, :Y3, :Z3, :B2, :C2, :D12, :D21, :bx, :bv, :by, :ρ]
     end
-    !(m.polar_param) && popfirst!(fs)
+    !(m.polar_param) && pop!(fs)
 
     # Get params, ignore empty ones (eg: when nx=0)
     ps = [getproperty(m, f) for f in fs]
