@@ -2,7 +2,6 @@ module RobustNeuralNetworks
 
 ############ Package dependencies ############
 
-using CUDA: CuVector, CuMatrix
 using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd, plyapd
