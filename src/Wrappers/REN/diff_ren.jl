@@ -1,10 +1,10 @@
 mutable struct DiffREN{T} <: AbstractREN{T}
-    nl
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    params::AbstractRENParams
+    params::AbstractRENParams{T}
 end
 
 """

@@ -1,11 +1,11 @@
 mutable struct WrapREN{T} <: AbstractREN{T}
-    nl
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitRENParams
-    params::AbstractRENParams
+    explicit::ExplicitRENParams{T}
+    params::AbstractRENParams{T}
 end
 
 """
