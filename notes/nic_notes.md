@@ -2,22 +2,11 @@
 
 This document is a work-in-progress. Use it to start our documentation of the `RobustNeuralNetworks.jl` package. I'm using this document to keep track of how I'm writing the package. It is not necessarily up-to-date or correct.
 
-
-
-
-
 ## TODO Lists (and other useful things)
 
 ### General:
 - Write tests for basic functionality
 - Add documentation and improve speed for `Base/acyclic_ren_solver.jl` code taken from Max's work
-
-### Changes from previous code:
-- Currently no method to construct a REN without specifying type. Seems good to force it
-- Treatment of `D22`:
-    - `D22` can be included directly as a trainable parameter in the `OutputLayer`, but is **NOT** by default. Have to set `D22_trainable = true` on construction
-    - `D22` can be parameterised by free parameters `(X3,Y3,Z3)` by setting `D22_free` in `DirectRENParams`
-- Added \alpha_bar to `ContractingRENParams` (as an example). Will use this to set contraction rate in explicit params construction
 
 ### Bugs:
 - Cholesky initialisation of `DirectRENParams`
