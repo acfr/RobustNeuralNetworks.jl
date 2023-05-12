@@ -148,7 +148,7 @@ function ContractingRENParams(
 
 end
 
-Flux.trainable(m::ContractingRENParams) = Flux.trainable(m.direct)
+Flux.@functor ContractingRENParams (direct, )
 
 function Flux.gpu(m::ContractingRENParams{T}) where T
     # TODO: Test and complete this

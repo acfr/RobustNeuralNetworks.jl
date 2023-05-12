@@ -4,7 +4,7 @@ mutable struct REN{T} <: AbstractREN{T}
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitRENParams
+    explicit::ExplicitRENParams{T}
 end
 
 """

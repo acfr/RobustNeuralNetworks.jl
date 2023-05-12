@@ -1,11 +1,11 @@
 mutable struct WrapREN{T} <: AbstractREN{T}
-    nl
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    explicit::ExplicitRENParams
-    params::AbstractRENParams
+    explicit::ExplicitRENParams{T}
+    params::AbstractRENParams{T}
 end
 
 """
@@ -74,4 +74,4 @@ function update_explicit!(m::WrapREN)
     return nothing
 end
 
-Flux.trainable(m::WrapREN) = Flux.params(m.params)
+Flux.@functor WrapREN (params, )

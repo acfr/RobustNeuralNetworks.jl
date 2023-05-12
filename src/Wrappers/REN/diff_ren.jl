@@ -1,10 +1,10 @@
 mutable struct DiffREN{T} <: AbstractREN{T}
-    nl
+    nl::Function
     nu::Int
     nx::Int
     nv::Int
     ny::Int
-    params::AbstractRENParams
+    params::AbstractRENParams{T}
 end
 
 """
@@ -22,7 +22,7 @@ function DiffREN(ps::AbstractRENParams{T}) where T
     return DiffREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps)
 end
 
-Flux.trainable(m::DiffREN) = Flux.trainable(m.params)
+Flux.@functor DiffREN (params, )
 
 function (m::DiffREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     explicit = direct_to_explicit(m.params)

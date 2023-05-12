@@ -6,9 +6,6 @@ using Test
     # Useful
     include("test_utils.jl")
 
-    # Test a basic example from the README
-    include("Wrappers/wrap_rens.jl")
-
     # Test for desired behaviour
     include("ParameterTypes/contraction.jl")
     include("ParameterTypes/general_behavioural_constrains.jl")
@@ -16,4 +13,10 @@ using Test
     include("ParameterTypes/passivity.jl")
 
     include("ParameterTypes/dense_lbdn.jl")
+
+    # Test wrappers
+    include("Wrappers/wrap_ren.jl")
+    include("Wrappers/diff_ren.jl")
+    include("Wrappers/diff_lbdn.jl")
+
 end

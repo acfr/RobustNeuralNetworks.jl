@@ -29,39 +29,39 @@ b_x \\ b_v \\ b_y
 See [Revay et al. (2021)](https://arxiv.org/abs/2104.05942) for more details on explicit parameterisations of REN.
 """
 mutable struct ExplicitRENParams{T}
-    A::Matrix{T}
-    B1::Matrix{T}
-    B2::Matrix{T}
-    C1::Matrix{T}
-    C2::Matrix{T}
-    D11::Matrix{T}
-    D12::Matrix{T}
-    D21::Matrix{T}
-    D22::Matrix{T}
-    bx::Vector{T}
-    bv::Vector{T}
-    by::Vector{T}
+    A  ::AbstractMatrix{T}
+    B1 ::AbstractMatrix{T}
+    B2 ::AbstractMatrix{T}
+    C1 ::AbstractMatrix{T}
+    C2 ::AbstractMatrix{T}
+    D11::AbstractMatrix{T}
+    D12::AbstractMatrix{T}
+    D21::AbstractMatrix{T}
+    D22::AbstractMatrix{T}
+    bx ::AbstractVector{T}
+    bv ::AbstractVector{T}
+    by ::AbstractVector{T}
 end
 
 mutable struct DirectRENParams{T}
-    ρ::Union{Vector{T},CuVector{T}}     # used in polar param
-    X::Union{Matrix{T},CuMatrix{T}}
-    Y1::Union{Matrix{T},CuMatrix{T}}
-    X3::Union{Matrix{T},CuMatrix{T}}
-    Y3::Union{Matrix{T},CuMatrix{T}}
-    Z3::Union{Matrix{T},CuMatrix{T}}
-    B2::Union{Matrix{T},CuMatrix{T}}
-    C2::Union{Matrix{T},CuMatrix{T}}
-    D12::Union{Matrix{T},CuMatrix{T}}
-    D21::Union{Matrix{T},CuMatrix{T}}
-    D22::Union{Matrix{T},CuMatrix{T}}
-    bx::Union{Vector{T},CuVector{T}}
-    bv::Union{Vector{T},CuVector{T}}
-    by::Union{Vector{T},CuVector{T}}
-    ϵ::T
-    polar_param::Bool                   # Whether or not to use polar param
-    D22_free::Bool                      # Is D22 free or parameterised by (X3,Y3,Z3)?
-    D22_zero::Bool                      # Option to remove feedthrough.
+    X  ::AbstractMatrix{T}
+    Y1 ::AbstractMatrix{T}
+    X3 ::AbstractMatrix{T}
+    Y3 ::AbstractMatrix{T}
+    Z3 ::AbstractMatrix{T}
+    B2 ::AbstractMatrix{T}
+    C2 ::AbstractMatrix{T}
+    D12::AbstractMatrix{T}
+    D21::AbstractMatrix{T}
+    D22::AbstractMatrix{T}
+    bx ::AbstractVector{T}
+    bv ::AbstractVector{T}
+    by ::AbstractVector{T}
+    ϵ  ::T
+    ρ  ::AbstractVector{T}              # Used in polar param (if specified)
+    polar_param::Bool                   # Whether or not to use polar parameterisation
+    D22_free   ::Bool                   # Is D22 free or parameterised by (X3,Y3,Z3)?
+    D22_zero   ::Bool                   # Option to remove feedthrough.
 end
 
 """
@@ -157,7 +157,7 @@ function DirectRENParams{T}(
     end
 
     # Polar parameter
-    ρ = [norm(X)]
+    ρ = polar_param ? [norm(X)] : zeros(T,0)
 
     # Free parameter for E
     Y1 = glorot_normal(nx, nx; T=T, rng=rng)
@@ -185,35 +185,37 @@ function DirectRENParams{T}(
     by = glorot_normal(ny; rng=rng)
 
     return DirectRENParams(
-        ρ ,X, 
+        X, 
         Y1, X3, Y3, Z3, 
         B2, C2, D12, D21, D22,
-        bx, bv, by, T(ϵ), 
+        bx, bv, by, T(ϵ), ρ,
         polar_param, D22_free, D22_zero
 )
 end
 
-function Flux.trainable(L::DirectRENParams)
+Flux.@functor DirectRENParams
 
-    # Different cases for D22 free/zero
-    if L.D22_free
-        if L.D22_zero
-            ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
-                  L.D12, L.D21, L.bx, L.bv, L.by]
+function Flux.trainable(m::DirectRENParams)
+
+    # Field names of trainable params, exclude ρ if needed
+    if m.D22_free
+        if m.D22_zero
+            fs = [:X, :Y1, :B2, :C2, :D12, :D21, :bx, :bv, :by, :ρ]
         else
-            ps = [L.ρ, L.X, L.Y1, L.B2, L.C2, 
-                 L.D12, L.D21, L.D22, L.bx, L.bv, L.by]
+            fs = [:X, :Y1, :B2, :C2, :D12, :D21, :D22, :bx, :bv, :by, :ρ]
         end
     else
-        ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2,
-              L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
+        fs = [:X, :Y1, :X3, :Y3, :Z3, :B2, :C2, :D12, :D21, :bx, :bv, :by, :ρ]
     end
+    !(m.polar_param) && pop!(fs)
 
-    # Don't need ρ if not polar param
-    !(L.polar_param) && popfirst!(ps)
+    # Get params, ignore empty ones (eg: when nx=0)
+    ps = [getproperty(m, f) for f in fs]
+    indx = length.(ps) .!= 0
+    ps, fs = ps[indx], fs[indx]
 
-    # Removes empty params, useful when nx=0
-    return filter(p -> length(p) !=0, ps)
+    # Flux.trainable() must return a NamedTuple
+    return NamedTuple{tuple(fs...)}(ps)
 end
 
 function Flux.gpu(M::DirectRENParams{T}) where T

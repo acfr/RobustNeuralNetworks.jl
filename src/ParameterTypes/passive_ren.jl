@@ -62,13 +62,7 @@ function PassiveRENParams{T}(
 
 end
 
-function passive_trainable(L::DirectRENParams)
-    ps = [L.ρ, L.X, L.Y1, L.X3, L.Y3, L.Z3, L.B2, L.C2, L.D12, L.D21, L.bx, L.bv, L.by]
-    !(L.polar_param) && popfirst!(ps)
-    return filter(p -> length(p) !=0, ps)
-end
-
-Flux.trainable(m::PassiveRENParams) = passive_trainable(m.direct)
+Flux.@functor PassiveRENParams (direct, )
 
 function Flux.gpu(m::PassiveRENParams{T}) where T
     # TODO: Test and complete this

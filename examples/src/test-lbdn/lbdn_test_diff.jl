@@ -15,10 +15,10 @@ nh       = [10,5,5,15]
 γ        = 1
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
 model    = DiffLBDN(model_ps)
-ps       = Flux.params(model)
 
 # Function to estimate
 f(x) = sin(x)+(1/N)*sin(N*x)
+# f(x) = (x < π/2 || (x > π && x < 3π/2)) ? 1 : 0
      
 # Training data
 N  = 5
@@ -29,24 +29,24 @@ T  = length(xs)
 data = zip(xs,ys)
 
 # Loss function
-loss(x,y) = Flux.mse(model([x]),[y]) 
+loss(model,x,y) = Flux.mse(model([x]),[y]) 
 
 # Callback function to show results while training
-function evalcb(α) 
-    fit_error = sqrt(sum(loss.(xs, ys)) / length(xs))
+function evalcb(model, α) 
+    fit_error = sqrt(sum(loss.((model,), xs, ys)) / length(xs))
     slope     = maximum(abs.(diff(model(xs'),dims=2)))/dx
     @show α fit_error slope
     println()
 end
 
-# Training loop
+# Training loop (could be improved with batches...)
 num_epochs = [400, 200]
 lrs = [2e-4, 5e-5]
 for k in eachindex(lrs)
-    opt = ADAM(lrs[k])
+    opt_state = Flux.setup(Adam(lrs[k]), model)
     for i in 1:num_epochs[k]
-        Flux.train!(loss, ps, data, opt)
-        (i % 10 == 0) && evalcb(lrs[k])
+        Flux.train!(loss, model, data, opt_state)
+        (i % 10 == 0) && evalcb(model, lrs[k])
     end
 end
 
