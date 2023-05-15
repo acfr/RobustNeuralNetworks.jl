@@ -22,15 +22,16 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 
 # Set up model: define parameters, then create model
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
-model = Chain(
-    DiffLBDN(model_ps), 
-    Flux.softmax
-)
+model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 # Get MNIST training and test data
 T = Float64
 x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
+
+# data = BSON.load("assets/lbdn-mnist/mnist_data.bson")
+# x_train, y_train = data["x_train"], data["y_train"]
+# x_test, y_test = data["x_test"], data["y_test"]
 
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
@@ -80,7 +81,7 @@ println("Training accuracy: $(round(train_acc,digits=2))%")
 println("Test accuracy:     $(round(test_acc,digits=2))%")
 
 # Make a couple of example plots
-indx = rand(rng, 1:1000, 3)
+indx = rand(rng, 1:100, 3)
 f1 = Figure(resolution = (800, 300))
 for i in eachindex(indx)
 
