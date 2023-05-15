@@ -95,7 +95,7 @@ model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
 model = DiffLBDN(model_ps)
 ```
 
-Notice that we first construct the model parameters `model_ps` defining a (dense) LBDN using [`DenseLBDNParams`](@ref) and then create a callable `model` using the [`DiffREN`](@ref) wrapper. In `RobustNeuralNetworks.jl`, we separate model parameterisations from the "explicit" definition of the model used for evaluation on data. The [`DiffREN`](@ref) model wrapper combines the two together in a model structure more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience.
+Notice that we first constructed the model parameters `model_ps` defining a (dense) LBDN with [`DenseLBDNParams`](@ref) and then created a callable `model` with the [`DiffREN`](@ref) wrapper. In `RobustNeuralNetworks.jl`, model parameterisations are separated from the "explicit" definition of the model used for evaluation on data. The [`DiffREN`](@ref) model wrapper combines the two together in a model structure more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience.
 
 For more information, see the [Package Overview](@ref). 
 
