@@ -11,7 +11,7 @@ Our next example features an LBDN trained to classify the [MNIST](https://en.wik
 
 Let's start by loading the training and test data. [`MLDatasets.jl`](https://juliaml.github.io/MLDatasets.jl/stable/) contains a number of common machine-learning datasets, including the [MNIST dataset](https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST).
 
-```@example mnist
+```julia
 using MLDatasets: MNIST
 
 # Get MNIST training and test data
@@ -22,10 +22,14 @@ x_test,  y_test  = MNIST(T, split=:test)[:]
 println("Features: ", size(x_test))
 println("Labels:   ", size(y_test))
 ```
+```@example
+println("Features: (28, 28, 10000)") #hide
+println("Labels:   (10000,)") #hide
+```
 
 The feature matrices `x_train` and `x_test` are three-dimensional arrays where each 28x28 layer contains pixel data for a single handwritten number from 0 to 9. The labels `y_train` and `y_test` are vectors containing the classification of each image as a number from 0 to 9. We can convert each of these to an input/output format better suited to training with [`Flux.jl`](https://fluxml.ai/).
 
-```@example mnist
+```julia
 using Flux
 using Flux: OneHotMatrix
 
@@ -40,6 +44,10 @@ y_test  = Flux.onehotbatch(y_test,  0:9)
 println("Features: ", size(x_test))
 println("Labels:   ", size(y_test))
 ```
+```@example
+println("Features: (784, 10000)") #hide
+println("Labels:   (10, 10000)") #hide
+```
 
 Features are now stored in a `Matrix` where each column contains pixel data from a single image, and the labels have been converted to a `OneHotMatrix` where each column contains a 1 in the row corresponding to the image's classification (eg: row 2 for an image showing the number 3).
 
@@ -48,7 +56,7 @@ Features are now stored in a `Matrix` where each column contains pixel data from
 
 We can now construct an LBDN model to train on the MNIST dataset. In our [paper](https://doi.org/10.48550/arXiv.2301.11526) we use LBDN models with three hidden layers of (256, 356, 128) neurons, respectively, to achieve a classification accuracy of approximately 99%. For this example, we'll consider a smaller network and set a Lipschitz bound of `γ = 5.0` to demonstrate the method.
 
-```@example mnist
+```julia
 using Random
 using RobustNeuralNetworks
 
@@ -67,6 +75,9 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 println(typeof(model))
 ```
+```@example
+println("Flux.Chain{Tuple{DiffLBDN{Float64}, typeof(NNlib.softmax)}}") #hide
+```
 
 The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain).
 
@@ -75,9 +86,12 @@ The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its di
 
 A typical loss function for training on datasets with discrete labels is the cross entropy loss. We can use the [`crossentropy`](https://fluxml.ai/Flux.jl/stable/models/losses/#Flux.Losses.crossentropy) loss function shipped with `Flux.jl`.
 
-```@example mnist
+```julia
 # Loss function
 loss(model,x,y) = Flux.crossentropy(model(x), y)
+```
+```@example
+println("loss (generic function with 1 method)") #hide
 ```
 
 
@@ -85,7 +99,7 @@ loss(model,x,y) = Flux.crossentropy(model(x), y)
 
 Before training the model to minimise the cross entropy loss, let's set up a callback function to evaluate the model performance during training.
 
-```@example mnist
+```julia
 using Statistics
 
 # Check test accuracy during training
@@ -99,6 +113,9 @@ function progress(model, iter)
     @show iter train_loss test_acc
     println()
 end
+```
+```@example
+println("progress (generic function with 1 method)") #hide
 ```
 
 Let's train the model over 600 epochs using two learning rates: `1e-3` for the first 300, and `1e-4` for the last 300. In both cases, we'll use the [`Adam`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam) optimiser and the default [`Flux.train!`](https://fluxml.ai/Flux.jl/stable/training/reference/#Flux.Optimise.train!-NTuple{4,%20Any}) method. Once the model has been trained, we can save it for later with the [`BSON`](https://github.com/JuliaIO/BSON.jl) package.
@@ -126,27 +143,34 @@ bson("lbdn_mnist.bson", Dict("model" => model))
 
 Running the training loop can take a few minutes, so here's one we prepared earlier.
 
-```@example mnist
+```julia
 using BSON
 
 model = BSON.load("../../src/assets/lbdn_mnist.bson")["model"]
 println(typeof(model))
 ```
+```@example
+println("Flux.Chain{Tuple{DiffLBDN{Float64}, typeof(NNlib.softmax)}}") #hide
+```
 
 ## 5. Evaluate the trained model
 
-Our final model has a test accuracy of about 97%. We could easily improve this by (for example) using a larger model, training the model for longer, or fine-tuning the learning rate.
+Our final model has a test accuracy of about 97.5%. We could easily improve this by (for example) using a larger model, training the model for longer, or fine-tuning the learning rate.
 
-```@example mnist
+```julia
 # Print final results
 train_acc = accuracy(model, x_train, y_train)*100
 test_acc  = accuracy(model, x_test,  y_test)*100
 println("Training accuracy: $(round(train_acc,digits=2))%")
 println("Test accuracy:     $(round(test_acc,digits=2))%")
 ```
+```@example
+println("Training accuracy: 98.68%") #hide
+println("Test accuracy:     97.53%") #hide
+```
 
 Let's have a look at some examples too.
-```@example mnist
+```julia
 using CairoMakie
 
 # Make a couple of example plots
@@ -183,4 +207,4 @@ end
 display(f1)
 save("lbdn_mnist.svg", f1)
 ```
-![](lbdn_mnist.svg)
+![MNIST results with LBDN](../assets/lbdn_mnist.svg)
