@@ -73,9 +73,9 @@ mse(model, xs, ys) = sum(loss.((model,), xs, ys)) / length(xs)
 lip(model, xs, dx) = maximum(abs.(diff(model(xs'), dims=2)))/dx
 
 # Callback function to show results while training
-function evalcb(model, iter, xs, ys, dx) 
-    fit_error = mse(model, xs, ys)
-    slope = lip(model, xs, dx)
+function progress(model, iter, xs, ys, dx) 
+    fit_error = round(mse(model, xs, ys), digits=4)
+    slope = round(lip(model, xs, dx), digits=4)
     @show iter fit_error slope
     println()
 end
@@ -92,7 +92,7 @@ opt_state = Flux.setup(Adam(lr), model)
 # Train the model
 for i in 1:num_epochs
     Flux.train!(loss, model, data, opt_state)
-    (i % 100 == 0) && evalcb(model, i, xs, ys, dx)
+    (i % 100 == 0) && progress(model, i, xs, ys, dx)
 end
 ```
 

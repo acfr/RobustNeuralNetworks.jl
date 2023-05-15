@@ -1,54 +1,74 @@
-# TODO: This is an old demo from our previous implementation of LBDN.
-# No good for the current version!
+cd(@__DIR__)
+using Pkg
+Pkg.activate("../")
 
-# Import packages (iincluding our REN package)
 using Flux
-using Flux:onehotbatch, @epochs, crossentropy,onecold,throttle, OneHotMatrix
+using Flux: OneHotMatrix
 using MLDatasets: MNIST
+using Random
 using RobustNeuralNetworks
 using Statistics
 
+# Random seed for consistency
+rng = MersenneTwister(42)
+
+# Model specification
+nu = 28*28              # Number of inputs (size of image)
+ny = 10                 # Number of outputs (possible classifications)
+nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
+γ = 10                  # Lipschitz bound of 1
+
+# Set up model: define parameters, then create model
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+model = Chain(
+    DiffLBDN(model_ps), 
+    Flux.softmax
+)
+
 # Get MNIST training and test data
-train_x, train_y = MNIST.traindata(Float64)
-test_x, test_y = MNIST.testdata(Float64)
+T = Float64
+x_train, y_train = MNIST(T, split=:train)[:]
+x_test,  y_test  = MNIST(T, split=:test)[:]
 
-# Reshape as appropriate for training
-train_x = Flux.flatten(train_x)
-test_x = Flux.flatten(test_x)
+# Reshape features for model input
+x_train = Flux.flatten(x_train)
+x_test  = Flux.flatten(x_test)
 
-train_y, test_y = onehotbatch(train_y, 0:9), onehotbatch(test_y, 0:9)
+# Encode categorical variables on output
+y_train = Flux.onehotbatch(y_train, 0:9)
+y_test  = Flux.onehotbatch(y_test,  0:9)
 
+# Loss function
+loss(model,x,y) = Flux.crossentropy(model(x), y)
 
-# Define a model with LBDN
-nu = 28*28      # Inputs
-nh = [60]       # 1 hidden layer of size 60 (has to be in a vector)
-ny = 10         # Outputs
-γ = 5.0         # Lipschitz bound upper limit (must be a float)
+# Check % accuracy during training
+compare(y::OneHotMatrix, ŷ) = maximum(ŷ, dims=1) .== maximum(y.*ŷ, dims=1)
+accuracy(model, x, y::OneHotMatrix) = mean(compare(y, model(x)))
 
-lbfn = LBFN{Float64}(nu, nh, ny, γ)
-m = Chain(lbfn, softmax)
+# Callback function to show results while training
+function progress(model, iter)
+    train_loss = round(loss(model, x_train, y_train), digits=4)
+    test_acc = round(accuracy(model, x_test, y_test), digits=4)
+    @show iter train_loss test_acc
+    println()
+end
 
-# Could instead use a fully-connected network (see below)
-#m =  Chain(Dense(28*28,60, relu), Dense(60, 10), softmax)
+# Define hyperparameters
+num_epochs = [200, 400]
+lrs = [1e-3, 1e-4]
+data = [(x_train, y_train)]
 
-# Define loss function, optimiser, and get params
-loss(x, y) = crossentropy(m(x), y) 
-opt = ADAM(1e-3)
-ps = Flux.params(m)
+# Train with the Adam optimiser
+for k in eachindex(lrs)
+    opt_state = Flux.setup(Adam(lrs[k]), model)
+    for i in 1:num_epochs[k]
+        Flux.train!(loss, model, data, opt_state)
+        (i % 10 == 0) && progress(model, i)
+    end
+end
 
-# Comparison functions
-compare(y::OneHotMatrix, y′) = maximum(y′, dims = 1) .== maximum(y .* y′, dims = 1)
-accuracy(x, y::OneHotMatrix) = mean(compare(y, m(x)))
-
-# To check progrress while training
-progress = () -> @show(loss(train_x, train_y), accuracy(test_x, test_y) ) # callback to show loss
-
-# Train model with two different leaning rates
-opt = ADAM(1e-3)
-@epochs 200 Flux.train!(loss, ps,[(train_x,train_y)], opt, cb = throttle(progress, 10))
-opt = ADAM(1e-4)
-@epochs 400 Flux.train!(loss, ps,[(train_x,train_y)], opt, cb = throttle(progress, 10))
-
-# Show results
-accuracy(train_x,train_y)
-accuracy(test_x,test_y)
+# Print final results
+train_acc = accuracy(model, x_train, y_train)
+test_acc  = accuracy(model, x_test,  y_test)
+println("Training accuracy: $(round(train_acc,digits=4)*100)%")
+println("Test accuracy:     $(round(test_acc,digits=4)*100)%")
