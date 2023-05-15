@@ -157,7 +157,7 @@ function DirectRENParams{T}(
     end
 
     # Polar parameter
-    ρ = polar_param ? [norm(X)] : zeros(T,0)
+    ρ = [norm(X)]
 
     # Free parameter for E
     Y1 = glorot_normal(nx, nx; T=T, rng=rng)
