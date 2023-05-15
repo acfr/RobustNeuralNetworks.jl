@@ -19,7 +19,7 @@ using RobustNeuralNetworks
 # Setup
 rng = MersenneTwister(42)
 batches = 10
-nu, nx, nv, ny = 4, 10, 20, 2
+nu, nx, nv, ny = 4, 10, 20, 1
 γ = 1
 
 # Construct a REN
@@ -34,14 +34,11 @@ u0 = randn(rng, ren.nu, batches)
 x1, y1 = ren(x0, u0)
 
 # Print results for testing
-yout = round.(y1; digits=2)
-println(yout[1,:])
-println(yout[2,:])
+println(round.(y1; digits=2))
 
 # output
 
-[0.73, 0.72, -0.53, 0.25, 0.84, 0.97, 0.96, 1.13, 0.87, 1.07]
-[1.13, 1.07, 1.44, 0.83, 0.94, 1.26, 0.86, 0.8, 0.96, 0.86]
+[0.23 -0.01 -0.06 0.15 -0.03 -0.11 0.0 0.42 0.24 0.22]
 ```
 
-See [Package Overview](@ref) for a detailed walkthrough of this example.
+See [Package Overview](@ref) for a detailed walkthrough of this example. For a detailed example of training models from `RobustNeuralNetworks.jl`, we recommend starting with [Fitting a Curve with LBDN](@ref).

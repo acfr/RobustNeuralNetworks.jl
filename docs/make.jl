@@ -15,10 +15,11 @@ makedocs(
             "Contributing to the Package" => "introduction/developing.md",
         ],
         "Examples" => Any[
-            "Image Classification" => "examples/lbdn.md",
+            "Fitting a Curve" => "examples/lbdn_curvefit.md",
+            "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
-            "Nonlinear Control" => "examples/nonlinear_ctrl.md",
             "PDE Observer" => "examples/pde_obsv.md",
+            "Nonlinear Control" => "examples/ren_ctrl.md",
         ],
         "Library" => Any[
             "Model Wrappers" => "lib/models.md",

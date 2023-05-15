@@ -21,7 +21,7 @@ Note that `WrapREN` cannot be used with [`Flux.jl`](http://fluxml.ai/Flux.jl/sta
 
 In this example, we create a REN satisfying some generic behavioural constraints and demonstrate how to update the REN wrapper if model parameters are changed.
 
-```jldoctest; output = false
+```jldoctest
 using LinearAlgebra
 using Random
 using RobustNeuralNetworks
@@ -50,11 +50,11 @@ x1, y1 = ren(x0, u0)
 ren.params.direct.B2 .*= rand(rng, size(ren.params.direct.B2)...)
 update_explicit!(ren)
 
-println(round(ren.explicit.B2[1];digits=4))
+println(round(ren.explicit.B2[10];digits=4))
 
 # output
 
--0.0335
+0.0109
 ```
 
 See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
