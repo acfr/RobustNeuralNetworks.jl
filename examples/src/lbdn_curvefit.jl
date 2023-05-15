@@ -67,7 +67,7 @@ lines!(xs, ys, label = "Data")
 lines!(xs, ŷ, label = "LBDN")
 axislegend(ax)
 display(f1)
-save("curve_fit_lbdn.svg", f1)
+save("../results/curve_fit_lbdn.svg", f1)
 
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = lip(model, xs, dx)

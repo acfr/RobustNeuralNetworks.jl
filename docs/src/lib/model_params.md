@@ -1,5 +1,5 @@
 ```@index
-Pages = ["ren_params.md"]
+Pages = ["model_params.md"]
 ```
 
 # Model Parameterisations
