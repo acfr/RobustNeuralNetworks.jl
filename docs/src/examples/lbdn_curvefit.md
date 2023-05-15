@@ -4,7 +4,7 @@ For our first example, let's fit a Lipschitz-bounded Deep Network (LBDN) to a cu
 ```math
 f(x) = \sin(x) + \frac{1}{N}\sin(Nx)
 ```
-Our aim is to demonstrate how to train a model in `RobustNeuralNetworks.jl`, and how toset constraints to ensure the model naturally satisfies some user-defined robustness certificate. We'll follow the steps below to fit an LBDN model to our function ``f(x)``:
+Our aim is to demonstrate how to train a model in `RobustNeuralNetworks.jl`, and how to set constraints to ensure the model naturally satisfies some user-defined robustness certificate. We'll follow the steps below to fit an LBDN model to our function ``f(x)``:
 1. Generate training data
 2. Define a model with a Lipshitz bound (maximum slope) of `1.0`
 3. Define a loss function
@@ -49,9 +49,7 @@ model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
 model = DiffLBDN(model_ps)
 ```
 
-Notice that we first constructed the model parameters `model_ps` defining a (dense) LBDN with [`DenseLBDNParams`](@ref) and then created a callable `model` with the [`DiffREN`](@ref) wrapper. In `RobustNeuralNetworks.jl`, model parameterisations are separated from the "explicit" definition of the model used for evaluation on data. The [`DiffREN`](@ref) model wrapper combines the two together in a model structure more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience.
-
-For more information, see the [Package Overview](@ref). 
+Notice that we first constructed the model parameters `model_ps` defining a (dense) LBDN with [`DenseLBDNParams`](@ref) and then created a callable `model` with the [`DiffLBDN`](@ref) wrapper. In `RobustNeuralNetworks.jl`, model parameterisations are separated from the "explicit" definition of the model used for evaluation on data. The [`DiffLBDN`](@ref) model wrapper combines the two together in a model structure more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience. See the [Package Overview](@ref) for more information.
 
 ## 3. Define a loss function
 
@@ -116,9 +114,9 @@ ŷ = map(x -> model([x])[1], xs)
 lines!(xs, ys, label = "Data")
 lines!(xs, ŷ, label = "LBDN")
 axislegend(ax)
-save("curve_fit_lbdn.svg", f1)
+save("lbdn_curve_fit.svg", f1)
 ```
-![](curve_fit_lbdn.svg)
+![](lbdn_curve_fit.svg)
 
 The model roughly approximates the multiple sine-wave ``f(x)``, but maintains a maximum Lipschitz constant (slope on the graph) below 1. 
 

@@ -18,8 +18,8 @@ makedocs(
             "Fitting a Curve" => "examples/lbdn_curvefit.md",
             "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
-            "Nonlinear Control" => "examples/ren_ctrl.md",
             "PDE Observer" => "examples/pde_obsv.md",
+            "Nonlinear Control" => "examples/ren_ctrl.md",
         ],
         "Library" => Any[
             "Model Wrappers" => "lib/models.md",

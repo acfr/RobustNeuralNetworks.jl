@@ -43,7 +43,7 @@ y_test  = Flux.onehotbatch(y_test,  0:9)
 # Loss function
 loss(model,x,y) = Flux.crossentropy(model(x), y)
 
-# Check % accuracy during training
+# Check test accuracy during training
 compare(y::OneHotMatrix, ŷ) = maximum(ŷ, dims=1) .== maximum(y.*ŷ, dims=1)
 accuracy(model, x, y::OneHotMatrix) = mean(compare(y, model(x)))
 
@@ -81,7 +81,7 @@ println("Test accuracy:     $(round(test_acc,digits=2))%")
 
 # Make a couple of example plots
 indx = rand(rng, 1:1000, 3)
-f1 = Figure(resolution = (1000, 400))
+f1 = Figure(resolution = (800, 300))
 for i in eachindex(indx)
 
     # Get data and do prediction
@@ -99,7 +99,7 @@ for i in eachindex(indx)
         f1[1,i], xmat, axis=(
             yreversed = true, 
             aspect = DataAspect(), 
-            title = "True: $(yval), Prediction: $(ŷval)"
+            title = "True class: $(yval), Prediction: $(ŷval)"
         )
     )
 
