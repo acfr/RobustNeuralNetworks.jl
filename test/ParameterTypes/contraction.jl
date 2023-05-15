@@ -5,13 +5,18 @@ using Test
 # include("../test_utils.jl")
 
 """
-Test that the contracting REN actually does contract
+Test that the contracting REN actually does contract.
+
+Test uses some of the additional options just to double-check.
 """
 batches = 42
-nu, nx, nv, ny = 4, 5, 10, 2
+nu, nx, nv, ny = 4, 5, 10, 5
 ᾱ = 0.5
 
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; init=:cholesky, αbar=ᾱ)
+ren_ps = ContractingRENParams{Float64}(
+    nu, nx, nv, ny; 
+    init=:cholesky, αbar=ᾱ, polar_param=false, is_output=false
+)
 ren = REN(ren_ps)
 
 # Same inputs. different initial conditions
