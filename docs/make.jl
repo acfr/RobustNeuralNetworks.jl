@@ -15,7 +15,7 @@ makedocs(
             "Contributing to the Package" => "introduction/developing.md",
         ],
         "Examples" => Any[
-            "Modelling a Curve" => "examples/lbdn_curvefit.md",
+            "Fitting a Curve" => "examples/lbdn_curvefit.md",
             "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
             "Nonlinear Control" => "examples/ren_ctrl.md",

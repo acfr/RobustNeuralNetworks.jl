@@ -41,4 +41,4 @@ println(round.(y1; digits=2))
 [0.23 -0.01 -0.06 0.15 -0.03 -0.11 0.0 0.42 0.24 0.22]
 ```
 
-See [Package Overview](@ref) for a detailed walkthrough of this example. For a detailed example of training models from `RobustNeuralNetworks.jl`, we recommend starting with [Modelling a Curve with LBDN](@ref).
+See [Package Overview](@ref) for a detailed walkthrough of this example. For a detailed example of training models from `RobustNeuralNetworks.jl`, we recommend starting with [Fitting a Curve with LBDN](@ref).

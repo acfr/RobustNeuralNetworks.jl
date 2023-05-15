@@ -1,4 +1,4 @@
-# Modelling a Curve with LBDN
+# Fitting a Curve with LBDN
 
 For our first example, let's fit a Lipschitz-bounded Deep Network (LBDN) to a curve in one dimension. Consider the multiple sine-wave function below as an example.
 ```math

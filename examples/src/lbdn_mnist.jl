@@ -2,6 +2,8 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate("../")
 
+using BSON
+using CairoMakie
 using Flux
 using Flux: OneHotMatrix
 using MLDatasets: MNIST
@@ -10,13 +12,13 @@ using RobustNeuralNetworks
 using Statistics
 
 # Random seed for consistency
-rng = MersenneTwister(42)
+rng = MersenneTwister(24)
 
 # Model specification
 nu = 28*28              # Number of inputs (size of image)
 ny = 10                 # Number of outputs (possible classifications)
 nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
-γ = 10                  # Lipschitz bound of 1
+γ  = 5                  # Lipschitz bound of 5
 
 # Set up model: define parameters, then create model
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
@@ -54,21 +56,59 @@ function progress(model, iter)
 end
 
 # Define hyperparameters
-num_epochs = [200, 400]
+num_epochs = 300
 lrs = [1e-3, 1e-4]
 data = [(x_train, y_train)]
 
 # Train with the Adam optimiser
 for k in eachindex(lrs)
     opt_state = Flux.setup(Adam(lrs[k]), model)
-    for i in 1:num_epochs[k]
+    for i in 1:num_epochs
         Flux.train!(loss, model, data, opt_state)
-        (i % 10 == 0) && progress(model, i)
+        (i % 50 == 0) && progress(model, i)
     end
 end
 
+# Save the model for later use
+bson("../results/lbdn_mnist.bson", Dict("model" => model))
+# model = BSON.load("../results/lbdn_mnist.bson")["model"]
+
 # Print final results
-train_acc = accuracy(model, x_train, y_train)
-test_acc  = accuracy(model, x_test,  y_test)
-println("Training accuracy: $(round(train_acc,digits=4)*100)%")
-println("Test accuracy:     $(round(test_acc,digits=4)*100)%")
+train_acc = accuracy(model, x_train, y_train)*100
+test_acc  = accuracy(model, x_test,  y_test)*100
+println("Training accuracy: $(round(train_acc,digits=2))%")
+println("Test accuracy:     $(round(test_acc,digits=2))%")
+
+# Make a couple of example plots
+indx = rand(rng, 1:1000, 3)
+f1 = Figure(resolution = (1000, 400))
+for i in eachindex(indx)
+
+    # Get data and do prediction
+    x = x_test[:,indx[i]]
+    y = y_test[:,indx[i]]
+    ŷ = model(x)
+
+    # Reshape data for plotting
+    xmat = reshape(x, 28, 28)
+    yval = (0:9)[y][1]
+    ŷval = (0:9)[ŷ .== maximum(ŷ)][1]
+
+    # Plot results
+    ax, _ = image(
+        f1[1,i], xmat, axis=(
+            yreversed = true, 
+            aspect = DataAspect(), 
+            title = "True: $(yval), Prediction: $(ŷval)"
+        )
+    )
+
+    # Format the plot
+    ax.xticksvisible = false
+    ax.yticksvisible = false
+    ax.xticklabelsvisible = false
+    ax.yticklabelsvisible = false
+
+end
+display(f1)
+save("../results/lbdn_mnist.svg", f1)

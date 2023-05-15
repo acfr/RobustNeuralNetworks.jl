@@ -59,7 +59,7 @@ for k in eachindex(lrs)
 end
 
 # Create a figure
-f1 = Figure()
+f1 = Figure(resolution = (600, 400))
 ax = Axis(f1[1,1], xlabel="x", ylabel="y")
 
 ŷ = map(x -> model([x])[1], xs)
@@ -67,7 +67,7 @@ lines!(xs, ys, label = "Data")
 lines!(xs, ŷ, label = "LBDN")
 axislegend(ax)
 display(f1)
-save("../results/curve_fit_lbdn.svg", f1)
+save("../results/lbdn_curve_fit.svg", f1)
 
 # Print out lower-bound on Lipschitz constant
 Empirical_Lipschitz = lip(model, xs, dx)
