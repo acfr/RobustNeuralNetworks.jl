@@ -60,6 +60,7 @@ include("Wrappers/REN/wrap_ren.jl")
 
 include("Wrappers/LBDN/lbdn.jl")
 include("Wrappers/LBDN/diff_lbdn.jl")
+include("Wrappers/LBDN/sandwich_fc.jl")
 
 
 ############ Exports ############
@@ -93,6 +94,7 @@ export WrapREN
 
 export LBDN
 export DiffLBDN
+export SandwichFC
 
 # Functions
 export direct_to_explicit

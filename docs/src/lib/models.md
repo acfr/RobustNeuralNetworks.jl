@@ -10,6 +10,7 @@ Pages = ["models.md"]
 AbstractLBDN
 DiffLBDN
 LBDN
+SandwichFC
 ```
 
 ## Recurrent Equilibrium Networks
