@@ -19,7 +19,7 @@ This is slow and computationally inefficient if the model is called many times b
 See also [`AbstractLBDN`](@ref), [`LBDN`](@ref).
 """
 function DiffLBDN(ps::AbstractLBDNParams{T}) where T
-    sqrt_γ = T(sqrt(ps.γ))
+    sqrt_γ = sqrt(ps.γ)
     return DiffLBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, ps)
 end
 

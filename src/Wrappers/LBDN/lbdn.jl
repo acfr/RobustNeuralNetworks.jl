@@ -19,7 +19,7 @@ This constructor takes a direct parameterisation of LBDN
 See also [`AbstractLBDN`](@ref), [`DiffLBDN`](@ref).
 """
 function LBDN(ps::AbstractLBDNParams{T}) where T
-    sqrt_γ = T(sqrt(ps.γ))
+    sqrt_γ = sqrt(ps.γ)
     explicit = direct_to_explicit(ps)
     return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, explicit)
 end
