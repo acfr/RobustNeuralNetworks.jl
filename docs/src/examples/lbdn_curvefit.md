@@ -51,6 +51,26 @@ model = DiffLBDN(model_ps)
 
 Notice that we first constructed the model parameters `model_ps` defining a (dense) LBDN with [`DenseLBDNParams`](@ref) and then created a callable `model` with the [`DiffLBDN`](@ref) wrapper. In `RobustNeuralNetworks.jl`, model parameterisations are separated from the "explicit" definition of the model used for evaluation on data. The [`DiffLBDN`](@ref) model wrapper combines the two together in a model structure more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience. See the [Package Overview](@ref) for more information.
 
+!!! info "A layer-wise approach"
+    The [`DiffLBDN`](@ref) (and [`LBDN`](@ref)) wrapper can be added to a [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) just like any other model. However, we also provide single LBDN layers with [`SandwichFC`](@ref) to mimic the layer-wise construction of models with [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense). This may be more convenient for users used to working with `Flux.jl`.
+
+    For example, we can construct an identical model to the LBDN `model` above with the following.
+    ```julia
+    using Flux
+
+    chain_model = Flux.Chain(
+        (x) -> (√γ * x),
+        SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng=rng),
+        SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng=rng),
+        SandwichFC(nh[2] => nh[3], Flux.relu; T=Float64, rng=rng),
+        SandwichFC(nh[3] => nh[4], Flux.relu; T=Float64, rng=rng),
+        (x) -> (√γ * x),
+        SandwichFC(nh[4] => ny, Flux.relu; output_layer=true, T=Float64, rng=rng),
+    )
+    ```
+
+    See Section 3.1 of [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) for further details.
+
 ## 3. Define a loss function
 
 Let's stick to a simple loss function based on the mean-squared error (MSE) for this example. All [`AbstractLBDN`](@ref) models take an `AbstractArray` as their input, which is why `x` and `y` are wrapped in vectors.

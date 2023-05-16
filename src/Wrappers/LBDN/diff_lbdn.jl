@@ -16,7 +16,7 @@ Construct a differentiable LBDN from its direct parameterisation.
 
 This is slow and computationally inefficient if the model is called many times before updating the parameters (eg: in reinforcement learning). However, it can be trained just like any other [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/) model and does not need to be re-created if the trainable parameters are updated (unlike [`LBDN`](@ref)).
 
-See also [`AbstractLBDN`](@ref), [`LBDN`](@ref).
+See also [`AbstractLBDN`](@ref), [`LBDN`](@ref), [`SandwichFC`](@ref).
 """
 function DiffLBDN(ps::AbstractLBDNParams{T}) where T
     sqrt_γ = sqrt(ps.γ)
