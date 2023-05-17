@@ -5,27 +5,21 @@ Pkg.activate("../../")
 # using Distributions
 using LinearAlgebra
 using ControlSystems
-using JuMP
+# using JuMP
 using Convex
 using BSON: @save, @load
 
-using MosekTools
-using Mosek
+# using MosekTools
+# using Mosek
 
-using Plots
-using StatsPlots
+# using Plots
+# using StatsPlots
 
 using Revise
 
 do_plot = false
 
-stop_here
-
-gr()
-default(labelfontsize=7, legendfontsize=7, tickfontsize=7,
-        linewidth=2, framestyle=:box, label=nothing, grid=true)
-
-# includet("utils.jl")
+# # includet("utils.jl")
 includet("./models/ffREN.jl")
 
 
@@ -58,16 +52,8 @@ function sample_disturbance()
 end
 d = sample_disturbance()
 
-p1 = plot(d[1:1000]; label="Example Disturbance", xlabel="Time Steps")
-do_plot && display(p1)
-
 # Simulate system response with disturbance
 b = Pdy(d)
-p2 = plot(d')
-plot!(b')
-do_plot && display(p2)
-
-
 
 
 # Sample ESN and simulate effect of output 
@@ -78,9 +64,6 @@ function Q(v)
 
     X = reduce(hcat, xt)
     W = reduce(hcat, wt)
-
-    println(size(X))
-    println(size(W))
     
     return [X; W; v; ones(1, size(v, 2))]   # include ones for bias term
 end
