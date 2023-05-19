@@ -36,18 +36,6 @@ end
 d = sample_disturbance()
 batches = size(d, 2)
 
-# Compute responses
-z0 = T0(d)
-ỹ = T2(d)
-
-# Plot just to check
-if do_plot
-    f = lines(vec(d))
-    lines!(vec(z))
-    display(f)
-end
-
-# Echo-state network: 
 # Set up a contracting REN whose outputs are yt = [xt; wt; ut]
 nu = 1
 nx, nv = 10, 20
@@ -60,17 +48,33 @@ model.explicit.D21 = Matrix{Float64}([zeros(nx, nv); I(nv); zeros(nu, nv)])
 model.explicit.D22 = Matrix{Float64}([zeros(nx, nu); zeros(nv, nu); I(nu)])
 model.explicit.by  = zeros(ny)
 
-# Set up a variable to represent the actual output layer
+# Echo-state network params θ = [C2, D21, D22, by]
 θ = Convex.Variable(1, nx+nv+nu+1)
 
-# Compute closed-loop response
-function Q(ỹt)
+# Echo-state components (add ones for bias vector)
+function Qᵢ(u)
     x0 = init_states(model, batches)
-    _, yt = model(x0, ỹt)
-    ũ = θ * [yt; ones(1, batches)] # Add 1s for the bias vector
-    return ũ
+    _, y = model(x0, u)
+    return [y; ones(1,batches)]
 end
-ũ = Q(ỹ)
-z = z0 + T1(ũ)
 
-# TODO: The output layer is linear. You can take it outside of the next operation! (will fix bug)
+# Complete the closed-loop response and control inputs 
+# z = T₀ + ∑ θᵢ*T₁(Qᵢ(T₂(d)))
+# u = ∑ θᵢ*Qᵢ(T₂(d))
+z0 = T0(d)
+ỹ  = T2(d)
+ũ  = Qᵢ(ỹ)
+z1 = reduce(vcat, T1(ũ') for ũ in eachrow(ũ))
+z  = z0 + θ * z1
+u  = θ * ũ
+
+# Optimize the closed-loop response
+J = norm(z, 1)
+
+
+# Plot just to check
+if do_plot
+    f = lines(vec(d))
+    lines!(vec(z))
+    display(f)
+end
