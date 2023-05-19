@@ -7,6 +7,8 @@ Our next example features an LBDN trained to classify the [MNIST](https://en.wik
 4. Train the model to minimise the loss function
 5. Evaluate the trained model
 
+For details on how tuning the Lipschitz bound increases the model robustness, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
+
 ## 1. Load the data
 
 Let's start by loading the training and test data. [`MLDatasets.jl`](https://juliaml.github.io/MLDatasets.jl/stable/) contains a number of common machine-learning datasets, including the [MNIST dataset](https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST). To load the full dataset of 60,000 training images and 10,000 test images, one would run the following code.
