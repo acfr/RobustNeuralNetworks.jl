@@ -8,6 +8,7 @@ using Convex
 using LinearAlgebra
 using Random
 using RobustNeuralNetworks
+using SCS
 
 do_plot = false
 rng = MersenneTwister(42)
@@ -61,15 +62,22 @@ end
 # Complete the closed-loop response and control inputs 
 # z = T₀ + ∑ θᵢ*T₁(Qᵢ(T₂(d)))
 # u = ∑ θᵢ*Qᵢ(T₂(d))
-z0 = T0(d)
-ỹ  = T2(d)
-ũ  = Qᵢ(ỹ)
-z1 = reduce(vcat, T1(ũ') for ũ in eachrow(ũ))
-z  = z0 + θ * z1
-u  = θ * ũ
+function echo_state_network(d, θ)
+    z0 = T0(d)
+    ỹ  = T2(d)
+    ũ  = Qᵢ(ỹ)
+    z1 = reduce(vcat, T1(ũ') for ũ in eachrow(ũ))
+    z  = z0 + θ * z1
+    u  = θ * ũ
+    return z, u
+end
+z, u = echo_state_network(d, θ)
 
 # Optimize the closed-loop response
 J = norm(z, 1)
+constraints = [u < 5, u > 5]
+problem = minimize(J, constraints)
+Convex.solve!(problem, SCS.Optimizer)
 
 
 # Plot just to check
