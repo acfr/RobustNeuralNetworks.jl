@@ -2,16 +2,16 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate("../")
 
+using BSON
 using CairoMakie
 using ControlSystems
 using Convex
 using LinearAlgebra
+using Mosek, MosekTools
 using Random
 using RobustNeuralNetworks
-using SCS
 
-do_plot = false
-rng = MersenneTwister(42)
+rng = MersenneTwister(1)
 
 # System parameters and poles: λ = ρ*exp(± im ϕ)
 ρ = 0.8
@@ -30,33 +30,40 @@ T1(u) = sim_sys(u)
 T2(u) = -sim_sys(u)
 
 # Sample disturbances
-function sample_disturbance(amplitude=10, samples=30, hold=50)
+function sample_disturbance(amplitude=10, samples=500, hold=50)
     d = 2 * amplitude * (rand(rng, 1, samples) .- 0.5)
     return kron(d, ones(1, hold))
 end
 d = sample_disturbance()
-batches = size(d, 2)
+
+# Check out the disturbance and response
+f = Figure(resolution = (600, 400))
+ax = Axis(f[1,1], xlabel="Time steps", ylabel="Output")
+lines!(ax, vec(d)[1:1000],  label="Disturbance")
+axislegend(ax, position=:rt)
+display(f)
+save("../results/echo_ren_inputs.svg", f)
 
 # Set up a contracting REN whose outputs are yt = [xt; wt; ut]
 nu = 1
-nx, nv = 10, 20
+nx, nv = 50, 500
 ny = nx + nv + nu
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, nx; rng=rng)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
 model  = REN(ren_ps)
 
-model.explicit.C2  = Matrix{Float64}([I(nx); zeros(nv, nx); zeros(nu, nx)])
-model.explicit.D21 = Matrix{Float64}([zeros(nx, nv); I(nv); zeros(nu, nv)])
-model.explicit.D22 = Matrix{Float64}([zeros(nx, nu); zeros(nv, nu); I(nu)])
-model.explicit.by  = zeros(ny)
+model.explicit.C2  .= [I(nx); zeros(nv, nx); zeros(nu, nx)]
+model.explicit.D21 .= [zeros(nx, nv); I(nv); zeros(nu, nv)]
+model.explicit.D22 .= [zeros(nx, nu); zeros(nv, nu); I(nu)]
+model.explicit.by  .= zeros(ny)
 
 # Echo-state network params θ = [C2, D21, D22, by]
 θ = Convex.Variable(1, nx+nv+nu+1)
 
 # Echo-state components (add ones for bias vector)
 function Qᵢ(u)
-    x0 = init_states(model, batches)
+    x0 = init_states(model, size(u,2))
     _, y = model(x0, u)
-    return [y; ones(1,batches)]
+    return [y; ones(1,size(y,2))]
 end
 
 # Complete the closed-loop response and control inputs 
@@ -69,20 +76,50 @@ function echo_state_network(d, θ)
     z1 = reduce(vcat, T1(ũ') for ũ in eachrow(ũ))
     z  = z0 + θ * z1
     u  = θ * ũ
-    return z, u
+    return z, u, z0
 end
-z, u = echo_state_network(d, θ)
+z, u, _= echo_state_network(d, θ)
 
 # Optimize the closed-loop response
-J = norm(z, 1)
-constraints = [u < 5, u > 5]
+J = norm(z, 1) + 1e-4*(sumsquares(u) + norm(θ, 2))
+constraints = [u < 5, u > -5]
 problem = minimize(J, constraints)
-Convex.solve!(problem, SCS.Optimizer)
+Convex.solve!(problem, Mosek.Optimizer)
 
+u1 = evaluate(u)
+println("Maximum training controls: ", round(maximum(u1), digits=2))
+println("Minimum training controls: ", round(minimum(u1), digits=2))
+println("Training cost: ", round(evaluate(J), digits=2), "\n")
 
-# Plot just to check
-if do_plot
-    f = lines(vec(d))
-    lines!(vec(z))
-    display(f)
-end
+# Test on a different disturbance and plot
+θ_solved = evaluate(θ)
+a_test = range(0, length=7, stop=8)
+d_test = reduce(hcat, a .* [ones(1, 50) zeros(1, 50)] for a in a_test)
+z_test, u_test, z0_test = echo_state_network(d_test, θ_solved)
+
+println("Maximum test controls: ", round(maximum(u_test), digits=2))
+println("Minimum test controls: ", round(minimum(u_test), digits=2))
+bson("../results/echo_ren_params.bson", Dict("params" => θ_solved))
+
+# Plot the results
+f = Figure(resolution = (1000, 400))
+ga = f[1,1] = GridLayout()
+
+# Response
+ax1 = Axis(ga[1,1], xlabel="Time steps", ylabel="Output")
+lines!(ax1, vec(d_test),  label="Disturbance")
+lines!(ax1, vec(z0_test), label="Open Loop")
+lines!(ax1, vec(z_test),  label="Echo-REN")
+axislegend(ax1, position=:lt)
+
+# Control inputs
+ax2 = Axis(ga[1,2], xlabel="Time steps", ylabel="Control signal")
+lines!(ax2, vec(u_test), label="Echo-REN")
+lines!(
+    ax2, [1, length(u_test)], [-5, -5], 
+    color=:black, linestyle=:dash, label="Constraints"
+)
+axislegend(ax2, position=:lt)
+
+display(f)
+save("../results/echo_ren_results.svg", f)
