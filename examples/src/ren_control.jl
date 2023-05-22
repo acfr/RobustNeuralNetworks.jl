@@ -119,7 +119,8 @@ lines!(
     ax2, [1, length(u_test)], [-5, -5], 
     color=:black, linestyle=:dash, label="Constraints"
 )
-axislegend(ax2, position=:lt)
+lines!(ax2, [1, length(u_test)], [5, 5], color=:black, linestyle=:dash)
+axislegend(ax2, position=:rt)
 
 display(f)
 save("../results/echo_ren_results.svg", f)
