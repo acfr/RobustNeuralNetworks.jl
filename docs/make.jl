@@ -19,7 +19,7 @@ makedocs(
             "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
             "PDE Observer" => "examples/pde_obsv.md",
-            "Nonlinear Control" => "examples/echo_ren.md",
+            "(Convex) Nonlinear Control" => "examples/echo_ren.md",
         ],
         "Library" => Any[
             "Model Wrappers" => "lib/models.md",
