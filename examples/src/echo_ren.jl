@@ -36,7 +36,7 @@ function sample_disturbance(amplitude=10, samples=500, hold=50)
 end
 d = sample_disturbance()
 
-# Check out the disturbance and response
+# Check out the disturbance
 f = Figure(resolution = (600, 400))
 ax = Axis(f[1,1], xlabel="Time steps", ylabel="Output")
 lines!(ax, vec(d)[1:1000],  label="Disturbance")
@@ -69,7 +69,7 @@ end
 # Complete the closed-loop response and control inputs 
 # z = T₀ + ∑ θᵢ*T₁(Qᵢ(T₂(d)))
 # u = ∑ θᵢ*Qᵢ(T₂(d))
-function echo_state_network(d, θ)
+function sim_echo_state_network(d, θ)
     z0 = T0(d)
     ỹ  = T2(d)
     ũ  = Qᵢ(ỹ)
@@ -78,11 +78,13 @@ function echo_state_network(d, θ)
     u  = θ * ũ
     return z, u, z0
 end
-z, u, _= echo_state_network(d, θ)
+z, u, _= sim_echo_state_network(d, θ)
 
-# Optimize the closed-loop response
+# Cost function and constraints
 J = norm(z, 1) + 1e-4*(sumsquares(u) + norm(θ, 2))
 constraints = [u < 5, u > -5]
+
+# Optimize the closed-loop response
 problem = minimize(J, constraints)
 Convex.solve!(problem, Mosek.Optimizer)
 
@@ -91,11 +93,11 @@ println("Maximum training controls: ", round(maximum(u1), digits=2))
 println("Minimum training controls: ", round(minimum(u1), digits=2))
 println("Training cost: ", round(evaluate(J), digits=2), "\n")
 
-# Test on a different disturbance and plot
+# Test on different inputs
 θ_solved = evaluate(θ)
 a_test = range(0, length=7, stop=8)
 d_test = reduce(hcat, a .* [ones(1, 50) zeros(1, 50)] for a in a_test)
-z_test, u_test, z0_test = echo_state_network(d_test, θ_solved)
+z_test, u_test, z0_test = sim_echo_state_network(d_test, θ_solved)
 
 println("Maximum test controls: ", round(maximum(u_test), digits=2))
 println("Minimum test controls: ", round(minimum(u_test), digits=2))
