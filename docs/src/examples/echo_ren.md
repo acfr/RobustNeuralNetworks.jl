@@ -3,16 +3,16 @@
 *This example was first presented in Section IX of [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942).*
 
 
-We can use RENs and LBDNs for a lot more than just learning-based problems. In this example, we'll see how RENs can be used to design nonlinear feedback controllers with stability guarantees for linear dynamical systems with constraints. Introducing constraints (eg: minimum/maximum control inputs) often means that nonlinear controllers perform better than linear policies. A common approach is to use *Model Predictive Control* ([MPC](https://en.wikipedia.org/wiki/Model_predictive_control)). In our case, we'll use convex optimisation to design a nonlinear controller. The controller will be an [*echo state network*](https://en.wikipedia.org/wiki/Echo_state_network) based on a contracting REN. We'll use this alongside the [*Youla-Kucera parameterisation*](https://www.sciencedirect.com/science/article/pii/S1367578820300249) to guarantee stability during optimisation.
+RENs and LBDNs can be used for a lot more than just learning-based problems. In this example, we'll see how RENs can be used to design nonlinear feedback controllers with stability guarantees for linear dynamical systems with constraints. Introducing constraints (eg: minimum/maximum control inputs) often means that nonlinear controllers perform better than linear policies. A common approach is to use *Model Predictive Control* ([MPC](https://en.wikipedia.org/wiki/Model_predictive_control)). In our case, we'll use convex optimisation to design a nonlinear controller. The controller will be an [*echo state network*](https://en.wikipedia.org/wiki/Echo_state_network) based on a contracting REN. We'll use this alongside the [*Youla-Kucera parameterisation*](https://www.sciencedirect.com/science/article/pii/S1367578820300249) to guarantee stability of the final controller.
 
-For a detailed explanation of the theory behind this example, please read the original [paper](https://doi.org/10.48550/arXiv.2104.05942). For more on using RENs with the Youla parameterisation, see [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) or [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193).
+For a detailed explanation of the theory behind this example, please read Section IX of the original [paper](https://doi.org/10.48550/arXiv.2104.05942). For more on using RENs with the Youla parameterisation, see [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193).
 
 
 ## 1. Background theory
 
 ### Stabilising a linear system
 
-We'll start with some background on the structure of linear systems and output-feedback controllers. Consider a discrete-time linear system with state vector ``x_t``, control signal ``u_t``, external inputs ``d_t``, measured output ``y_t,`` and some performance variable to be kept small ``z_t``.
+We'll start with some background on the structure of linear systems and output-feedback controllers. Consider a discrete-time linear system with state vector ``x_t``, control signal ``u_t``, external inputs ``d_t``, measured output ``y_t,`` and some performance variable ``z_t`` to be kept small.
 
 ```math
 \begin{aligned}
@@ -32,7 +32,7 @@ u_t &= -K\hat{x}_t + \tilde{u}_t
 \end{aligned}
 ```
 
-We have also included an additional signal ``\tilde{u}_t`` to augment the control signal. With a little bit of algebra, the closed-loop dynamics of the system can be written in the following form, where ``\mathcal{T}_0, \mathcal{T}_1, \mathcal{T}_2`` are linear systems.
+We have also included an additional signal ``\tilde{u}_t`` to augment the control inputs ``u_t.`` With a little bit of algebra, the closed-loop dynamics of the system can be written in the following form, where ``\mathcal{T}_0, \mathcal{T}_1, \mathcal{T}_2`` are linear systems.
 
 ```math
 \begin{bmatrix}
@@ -53,7 +53,7 @@ Notice that there is no coupling between ``\tilde{y}`` and ``\tilde{u}``.
 
 The linear controller will stabilise our linear dynamical system in the absence of any constraints. But what if we want to shape the closed-loop response to meet some user-defined design criteria without losing stability? For example, what if we want to keep the control signal in some safe range ``u_\mathrm{min} < u_t < u_\mathrm{max}`` at all times?
 
-It turns out that if we augment the original controller with ``\tilde{u} = \mathcal{Q}(\tilde{y})`` where ``\mathcal{Q}`` is a [*contracting system*](https://fbullo.github.io/ctds/) then the closed-loop system is guaranteed to still be stable. This is incredibly useful for optimal control design. For example, we could use a contracting REN as our parameter ``\mathcal{Q}`` and optimise it to meet some performance specifications (like control constrains), knowing that final closed-loop system is guaranteed to be stable. The closed-loop response can be written as follows.
+It turns out that if we augment the original controller with ``\tilde{u} = \mathcal{Q}(\tilde{y})`` where ``\mathcal{Q}`` is a [*contracting system*](https://fbullo.github.io/ctds/) then the closed-loop system is guaranteed to remain stable. This is incredibly useful for optimal control design. For example, we could use a contracting REN as our parameter ``\mathcal{Q}`` and optimise it to meet some performance specifications (like control constrains), knowing that final closed-loop system is guaranteed to be stable. The closed-loop response can be written as follows.
 
 ```math
 z = \mathcal{T}_0 d + \mathcal{T}_1 \mathcal{Q}(\mathcal{T}_2 d)
@@ -64,7 +64,7 @@ This is an old idea in linear control theory called the Youla-Kucera parameteris
 
 ### Echo state networks with REN
 
-Now that we've decided on a structure for our control framework, we need a way to create and optimise a contracting ``\mathcal{Q}`` to meet our design criteria. We could directly use a contracting REN for ``\mathcal{Q}`` and train it with reinforcement learning, thereby learning over the space of [all stabilising controllers](https://ieeexplore.ieee.org/abstract/document/9802667)  for this linear system. While it's very useful to have this option, sometimes we'll want a more straightforward solution. Enter convex optimisation with echo state networks.
+Now that we've decided on a structure for our control framework, we need a way to create and optimise a contracting ``\mathcal{Q}`` to meet our design criteria. We could directly use a contracting REN for ``\mathcal{Q}`` and train it with reinforcement learning, thereby [learning over the space of all stabilising controllers](https://ieeexplore.ieee.org/abstract/document/9802667)  for this linear system. While it's very useful to have this option, sometimes we'll want a more efficient solution. Enter convex optimisation with echo state networks.
 
 Let's say ``\mathcal{Q}`` has learnable parameters ``\theta``. Suppose our problem is to minimise some convex objective function ``J(z)`` subject to a set of convex constraints. I.e:
 
@@ -116,7 +116,7 @@ Let's consider a simple discrete-time linear system whose closed-loop transfer f
 \mathcal{T}_0 = \mathcal{T}_1 = -\mathcal{T}_2 = \frac{0.3}{q^2 - 2\rho \cos(\phi)q + \rho^2}
 ```
 
-where ``q`` is the shift operator and ``\rho = 0.8,`` ``\phi = 0.2\pi.`` We'll define the system using [`ControlSystems.jl`](https://juliacontrol.github.io/ControlSystems.jl/stable/).
+where ``q`` is the shift operator and ``\rho = 0.8,`` ``\phi = 0.2\pi.`` [`ControlSystems.jl`](https://juliacontrol.github.io/ControlSystems.jl/stable/) offers a nice interface for working with discrete-time transfer functions.
 
 ```julia
 using ControlSystems
@@ -204,7 +204,7 @@ function Qᵢ(u)
 end
 ```
 
-The last part of the echo state network is the learnable output map. Let's use [`Convex.jl`](https://jump.dev/Convex.jl/stable/) to set up this optimisation problem.
+The last part of the echo state network is the optimisable output map, which we can set up with [`Convex.jl`](https://jump.dev/Convex.jl/stable/).
 
 ```julia
 using Convex
@@ -216,7 +216,7 @@ using Convex
 
 ## 5. Optimise the model
 
-Now that we've defined the model, we can simulate the closed-loop system and optimise it to meet our design requirements. Let's write a function that computes the performance signal ``z`` and control inputs ``u`` with the echo state network as our augmenting system ``\mathcal{Q}``.
+Now that we've defined the model, we can simulate the closed-loop system and optimise it to meet our design requirements. We need a function that computes the performance signal ``z`` and control inputs ``u`` with the echo state network as our augmenting system ``\mathcal{Q}``.
 
 ```julia
 # Complete the closed-loop response and control inputs 
@@ -242,7 +242,7 @@ J = norm(z, 1) + 1e-4*(sumsquares(u) + norm(θ, 2))
 constraints = [u < 5, u > -5]
 ```
 
-With the problem all nicely defined, all we have to do is solve it and investigate the resulting control system. We used the Mosek solver packaged up in [`Mosek.jl`](https://github.com/MOSEK/Mosek.jl). Note that Mosek requires a license. A free academic license can be obtained from [this link](https://www.mosek.com/products/academic-licenses/). You could try using any of the other solvers compatible with `Convex.jl`, but second-order interior point methods will be the most reliable.
+With the problem all nicely defined, all we have to do is solve it and investigate the resulting control system. We used the Mosek solver with [`Mosek.jl`](https://github.com/MOSEK/Mosek.jl). Note that Mosek requires a license. A free academic license can be obtained from [this link](https://www.mosek.com/products/academic-licenses/). You could try using any of the other solvers compatible with `Convex.jl`, but second-order interior point methods will be the most reliable.
 
 ```julia
 using BSON
@@ -260,7 +260,7 @@ bson("../results/echo_ren_params.bson", Dict("params" => θ_solved))
 
 ## 6. Evaluate the model
 
-Let's have a look at how our closed-loop system performs with our optimised nonlinear controller. We'll first generate some test data: repeating square waves of increasing amplitude.
+We can now assess the closed-loop performance of our system under the optimised nonlinear controller. We'll first generate some test data: repeating square waves of increasing amplitude.
 
 ```julia
 # Test on different inputs
@@ -269,7 +269,7 @@ d_test = reduce(hcat, a .* [ones(1, 50) zeros(1, 50)] for a in a_test)
 z_test, u_test, z0_test = sim_echo_state_network(d_test, θ_solved)
 ```
 
-Now let's plot the closed-loop response and required control signal.
+Now plot the closed-loop response and required control signal.
 
 ```julia
 # Plot the results

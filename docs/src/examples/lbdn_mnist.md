@@ -22,7 +22,7 @@ x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 ```
 
-For the purposes of this example, we'll only load a small subset of the dataset.
+For the purposes of this example, we'll load a small subset of the dataset.
 ```@example mnist
 using BSON
 
@@ -52,7 +52,7 @@ println("Features: ", size(x_test))
 println("Labels:   ", size(y_test))
 ```
 
-Features are now stored in a `Matrix` where each column contains pixel data from a single image, and the labels have been converted to a `OneHotMatrix` where each column contains a 1 in the row corresponding to the image's classification (eg: row 2 for an image showing the number 3).
+Features are now stored in a `Matrix` where each column contains pixel data from a single image, and the labels have been converted to a `OneHotMatrix` where each column contains a 1 in the row corresponding to the image's classification (eg: row 3 for an image showing the number 2).
 
 
 ## 2. Define a model
@@ -79,7 +79,7 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 println(typeof(model))
 ```
 
-The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain).
+The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain). An alternative approach would be to use [`SandwichFC`](@ref) layers to build the network.
 
 
 ## 3. Define a loss function
@@ -94,7 +94,7 @@ loss(model,x,y) = Flux.crossentropy(model(x), y)
 
 ## 4. Train the model
 
-Before training the model to minimise the cross entropy loss, let's set up a callback function to evaluate the model performance during training.
+Before training the model to minimise the cross entropy loss, we can set up a callback function to evaluate the model performance during training.
 
 ```@example mnist
 using Statistics
