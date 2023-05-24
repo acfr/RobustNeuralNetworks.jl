@@ -93,9 +93,10 @@ C_2 & D_{21} & D_{22} \\
 b_x \\ b_v \\ b_y
 \end{bmatrix}
 \end{equation*}
+\quad \text{where} \quad w_t = \sigma(v_t)
 ```
 
-Note that ``w_t = \sigma(v_t)`` where ``\sigma`` is the nonlinear activation function. The inputs and outputs of the REN are ``\bar{u}_t`` and ``\bar{y}_t``, respectively. We can therefore create a *contracting* echo state network by randomly initialising a contracting REN whose outputs are ``\bar{x}_t, w_t, \bar{u}_t`` and separately optimising the output layer 
+Note that ``\sigma`` is the nonlinear activation function (eg: a ReLU). The inputs and outputs of the REN are ``\bar{u}_t`` and ``\bar{y}_t``, respectively. We can therefore create a *contracting* echo state network by randomly initialising a contracting REN whose outputs are ``\bar{x}_t, w_t, \bar{u}_t`` and separately optimising the output layer 
 ```math
 \bar{y}_t = C_2 \bar{x}_t + D_{21} w_t + D_{22} \bar{u}_t + b_y,
 ```
@@ -169,7 +170,7 @@ lines!(ax, vec(d)[1:1000],  label="Disturbance")
 axislegend(ax, position=:rt)
 display(f)
 ```
-![](../../assets/echo-ren/echo_ren_inputs.svg)
+![](../assets/echo-ren/echo_ren_inputs.svg)
 
 
 ## 4. Define a stable echo state network
@@ -296,6 +297,6 @@ axislegend(ax2, position=:rt)
 display(f)
 ```
 
-![](../../assets/echo-ren/echo_ren_results.svg)
+![](../assets/echo-ren/echo_ren_results.svg)
 
 In open loop (i.e: just the system ``\mathcal{T}_0`` without our echo state REN), the performance output increases linearly with the disturbance amplitude. When we add our optimised "Echo-REN", it returns the performance output to zero as quickly as possible without exceeding the ``\pm 5`` limits on the control signal. The steady-state amplitude only starts to deviate from zero when the control signal reaches its limits.

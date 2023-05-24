@@ -1,15 +1,11 @@
-# Package Overview
+# Package Overview OLD
 
 The `RobustNeuralNetwork.jl` package is divided into Recurrent Equilibrium Network (REN) and Lipschitz-Bounded Deep Network (LBDN) models.
 
 
 ## REN Overview
 
-The REN models are defined by two fundamental types:
 
-- Any subtype of [`AbstractRENParams`](@ref) holds all the information required to directly parameterise a REN satisfying some user-defined behavioural constraints.
-
-- Any subtype of [`AbstractREN`](@ref) represents the REN in its explicit form so that it can be called and evaluated.
 
 !!! info "Separate Objects for Parameters and Model"
     When working with most models (eg: [RNN](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.RNN) and [LSTM](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.LSTM)) the typical workflow is to create a single instance of a model. Its parameters are updated during training, but the model object is only created once. For example:
@@ -45,41 +41,7 @@ The REN models are defined by two fundamental types:
 
 ### (Direct) Parameter Types
 
-Subtypes of [`AbstractRENParams`](@ref) define *direct parameterisations* of a REN. They are not callable models. There are four REN parameter types currently in this package:
-
-- [`ContractingRENParams`](@ref) parameterises a REN with a user-defined upper bound on the contraction rate.
-
-- [`LipschitzRENParams`](@ref) parameterises a REN with a user-defined Lipschitz constant of $\gamma \in (0,\infty)$.
-
-- [`PassiveRENParams`](@ref) parameterises an input/output passive REN with user-tunable passivity parameter $\nu \ge 0$.
-
-- [`GeneralRENParams`](@ref) parameterises a REN satisfying some generalbehavioural constraints defined by an Integral Quadratic Constraint (IQC).
-
-For more information on these four parameterisations, please see [Revay et al. (2021)](https://doi.org/10.48550/arXiv.2104.05942).
-
-Each of these parameter types has the following collection of attributes:
-
-- A static nonlinearity `nl`. Common choices are `Flux.relu` or `Flux.tanh` (see [`Flux.jl`](http://fluxml.ai/Flux.jl/stable/) for more information).
-
-- Model sizes `nu`, `nx`, `nv`, `ny` defining the number of inputs, states, neurons, and outputs (respectively).
-
-- An instance of [`DirectRENParams`](@ref) containing the direct parameters of the REN, including all **trainable** parameters.
-
-- Other attributes used to define how the direct parameterisation should be converted to the implicit model. These parameters encode the user-tunable behavioural constraints. Eg: $\gamma$ for a Lipschitz-bounded REN.
-
 The typical workflow is to create an instance of a REN parameterisation only once. This defines all dimensions and desired properties of a REN. It is then converted to an explicit model for the REN to be evaluated.
-
-
-
-### Explicit REN Models
-
-An *explicit* REN model must be created to call and use the network for computation. The explicit parameterisation contains all information required to evaluate a REN. We encode RENs in explicit form as subtypes of the [`AbstractREN`](@ref) type. Each subtype of `AbstractREN` is callable and includes the following attributes:
-
-- A static nonlinearity `nl` and model sizes `nu`, `nx`, `nv`, `ny` (same as `AbstractRENParams`.
-
-- An instance of `ExplicitRENParams` containing all REN parameters in explicit form for model evaluation (see the [`ExplicitRENParams`](@ref) docs for more detail).
-
-Each subtype of `AbstractRENParams` has a method [`direct_to_explicit`](@ref) associated with it that converts the `DirectRENParams` struct to an instance of `ExplicitRENParams` satisfying the specified behavioural constraints.
 
 
 #### REN Wrappers
@@ -126,8 +88,3 @@ for k in 1:num_training_epochs
 ```
 
 See the docstring of each wrapper and the examples (eg: [PDE Observer Design with REN](@ref)) for more details.
-
-
-## LBDN Overview
-
-*[To be written once LBDN has been properly added to the package.]*

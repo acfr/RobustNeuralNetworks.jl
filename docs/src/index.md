@@ -16,7 +16,7 @@ The direct parameterisation of RENs and LBDNs means that we can train models wit
 ## Introduction
 
 ```@contents
-Pages = ["introduction/getting_started.md", "introduction/layout.md", "introduction/developing.md"]
+Pages = ["introduction/getting_started.md", "introduction/background_theory.md", "introduction/package_overview.md", "introduction/developing.md"]
 Depth = 1
 ```
 

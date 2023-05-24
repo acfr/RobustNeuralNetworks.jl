@@ -11,7 +11,8 @@ makedocs(
         "Home" => "index.md",
         "Introduction" => Any[
             "Getting Started" => "introduction/getting_started.md",
-            "Package Overview" => "introduction/layout.md",
+            "Background Theory" => "introduction/background_theory.md",
+            "Package Overview" => "introduction/package_overview.md",
             "Contributing to the Package" => "introduction/developing.md",
         ],
         "Examples" => Any[
