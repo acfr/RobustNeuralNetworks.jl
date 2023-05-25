@@ -60,21 +60,129 @@ See [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) for mo
 
 ## Direct & explicit parameterisations
 
-The key advantage of the RENs and LBDNs in `RobustNeuralNetworks.jl` is that the models naturally satisfy a set of user-defined robustness constraints (see [Definitions of robustness](@ref)). This means that we can guarantee the robustness of our neural networks *by construction*. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or LBDN. One can simply use unconstrained optimisation methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
+The key advantage of the models in `RobustNeuralNetworks.jl` is that they naturally satisfy a set of user-defined robustness constraints (see [Robustness metrics and IQCs](@ref)). This means that we can guarantee the robustness of our neural networks *by construction*. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or LBDN. One can simply use unconstrained optimisation methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
-We achieve this by constructing the weight matrices and bias vectors in the RENs and LBDNs to satisfy linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) for details). From a high level, think of the equations above as the **explicit parameterisation** of RENs and LBDNs. I.e: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
+We achieve this by constructing the weight matrices and bias vectors in the models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters for a model is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs. I.e: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
 
-The learnable parameters of the model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters for a model is exactly ``\mathbb{R}^N``, we call this a **direct parameterisation**. The *direct parameters* of the model are then ``\theta.`` 
+In `RobustNeuralNetworks.jl`, RENs are defined by two fundamental types. Any subtype of [`AbstractRENParams`](@ref) holds all the information required to directly parameterise a REN satisfying some robustness properties. For example, to initialise the direct parameters of a contracting REN with 1 input, 10 states, 20 neurons, and 1 output, we would use the following.
 
-When training a REN or LBDN, we learn and update the direct parameters ``\theta`` and convert them to the explicit parameters ``\bar{\theta}`` only for model evaluation. The mapping ``\theta \mapsto \bar{\theta}`` ensures that the REN or LBDN being evaluated is constructed in such a way that the robustness criteria are met.
+```@example build_ren
+using RobustNeuralNetworks
 
-## Definitions of robustness
+nu, nx, nv, ny = 1, 10, 20, 1
+ren_params = ContractingRENParams{Float64}(nu, nx, nv, ny)
+
+typeof(ren_params) <: AbstractRENParams
+```
+
+Subtypes of [`AbstractREN`](@ref) represent RENs in their explicit form so that they can be called and evaluated. The conversion from the direct to explicit parameters ``\theta \mapsto \bar{\theta}`` is performed when the REN is constructed.
+
+```@example build_ren
+model = REN(ren_params)
+
+typeof(model) <: AbstractREN
+```
+
+The same is true for [`AbstractLBDNParams`](@ref) and [`AbstractLBDN`](@ref) regarding LBDN models.
+
+
+### Types of direct parameterisations
+
+There are currently four REN parameterisations implemented in this package:
+
+- [`ContractingRENParams`](@ref) parameterises a REN with a user-defined upper bound on the contraction rate.
+
+- [`LipschitzRENParams`](@ref) parameterises a REN with a user-defined Lipschitz constant of $\gamma \in (0,\infty)$.
+
+- [`PassiveRENParams`](@ref) parameterises an input/output passive REN with user-tunable passivity parameter $\nu \ge 0$.
+
+- [`GeneralRENParams`](@ref) parameterises a REN satisfying some general behavioural constraints defined by an Integral Quadratic Constraint (IQC) with parameters (Q,S,R).
+
+Similarly, subtypes of [`AbstractLBDNParams`](@ref) define the direct parameterisation of an LBDN. There is currently only one version implemented in `RobustNeuralNetworks.jl`:
+
+- [`DenseLBDNParams`](@ref) parameterises an dense (fully-connected) LBDN. A dense LBDN is effectively a Lipschitz-bounded [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) network.
+
+See [Robustness metrics and IQCs](@ref) for an explanation of these types.
+
+
+### Explicit model wrappers
+
+When training a REN or LBDN, we learn and update the direct parameters ``\theta`` and convert them to the explicit parameters ``\bar{\theta}`` only for model evaluation. The main constructors for explicit models are [`REN`](@ref) and [`LBDN`](@ref).
+
+Users familiar with [`Flux.jl`](https://fluxml.ai/) will be used to creating a model just once and then training/updating it on their data. The typical workflow is something like this.
+
+```julia
+using Flux
+using Random
+
+# Define a model and a loss function
+model = Chain(Flux.Dense(1 => 10, Flux.relu), Flux.Dense(10 => 1), Flux.relu)
+loss(model, x, y) = Flux.mse(model(x), y)
+
+# Set up some dummy training data
+batches = 20
+xs, ys = rand(1,batches), rand(1,batches)
+data = [(xs, ys)]
+
+# Train the model for 50 epochs
+opt_state = Flux.setup(Adam(0.01), model)
+for _ in 1:50
+	Flux.train!(loss, model, data, opt_state)
+end
+```
+
+When using a model constructed from [`REN`](@ref) or [`LBDN`](@ref), we also want to differentiate through the mapping from direct (learnable) parameters to explicit model. In this case, we'd need a setup where the model construction is actually part of the loss function. Here's an example with an [`LBDN`](@ref).
+
+```julia
+using Flux
+using Random
+
+# Define a model parameterisation and a loss function
+model_params = DenseLBDNParams{Float64}(1, [10], 1)
+function loss(model_params, x, y) 
+	model = LBDN(model_params)
+	Flux.mse(model(x), y)
+end
+
+# Set up some dummy training data
+batches = 20
+xs, ys = rand(1,batches), rand(1,batches)
+data = [(xs, ys)]
+
+# Train the model for 50 epochs
+opt_state = Flux.setup(Adam(0.01), model_params)
+for _ in 1:50
+	Flux.train!(loss, model_params, data, opt_state)
+end
+```
+
+!!! info "Separating parameters and models is efficient"
+    You might ask: why not write a wrapper which just computes the explicit parameters each time the model is called? That would save the user the worry of keeping track of the `model_params` and `model` separately. 
+
+	In fact, we have. See [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref). Any model created with these interfaces can be used exactly the same way as a regular [`Flux.jl`](https://fluxml.ai/) model. This is illustrated in the examples like [Fitting a Curve with LBDN](@ref).
+
+	The reason we nominally keep the `model_params` and `model` separate with [`REN`](@ref) and [`LBDN`](@ref) is because the computational bottleneck is converting from the direct to explicit parameters (mapping ``\theta \mapsto \bar{\theta}``). Direct parameters are stored in `model_params`, while explicit parameters are stored in the `model`. Using our earlier example of a contracting REN:
+
+	```@example build_ren
+	println(typeof(model_params.direct))
+	println(typeof(model.explicit))
+	```
+	
+	In some applications (eg: reinforcement learning or system identification), a model is called many times with the same explicit parameters ``\bar{\theta}`` before its learnable parameters ``\theta`` are updated and ``\bar{\theta}`` needs to be computed again. 
+
+	It's therefore efficient to store the explicit parameters, use them many times, and then update them when required. We can't store the direct and explicit parameters in the same object though, since [`Flux.jl`] does not permit mutation of non-learnable parameters. Instead, we separate the two.
+
+	!!! tip "Which wrapper should I use?"
+		Model wrappers like [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref) re-compute the explicit parameters every single time the model is called rather than storing it. For applications like image classification, curve fitting, etc., they are the best choice. For applications where the model is called many times (eg: in a feedback loop) before updating it, use [`REN`](@ref) and [`LBDN`](@ref).
+
+
+## Robustness metrics and IQCs
 
 There are a number of different robustness criteria which our REN models can satisfy. Some relate to the internal dynamics of the model, others relate to the input/output map. LBDNs are less general. They are specifically constructed to satisfy Lipschitz bounds. See the section on [Lipschitz bounds (smoothness)](@ref) below.
 
 ### Contracting systems
 
-First and foremost, all of our REN models are **contracting systems**. This means that they exponentially "forget" initial conditions. That is, if two copies of the system start at two different initial conditions but are given the same inputs, the internal states will converge over time. See below for an example of a contracting REN with a single internal state.
+First and foremost, **all** of our REN models are **contracting systems**. This means that they exponentially "forget" initial conditions. That is, if two copies of the system start at two different initial conditions but are given the same inputs, the internal states will converge over time. See below for an example of a contracting REN with a single internal state.
 
 ```@raw html
 <p align="center">
@@ -84,7 +192,7 @@ First and foremost, all of our REN models are **contracting systems**. This mean
 
 ### Integral quadratic constraints
 
-We define robustness criteria on the input/output map of our RENs with *incremental integral quadratic constraints* (IQCs). Suppose we have a model ``\mathcal{M}`` starting at two different initial conditions ``a,b`` with two different input signals ``u, v``, and consider their corresponding output trajectories ``y^a = \mathcal{M}_a(u)`` and ``y^b = \mathcal{M}_b(v).`` The model ``\mathcal{M}`` satisfies the IQC defined by matrices ``(Q, S, R)`` if
+We define additional robustness criteria on the input/output map of our RENs with *incremental integral quadratic constraints* (IQCs). Suppose we have a model ``\mathcal{M}`` starting at two different initial conditions ``a,b`` with two different input signals ``u, v``, and consider their corresponding output trajectories ``y^a = \mathcal{M}_a(u)`` and ``y^b = \mathcal{M}_b(v).`` The model ``\mathcal{M}`` satisfies the IQC defined by matrices ``(Q, S, R)`` if
 
 ```math
 \sum_{t=0}^T
