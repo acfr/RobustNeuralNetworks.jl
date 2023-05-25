@@ -1,10 +1,10 @@
 # Fitting a Curve with LBDN
 
-For our first example, let's fit a Lipschitz-bounded Deep Network (LBDN) to a curve in one dimension. Consider the multiple sine-wave function below as an example.
+For our first example, let's fit a Lipschitz-bounded Deep Network (LBDN) to a curve in one dimension. Consider the multiple sine-wave function below.
 ```math
 f(x) = \sin(x) + \frac{1}{N}\sin(Nx)
 ```
-Our aim is to demonstrate how to train a model in `RobustNeuralNetworks.jl`, and how to set constraints to ensure the model naturally satisfies some user-defined robustness certificate (the Lipschitz bound). We'll follow the steps below to fit an LBDN model to our function ``f(x)``:
+Our aim is to demonstrate how to train a model in `RobustNeuralNetworks.jl`, and how to ensure the model naturally satisfies some user-defined robustness certificate (the Lipschitz bound). We'll follow the steps below to fit an LBDN model to our function ``f(x)``:
 1. Generate training data
 2. Define a model with a Lipshitz bound (maximum slope) of `1.0`
 3. Define a loss function
@@ -49,10 +49,10 @@ model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
 model = DiffLBDN(model_ps)
 ```
 
-Note that we first constructed the model parameters `model_ps`, and *then* created a callable `model`. In `RobustNeuralNetworks.jl`, model parameterisations are separated from "explicit" definitions of a model used for evaluation on data. The [`DiffLBDN`](@ref) model wrapper combines the two together in a model structure that may be more familiar to [`Flux.jl`](https://fluxml.ai/) users for convenience. The `model_ps`, constructed from [`DenseLBDNParams`](@ref), contain all information required to define an LBDN. See the [Package Overview](@ref) for more information.
+Note that we first constructed the model parameters `model_ps`, and *then* created a callable `model`. In `RobustNeuralNetworks.jl`, model parameterisations are separated from "explicit" definitions of a model used for evaluation on data. See the [Direct & explicit parameterisations](@ref) for more information.
 
 !!! info "A layer-wise approach"
-    The [`DiffLBDN`](@ref) (and [`LBDN`](@ref)) wrapper can be added to a [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain) just like any other model. However, we also provide single LBDN layers with [`SandwichFC`](@ref) to mimic the layer-wise construction of models like with [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense). This may be more convenient for users used to working with `Flux.jl`.
+    We have also provided single LBDN layers with [`SandwichFC`](@ref) to mimic the layer-wise construction of models like with [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense). This may be more convenient for users used to working with `Flux.jl`.
 
     For example, we can construct an identical model to the LBDN `model` above with the following.
     ```julia
