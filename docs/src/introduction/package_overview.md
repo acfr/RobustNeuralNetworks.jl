@@ -37,10 +37,8 @@ w_t=\sigma(&v_t):=\begin{bmatrix}
 
 where ``v_t, w_t \in \mathbb{R}^{n_v}`` are the inputs and outputs of neurons and ``\sigma`` is the activation function. Graphically, this is equivalent to the following, where the linear (actually affine) system ``G`` represents the first equation above.
 
-```@raw html
-<p align="center">
-  <img src="ren.svg" width="35%"/>
-</p>
+```@example
+HTML("""<p align="center"> <object type="image/svg+xml" data=$(joinpath(Main.buildpath, "../assets/ren.svg")) width="35%"></object> </p>""") #hide
 ```
 
 A *Lipschitz-Bounded Deep Network* (LBDN) can be thought of as a specialisation of a REN with a state dimension of ``n_x = 0``. That is, LBDN models have no dynamics or memory associated with them. In reality, we use this simplification to construct LBDN models completely differently to RENs. We construct LBDNs as ``L``-layer feed-forward networks, much like [MLPs](https://en.wikipedia.org/wiki/Multilayer_perceptron) or [CNNs](https://en.wikipedia.org/wiki/Convolutional_neural_network), described by the following recursive equations.
@@ -185,10 +183,8 @@ There are a number of different robustness criteria which our RENs can satisfy. 
 
 First and foremost, all of our RENs are *contracting systems*. This means that they exponentially "forget" initial conditions. If the system starts at two different initial conditions but is given the same inputs, the internal states will converge over time. See below for an example of a contracting REN with a single internal state. The code used to generate this figure can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/contracting_ren.jl).
 
-```@raw html
-<p align="center">
-  <img src="contracting_ren.svg" width="50%"/>
-</p>
+```@example
+HTML("""<p align="center"> <object type="image/svg+xml" data=$(joinpath(Main.buildpath, "../assets/contracting_ren.svg")) width="50%"></object> </p>""") #hide
 ```
 
 ### Integral quadratic constraints
