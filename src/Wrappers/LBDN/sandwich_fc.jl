@@ -22,7 +22,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 
 - `init::Function=Flux.glorot_normal`: Initialisation function for all weights and bias vectors.
 - `bias::Bool=true`: Include bias vector or not.
--`output_layer::Bool=false`: Just the output layer of a dense LBDN or regular sandwich layer.
+- `output_layer::Bool=false`: Just the output layer of a dense LBDN or regular sandwich layer.
 - `T::DataType=Float32`: Data type for weight matrices and bias vectors.
 - `rng::AbstractRNG = Random.GLOBAL_RNG`: rng for model initialisation.
 

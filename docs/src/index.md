@@ -1,31 +1,29 @@
 # RobustNeuralNetworks.jl Documentation
 
-*Bringing robust machine learning to Julia.*
+*A Julia package for robust neural networks.*
 
-Welcome to the documentation for `RobustNeuralNetworks.jl`! This package contains neural network models that are constructed to naturally satisfy robustness constraints, all in native Julia.
+Welcome to the documentation for `RobustNeuralNetworks.jl`! This package contains neural network models that are constructed to naturally satisfy robustness constraints, all in native Julia. You can find our GitHub repository [here](https://github.com/acfr/RobustNeuralNetworks.jl).
 
 ## Why Robust Models?
 
-Modern machine learning relies heavily on rapidly training and evaluating neural networks in problems ranging from image classification to robotic control. Most existing neural network architectures have no robustness certificates, making them sensitive to poor data quality, adversarial attacks, and other input perturbations. The few neural network architectures proposed in recent years that offer solutions to this brittle behaviour rely on explicitly enforcing constraints during training to “smooth” the network response. These methods are computationally expensive, making them slow and difficult to scale up to complex real-world problems.
+Modern machine learning relies heavily on training and evaluating neural networks in problems ranging from image classification to robotic control. Most neural network architectures have no robustness certificates, making them sensitive to poor data quality, adversarial attacks, and other input perturbations. The few architectures that address this brittle behaviour rely on explicitly enforcing constraints during training to “smooth” the network response. These methods are computationally expensive, making them slow and difficult to scale up to complex real-world problems.
 
-Recently, we proposed the Recurrent Equilibrium Network (REN) architecture as computationally efficient solutions to these problems. The REN architecture is flexible in that it includes all commonly used neural network models, such as fully-connected networks, convolutional neural networks, and recurrent neural networks. The weight matrices and bias vectors in a REN are directly parameterised to **naturally satisfy** behavioural constraints chosen by the user. For example, the user can build a REN with a given Lipschitz constant to ensure the output of the network is quantifiably less sensitive to unexpected input perturbations. 
+Recently, we proposed the Recurrent Equilibrium Network (REN) and Lipschitz-Bounded Deep Network (LBDN) architectures as computationally efficient solutions to these problems. The REN architecture is flexible in that it includes all commonly used neural network models, such as fully-connected networks, convolutional neural networks, and recurrent neural networks. The weight matrices and bias vectors in a REN are directly parameterised to **naturally satisfy** behavioural constraints chosen by the user. For example, the user can build a REN with a given Lipschitz constant to ensure the output of the network is quantifiably less sensitive to unexpected input perturbations. LBDN models are a specialisation of RENs with no internal state (no memory or recurrent cells) and a guaranteed, user-defined Lipschitz bound.
 
-The direct parameterisation of RENs means that we can train RENs with standard, unconstrained optimization methods (such as gradient descent) while also guaranteeing their robustness. Achieving the “best of both worlds” in this way is the main advantage of our REN/LBDN model classes, and allows us to freely train them for common machine learning problems as well as more difficult applications where safety and robustness are critical.
-
-[*TODO: Add comments on LBDN when properly added to the package.*]
+The direct parameterisation of RENs and LBDNs means that we can train models with standard, unconstrained optimization methods (such as gradient descent) while also guaranteeing their robustness. Achieving the “best of both worlds” in this way is the main advantage of our REN/LBDN model classes, and allows us to freely train them for common machine learning problems as well as more difficult applications where safety and robustness are critical.
 
 
 ## Introduction
 
 ```@contents
-Pages = ["introduction/getting_started.md", "introduction/layout.md", "introduction/developing.md"]
+Pages = ["introduction/getting_started.md", "introduction/package_overview.md", "introduction/developing.md"]
 Depth = 1
 ```
 
 ## Examples
 
 ```@contents
-Pages = ["examples/lbdn_curvefit.md", "examples/lbdn_mnist.md", "examples/rl.md", "examples/pde_obsv.md", "examples/ren_ctrl.md"]
+Pages = ["examples/lbdn_curvefit.md", "examples/lbdn_mnist.md", "examples/rl.md", "examples/pde_obsv.md", "examples/echo_ren.md"]
 Depth = 1
 ```
 

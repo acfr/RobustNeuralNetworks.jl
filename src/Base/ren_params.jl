@@ -94,7 +94,7 @@ This is typically used by higher-level constructors when defining a REN, which t
 
 - `bv_scale::T=1`: Set scalse of initial neuron input bias vector `bv`.
 
-- `is_output::Bool=true`: Include output layer ``y_t = C_2 x_t + D_{21} w_t + D_{22} u_t + b_y``.
+- `is_output::Bool=true`: Include output layer ``y_t = C_2 x_t + D_{21} w_t + D_{22} u_t + b_y``. Otherwise, output is just ``y_t = x_t``.
 
 - `ϵ::T=1e-12`: Regularising parameter for positive-definite matrices.
 

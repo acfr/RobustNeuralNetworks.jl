@@ -11,7 +11,7 @@ makedocs(
         "Home" => "index.md",
         "Introduction" => Any[
             "Getting Started" => "introduction/getting_started.md",
-            "Package Overview" => "introduction/layout.md",
+            "Package Overview" => "introduction/package_overview.md",
             "Contributing to the Package" => "introduction/developing.md",
         ],
         "Examples" => Any[
@@ -19,7 +19,7 @@ makedocs(
             "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
             "PDE Observer" => "examples/pde_obsv.md",
-            "Nonlinear Control" => "examples/ren_ctrl.md",
+            "(Convex) Nonlinear Control" => "examples/echo_ren.md",
         ],
         "Library" => Any[
             "Model Wrappers" => "lib/models.md",

@@ -7,6 +7,8 @@ Our next example features an LBDN trained to classify the [MNIST](https://en.wik
 4. Train the model to minimise the loss function
 5. Evaluate the trained model
 
+For details on how tuning the Lipschitz bound increases the model robustness, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
+
 ## 1. Load the data
 
 Let's start by loading the training and test data. [`MLDatasets.jl`](https://juliaml.github.io/MLDatasets.jl/stable/) contains a number of common machine-learning datasets, including the [MNIST dataset](https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST). To load the full dataset of 60,000 training images and 10,000 test images, one would run the following code.
@@ -20,7 +22,7 @@ x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 ```
 
-For the purposes of this example, we'll only load a small subset of the dataset.
+For the purposes of this example, we'll load a small subset of the dataset.
 ```@example mnist
 using BSON
 
@@ -50,7 +52,7 @@ println("Features: ", size(x_test))
 println("Labels:   ", size(y_test))
 ```
 
-Features are now stored in a `Matrix` where each column contains pixel data from a single image, and the labels have been converted to a `OneHotMatrix` where each column contains a 1 in the row corresponding to the image's classification (eg: row 2 for an image showing the number 3).
+Features are now stored in a `Matrix` where each column contains pixel data from a single image, and the labels have been converted to a `OneHotMatrix` where each column contains a 1 in the row corresponding to the image's classification (eg: row 3 for an image showing the number 2).
 
 
 ## 2. Define a model
@@ -77,7 +79,7 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 println(typeof(model))
 ```
 
-The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain).
+The `model` contains a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain). An alternative approach would be to use [`SandwichFC`](@ref) layers to build the network.
 
 
 ## 3. Define a loss function
@@ -92,7 +94,7 @@ loss(model,x,y) = Flux.crossentropy(model(x), y)
 
 ## 4. Train the model
 
-Before training the model to minimise the cross entropy loss, let's set up a callback function to evaluate the model performance during training.
+Before training the model to minimise the cross entropy loss, we can set up a callback function to evaluate the model performance during training.
 
 ```@example mnist
 using Statistics
@@ -187,7 +189,6 @@ for i in eachindex(indx)
     ax.yticklabelsvisible = false
 
 end
-display(f1)
 save("lbdn_mnist.svg", f1)
 ```
 ![](lbdn_mnist.svg)
