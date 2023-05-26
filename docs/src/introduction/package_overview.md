@@ -39,7 +39,7 @@ where ``v_t, w_t \in \mathbb{R}^{n_v}`` are the inputs and outputs of neurons an
 
 ```@raw html
 <p align="center">
-  <img src="../assets/ren.svg" width="35%"/>
+  <img src="ren.svg" width="35%"/>
 </p>
 ```
 
@@ -187,7 +187,7 @@ First and foremost, all of our RENs are *contracting systems*. This means that t
 
 ```@raw html
 <p align="center">
-  <img src="../assets/contracting_ren.svg" width="50%"/>
+  <img src="contracting_ren.svg" width="50%"/>
 </p>
 ```
 
