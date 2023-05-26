@@ -1,6 +1,8 @@
 using Documenter
 using RobustNeuralNetworks
 
+const buildpath = haskey(ENV, "CI") ? ".." : ""
+
 makedocs(
     sitename = "RobustNeuralNetworks.jl", 
     modules = [RobustNeuralNetworks],
