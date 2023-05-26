@@ -2,120 +2,121 @@ cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
 
-# TODO: Tidy up the unnecessary packages
-using Distributions
+using BSON
+using CairoMakie
 using Flux
-using Flux.Optimise:update!
-using Flux.Optimise
 using Formatting
 using LinearAlgebra
-using Plots
 using Random
 using RobustNeuralNetworks
-using Zygote
+using Statistics
 
 
 # TODO: Get this working with Float32, will be faster
 # TODO: Would be even better to get it working on the GPU
+dtype = Float64
 
 # Problem setup
 nx = 51             # Number of states
 n_in = 1            # Number of inputs
 L = 10.0            # Size of spatial domain
+steps = 5           # ?? What actually is this?
+sigma = 0.1         # Used to construct time step
 
+# Discretise space and time
+dx = L / (nx - 1)
+dt = sigma * dx^2
 
-# Generate data from finite difference approximation of heat equation
-function reaction_diffusion_equation(;L=10.0, steps=5, nx=51, sigma=0.1)
+# State dynamics and output functions f, g
+function f(u0, d)
+    u, un = copy(u0), copy(u0)
+    for _ in 1:steps
+        u = copy(un) 
 
-    # Discretise space/time
-    dx = L / (nx - 1)
-    dt = sigma * dx^2
+        # FD approximation of heat equation
+        f_local(v) = v[2:end - 1, :] .* (1 .- v[2:end - 1, :]) .* ( v[2:end - 1, :] .- 0.5)
+        laplacian(v) = (v[1:end - 2, :] + v[3:end, :] - 2v[2:end - 1, :]) / dx^2
+        
+        # Euler step for time
+        un[2:end - 1, :] = u[2:end - 1, :] + dt * (laplacian(u) + f_local(u) / 2 )
 
-    # State dynamics
-    function f(u0, d)
-        u, un = copy(u0), copy(u0)
-        for _ in 1:steps
-            u = copy(un) 
-
-            # FD approximation of heat equation
-            f_local(v) = v[2:end - 1, :] .* (1 .- v[2:end - 1, :]) .* ( v[2:end - 1, :] .- 0.5)
-            laplacian(v) = (v[1:end - 2, :] + v[3:end, :] - 2v[2:end - 1, :]) / dx^2
-            
-            # Euler step for time
-            un[2:end - 1, :] = u[2:end - 1, :] + dt * (laplacian(u) + f_local(u) / 2 )
-
-            # Boundary condition
-            un[1:1, :] = d;
-            un[end:end, :] = d;
-        end
-        return u
+        # Boundary condition
+        un[1:1, :] = d;
+        un[end:end, :] = d;
     end
-
-    # Output function
-    g(u, d) = [d; u[end ÷ 2:end ÷ 2, :]]
-    return f, g
+    return u
 end
-f, g = reaction_diffusion_equation()
 
-nPoints = Int(1e5)
-X = zeros(nx, nPoints)
-U = zeros(n_in, nPoints)
-for t in 1:nPoints - 1
-    X[:, t + 1:t + 1] = f(X[:, t:t], U[:, t:t])
-    
-    # Calculate next u
-    u_next = U[1,t] .+ 0.05f0 * randn(Float64)
-    if u_next > 1
-        u_next = 1
-    elseif u_next < 0
-        u_next = 0
+g(u, d) = [d; u[end ÷ 2:end ÷ 2, :]]
+
+# Generate simulated data
+function get_data(npoints=1000; init=zeros)
+
+    X = init(dtype, nx, npoints)
+    U = init(dtype, n_in, npoints)
+
+    for t in 1:npoints-1
+
+        # Next state
+        X[:, t+1] = f(X[:, t], U[:, t])
+        
+        # Next input bₜ
+        u_next = U[t] + 0.05f0*randn(dtype)
+        (u_next > 1) && (u_next = 1)
+        (u_next < 0) && (u_next = 0)
+        U[t + 1] = u_next
     end
-    U[:,t + 1] .= u_next
+    return X, U
 end
+
+X, U = get_data(100000; init=zeros)
 xt = X[:, 1:end - 1]
 xn = X[:, 2:end]
 y = g(X, U)
 
-input_data = [U; y][:, 1:end - 1]  # inputs to observer
-batchsize = 20
+# Store for the observer (inputs are inputs to observer)
+input_data = [U; y][:, 1:end - 1]
+batches = 20
+data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batches, shuffle=true)
 
-data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batchsize, shuffle=true)
-
-# Model parameters
+# Constuct a REN
+# TODO: Test if we actually need all of this
+# TODO: Does it matter what ϵ, polar_param, or nl are?
 nv = 500
 nu = size(input_data, 1)
 ny = nx
-
-# Constuction REN
-model_params = ContractingRENParams{Float64}(
+model_params = ContractingRENParams{dtype}(
     nu, nx, nv, ny; 
-    nl = tanh,
-    ϵ=0.01,
+    nl = tanh, ϵ=0.01,
     polar_param = false, 
     is_output = false
 )
-model = DiffREN(model_params)
+model = DiffREN(model_params) # (see the documentation)
 
-function train_observer!(model, data, opt; Epochs=200, regularizer=nothing, solve_tol=1E-5, min_lr=1E-7)
-    ps = Flux.params(model)
-    mean_loss = [1E5]
-    loss_std = []
+# Define a loss function
+function loss(model, xn, x, u)
+    xpred = model(x, u)[1]
+    return mean(norm(xpred[:, i] - xn[:, i]).^2 for i in 1:size(x, 2))
+end
+
+# Train the model
+function train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
+
+    # Set up the optimiser
+    opt_state = Flux.setup(Adam(lr), model)
+
+    mean_loss, loss_std = [1e5], []
     for epoch in 1:Epochs
         batch_loss = []
         for (xni, xi, ui) in data
-            function calc_loss()
-                xpred = model(xi, ui)[1]
-                return mean(norm(xpred[:, i] - xni[:, i]).^2 for i in 1:size(xi, 2))
-            end
 
-            train_loss, back = Zygote.pullback(calc_loss, ps)
-
-            # Calculate gradients and update loss
-            ∇J = back(one(train_loss))
-            update!(opt, ps, ∇J)
+            # Get gradient and store loss
+            train_loss, ∇J = Flux.withgradient(loss, model, xni, xi, ui)
+            Flux.update!(opt_state, model, ∇J[1])
         
+            # Store losses for later
             push!(batch_loss, train_loss)
-            printfmt("Epoch: {1:2d}\tTraining loss: {2:1.4E} \t lr={3:1.1E}\n", epoch, train_loss, opt.eta)
+            printfmt("Epoch: {1:2d}\tTraining loss: {2:1.4E} \t lr={3:1.1E}\n", epoch, train_loss, lr)
         end
 
         # Print stats through epoch
@@ -125,65 +126,69 @@ function train_observer!(model, data, opt; Epochs=200, regularizer=nothing, solv
         push!(mean_loss, mean(batch_loss))
         push!(loss_std, std(batch_loss))
 
-        # Check for decrease in loss.
+        # Check for decrease in loss
         if mean_loss[end] >= mean_loss[end - 1]
             println("Reducing Learning rate")
-            opt.eta *= 0.1
-            if opt.eta <= min_lr  # terminate optim.
-                return mean_loss, loss_std
-            end
+            lr *= 0.1
+            Flux.adjust!(opt_state, lr)
+            (lr <= min_lr) && (return mean_loss, loss_std)
         end
     end
     return mean_loss, loss_std
 end
 
-opt = Flux.Optimise.ADAM(1E-3)
-tloss, loss_std = train_observer!(model, data, opt; Epochs=200, min_lr=1E-7)
+# Train and save the model
+tloss, loss_std = train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
+bson("../results/pde_obsv.bson", 
+    Dict(
+        "model" => model, 
+        "training_loss" => tloss, 
+        "loss_std" => loss_std
+    )
+)
 
 # Test observer
-T = 1000
-time = 1:T
-
-u = ones(Float64, n_in, length(time)) / 2
-x = ones(Float64, nx, length(time))
-
-for t in 1:T - 1
-    x[:, t + 1] = f(x[:, t:t], u[t:t])
-    
-    # Calculate next u
-    u_next = u[t] + 0.05f0 * (randn(Float64))
-    if u_next > 1
-        u_next = 1
-    elseif u_next < 0
-        u_next = 0
-    end
-    u[t + 1] = u_next
-end
-y = [g(x[:, t:t], u[t]) for t in time]
+T = 2000
+init = (args...) -> 0.5*ones(args...)
+x, u = get_data(T, init=init)
+y = [g(x[:, t:t], u[t]) for t in 1:T]
 
 batches = 1
 observer_inputs = [repeat([ui; yi], outer=(1, batches)) for (ui, yi) in zip(u, y)]
-# println(typeof(observer_inputs),size(observer_inputs))
 
-# Foward simulation
-
-unzip(a) = (getfield.(a, x) for x in fieldnames(eltype(a)))
+# Simulate the model through time
 function simulate(model::AbstractREN, x0, u)
-    eval_cell = (x, u) -> model(x, u)
-    recurrent = Flux.Recur(eval_cell, x0)
-    output = [recurrent(input) for input in u]
+    recurrent = Flux.Recur(model, x0)
+    output = recurrent.(u)
     return output
 end
-
-x0 = zeros(nx, batches)
+x0 = init_states(model, batches)
 xhat = simulate(model, x0, observer_inputs)
-# xhat = collect(simulate(testdata["model"], cpu(x0), cpu(observer_inputs)))[1]
-
-p1 = heatmap(x, color=:cividis, aspect_ratio=1);
-
 Xhat = reduce(hcat, xhat)
-p2 = heatmap(Xhat[:, 1:batches:end], color=:cividis, aspect_ratio=1);
-p3 = heatmap(abs.(x - Xhat[:, 1:batches:end]), color=:cividis, aspect_ratio=1);
 
-p = plot(p1, p2, p3; layout=(3, 1))
-# savefig(p,"pde_observer.png")
+# Make a plot to show PDE and errors
+function plot_heatmap(f1, xdata, i)
+
+    # Make and label the plot
+    xlabel = i < 3 ? "" : "Time steps"
+    ylabel = i == 1 ? "True" : (i == 2 ? "Observer" : "Error")
+    ax, _ = heatmap(f1[i,1], xdata', colormap=:thermal, axis=(xlabel=xlabel, ylabel=ylabel))
+
+    # Format the axes
+    ax.yticksvisible = false
+    ax.yticklabelsvisible = false
+    if i < 3
+        ax.xticksvisible = false
+        ax.xticklabelsvisible = false
+    end
+    xlims!(ax, 0, T)
+end
+
+f1 = Figure(resolution=(500,400))
+plot_heatmap(f1, x, 1)
+plot_heatmap(f1, Xhat[:, 1:batches:end], 2)
+plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]), 3)
+Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
+
+display(f1)
+# save("../results/ren_pde.svg", f1) # Note: this takes a long time...
