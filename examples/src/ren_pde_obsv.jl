@@ -76,7 +76,7 @@ y = g(X, U)
 
 # Store for the observer (inputs are inputs to observer)
 input_data = [U; y][:, 1:end - 1]
-batches = 20
+batches = 200
 data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batches, shuffle=true)
 
 # Constuct a REN
@@ -191,4 +191,4 @@ plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]), 3)
 Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
 
 display(f1)
-# save("../results/ren_pde.svg", f1) # Note: this takes a long time...
+save("../results/ren_pde.png", f1) # Note: this takes a long time...
