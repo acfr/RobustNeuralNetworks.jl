@@ -39,5 +39,5 @@ deploydocs(repo = "github.com/acfr/RobustNeuralNetworks.jl.git")
 
 # To generate the documentation locally:
 # ] activate docs
-# using LiverServer
+# using LiveServer
 # servedocs()

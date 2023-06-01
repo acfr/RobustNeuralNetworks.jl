@@ -20,7 +20,6 @@ dtype = Float64
 nx = 51             # Number of states
 n_in = 1            # Number of inputs
 L = 10.0            # Size of spatial domain
-steps = 5           # ?? What actually is this?
 sigma = 0.1         # Used to construct time step
 
 # Discretise space and time
@@ -30,7 +29,7 @@ dt = sigma * dx^2
 # State dynamics and output functions f, g
 function f(u0, d)
     u, un = copy(u0), copy(u0)
-    for _ in 1:steps
+    for _ in 1:5
         u = copy(un) 
 
         # FD approximation of heat equation
