@@ -4,12 +4,18 @@ Pkg.activate("..")
 
 using CairoMakie
 using Flux
+using Flux: glorot_normal
+using Printf
 using Random
 using RobustNeuralNetworks
 using Statistics
 using Zygote: Buffer
 
 rng = MersenneTwister(42)
+
+# -------------------------
+# Problem setup
+# -------------------------
 
 # System parameters
 m = 1                   # Mass (kg)
@@ -22,7 +28,7 @@ dt = 0.02
 ts = 1:Int(Tmax/dt)
 
 # Start at zero, random goal states
-nx, nref, batches = 2, 1, 10
+nx, nref, batches = 2, 1, 80
 x0 = zeros(nx, batches)
 xref = 2*rand(rng, nref, batches) .- 1
 uref = k*xref
@@ -33,12 +39,15 @@ fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 
 # Simulate the system given initial condition and a controller
 # Controller of the form u = k([x; xref])
-function rollout(model, x0, xref)
+function rollout(model, x0, xref; ϵ=0.0)
     z = Buffer([zero([x0;xref])], length(ts))
     x = x0
     for t in ts
-        u = model([x;xref]) 
+
+        u = model([x;xref])
         z[t] = vcat(x,u)
+
+        u = u + ϵ*(2*rand(rng, size(u)...) .- 1)
         x = fd(x,u)
     end
     return copy(z)
@@ -52,12 +61,17 @@ function _cost(z, xref, uref)
 end
 cost(z::AbstractVector) = mean(_cost.(z, (xref,), (uref,)))
 
+
+# -------------------------
+# Train LBDN
+# -------------------------
+
 # Define an LBDN model 
 nu = nx + nref          # Inputs (states and reference)
 ny = 1                  # Outputs (control action u)
 nh = fill(32, 2)        # Hidden layers
-γ = 10                  # Lipschitz bound
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=Flux.relu, rng)
+γ = 20                  # Lipschitz bound
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
 
 # Choose a loss function
 function loss(model_ps, x0, xref)
@@ -67,15 +81,29 @@ function loss(model_ps, x0, xref)
 end
 
 # Train the model
-costs = Vector{Float64}()
-num_epoch = 500
-opt_state = Flux.setup(Adam(1e-3), model_ps)
-for k in 1:num_epoch
-    train_loss, ∇J = Flux.withgradient(loss, model_ps, x0, xref)
-    Flux.update!(opt_state, model_ps, ∇J[1])
-    push!(costs, train_loss)
-    println("Iter $k loss: ", train_loss)
+function train_box_ctrl!(model, loss_func; lr=1e-3, epochs=250, verbose=false)
+
+    costs = Vector{Float64}()
+    opt_state = Flux.setup(Adam(lr), model)
+
+    for k in 1:epochs
+
+        train_loss, ∇J = Flux.withgradient(loss_func, model, x0, xref)
+        Flux.update!(opt_state, model, ∇J[1])
+
+        push!(costs, train_loss)
+        verbose && @printf "Iter %d loss: %.2f\n" k train_loss
+    end
+
+    return costs
 end
+
+train_box_ctrl!(model_ps, loss; epochs=1); # Dummy run for just-in-time compiler
+t_lbdn = @elapsed (costs = train_box_ctrl!(model_ps, loss))
+
+# -------------------------
+# Test LBDN
+# -------------------------
 
 # Evaluate final model on an example
 model = LBDN(model_ps)
@@ -109,9 +137,47 @@ function plot_box_learning(costs, z, xref, indx=1)
     lines!(ax2, ts, zeros(size(ts)), color=:red, linestyle=:dash)
     lines!(ax3, ts, ur*ones(size(ts)), color=:red, linestyle=:dash)
 
+    display(f1)
     return f1
 end
 
 fig = plot_box_learning(costs, ztest, xtest)
-display(fig)
 save("../results/lbdn_rl.svg", fig) 
+
+
+# -------------------------
+# Compare to DiffLBDN
+# -------------------------
+model_ps2 = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
+model2 = DiffLBDN(model_ps2)
+
+loss2(model, x0, xref) = cost(rollout(model, x0, xref))
+
+train_box_ctrl!(model2, loss2; epochs=1); # Dummy run for just-in-time compiler
+t_diff_lbdn = @elapsed (costs2 = train_box_ctrl!(model2, loss2))
+
+
+# -------------------------
+# Compare to Dense
+# -------------------------
+
+# Train new model with smaller γ
+initb(n) = glorot_normal(rng,n)
+model3 = Chain(
+    Dense(nu => nh[1], relu; init=glorot_normal, bias=initb(nh[1])),
+    Dense(nh[1] => nh[2], relu; init=glorot_normal, bias=initb(nh[2])),
+    Dense(nh[2] => ny; init=glorot_normal, bias=initb(ny)),
+)
+train_box_ctrl!(model3, loss2; lr=5e-3) # Dummy run for just-in-time compiler
+t_dense = @elapsed (costs3 = train_box_ctrl!(model3, loss2; lr=5e-3))
+
+# Test robustness
+ϵ = 10.0
+ztest  = rollout(model, zeros(nx,1), xtest; ϵ)
+ztest3 = rollout(model3, zeros(nx,1), xtest; ϵ)
+plot_box_learning(costs, ztest, xtest)
+plot_box_learning(costs3, ztest3, xtest)
+
+@printf "Training time for LBDN:     %.2fs\n" t_lbdn
+@printf "Training time for DiffLBDN: %.2fs\n" t_diff_lbdn
+@printf "Training time for Dense:    %.2fs\n" t_dense
