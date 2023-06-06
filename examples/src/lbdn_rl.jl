@@ -67,7 +67,7 @@ cost(z::AbstractVector, xref, uref) = mean(_cost.(z, (xref,), (uref,)))
 # Define an LBDN model 
 nu = nx + nref          # Inputs (states and reference)
 ny = 1                  # Outputs (control action u)
-nh = fill(32, 2)      # Hidden layers TODO:
+nh = fill(32, 2)        # Hidden layers
 γ = 20                  # Lipschitz bound
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
 
@@ -96,8 +96,7 @@ function train_box_ctrl!(model, loss_func; lr=1e-3, epochs=250, verbose=false)
     return costs
 end
 
-train_box_ctrl!(model_ps, loss; epochs=1); # Dummy run for just-in-time compiler
-t_lbdn = @elapsed (costs = train_box_ctrl!(model_ps, loss))
+costs = train_box_ctrl!(model_ps, loss)
 
 
 # -------------------------
@@ -120,7 +119,7 @@ function plot_box_learning(costs, z, xref, indx=1)
     xr = xref[indx]
     ur = k*xr
 
-    f1 = Figure(resolution = (500, 400))
+    f1 = Figure(resolution = (600, 400))
     ga = f1[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
@@ -146,36 +145,39 @@ save("../results/lbdn_rl.svg", fig)
 
 
 # ---------------------------------
-# Compare to DiffLBDN and Dense
+# Compare to DiffLBDN
 # ---------------------------------
 
-# DiffLBDN model
-model_ps2 = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
-diff_lbdn = DiffLBDN(model_ps2)
-
+# Loss function for differentiable model
 loss2(model, x0, xref, uref) = cost(rollout(model, x0, xref), xref, uref)
 
-train_box_ctrl!(diff_lbdn, loss2; epochs=1);
-t_diff_lbdn = @elapsed (train_box_ctrl!(diff_lbdn, loss2))
-z_diff_lbdn = rollout(diff_lbdn, x0_test, xr_test)
+function lbdn_compute_times(n; epochs=100)
 
-# Dense model
-initb(n) = glorot_normal(rng,n)
-dense = Chain(
-    Dense(nu => nh[1], relu; init=glorot_normal, bias=initb(nh[1])),
-    Dense(nh[1] => nh[2], relu; init=glorot_normal, bias=initb(nh[2])),
-    Dense(nh[2] => ny; init=glorot_normal, bias=initb(ny)),
+    lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
+    diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
+
+    t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)
+    t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)
+    return [t_lbdn, t_diff_lbdn]
+
+end
+
+# Evaluate computation time with different hidden-layer sizes
+# Run it once first for just-in-time compiler
+sizes = 2 .^ (1:9)
+lbdn_compute_times(2; epochs=1)
+comp_times = reduce(hcat, lbdn_compute_times.(sizes))
+
+# Plot the results
+f1 = Figure(resolution = (600, 400))
+ax = Axis(
+    f1[1,1], 
+    xlabel="Hidden layer size", 
+    ylabel="Training time (100 epochs)", 
+    xscale=Makie.log2, yscale=Makie.log10
 )
-
-train_box_ctrl!(dense, loss2; lr=5e-3, epochs=1)
-t_dense = @elapsed (train_box_ctrl!(dense, loss2; lr=5e-3))
-z_dense = rollout(dense, x0_test, xr_test)
-
-# Print some results
-@printf "Test cost for LBDN:     %.2f\n" cost(z_lbdn, xr_test, k*xr_test)
-@printf "Test cost for DiffLBDN: %.2f\n" cost(z_diff_lbdn, xr_test, k*xr_test)
-@printf "Test cost for Dense:    %.2f\n\n" cost(z_dense, xr_test, k*xr_test)
-
-@printf "Training time for LBDN:     %.2fs\n" t_lbdn
-@printf "Training time for DiffLBDN: %.2fs\n" t_diff_lbdn
-@printf "Training time for Dense:    %.2fs\n" t_dense
+lines!(ax, sizes, comp_times[1,:], label="LBDN")
+lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
+axislegend(ax, position=:lt)
+display(f1)
+save("../results/lbdn_rl_comptime.svg", f1) 
