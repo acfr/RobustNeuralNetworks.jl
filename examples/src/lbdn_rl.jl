@@ -13,6 +13,7 @@ using Zygote: Buffer
 
 rng = MersenneTwister(42)
 
+
 # -------------------------
 # Problem setup
 # -------------------------
@@ -39,15 +40,12 @@ fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 
 # Simulate the system given initial condition and a controller
 # Controller of the form u = k([x; xref])
-function rollout(model, x0, xref; ϵ=0.0)
+function rollout(model, x0, xref)
     z = Buffer([zero([x0;xref])], length(ts))
     x = x0
     for t in ts
-
         u = model([x;xref])
         z[t] = vcat(x,u)
-
-        u = u + ϵ*(2*rand(rng, size(u)...) .- 1)
         x = fd(x,u)
     end
     return copy(z)
@@ -59,7 +57,7 @@ function _cost(z, xref, uref)
     Δz = z .- [xref; zero(xref); uref]
     return mean(sum(weights .* Δz.^2; dims=1))
 end
-cost(z::AbstractVector) = mean(_cost.(z, (xref,), (uref,)))
+cost(z::AbstractVector, xref, uref) = mean(_cost.(z, (xref,), (uref,)))
 
 
 # -------------------------
@@ -69,15 +67,15 @@ cost(z::AbstractVector) = mean(_cost.(z, (xref,), (uref,)))
 # Define an LBDN model 
 nu = nx + nref          # Inputs (states and reference)
 ny = 1                  # Outputs (control action u)
-nh = fill(32, 2)        # Hidden layers
+nh = fill(32, 2)      # Hidden layers TODO:
 γ = 20                  # Lipschitz bound
 model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
 
 # Choose a loss function
-function loss(model_ps, x0, xref)
+function loss(model_ps, x0, xref, uref)
     model = LBDN(model_ps)
     z = rollout(model, x0, xref)
-    return cost(z)
+    return cost(z, xref, uref)
 end
 
 # Train the model
@@ -88,7 +86,7 @@ function train_box_ctrl!(model, loss_func; lr=1e-3, epochs=250, verbose=false)
 
     for k in 1:epochs
 
-        train_loss, ∇J = Flux.withgradient(loss_func, model, x0, xref)
+        train_loss, ∇J = Flux.withgradient(loss_func, model, x0, xref, uref)
         Flux.update!(opt_state, model, ∇J[1])
 
         push!(costs, train_loss)
@@ -101,14 +99,16 @@ end
 train_box_ctrl!(model_ps, loss; epochs=1); # Dummy run for just-in-time compiler
 t_lbdn = @elapsed (costs = train_box_ctrl!(model_ps, loss))
 
+
 # -------------------------
 # Test LBDN
 # -------------------------
 
 # Evaluate final model on an example
-model = LBDN(model_ps)
-xtest = reshape([1.0],1,1)
-ztest = rollout(model, zeros(nx,1), xtest)
+lbdn = LBDN(model_ps)
+x0_test = zeros(2,100)
+xr_test = hcat(ones(1,1), 2*rand(rng, 1, 99) .- 1)
+z_lbdn = rollout(lbdn, x0_test, xr_test)
 
 # Plot position, velocity, and control input over time
 function plot_box_learning(costs, z, xref, indx=1)
@@ -141,42 +141,40 @@ function plot_box_learning(costs, z, xref, indx=1)
     return f1
 end
 
-fig = plot_box_learning(costs, ztest, xtest)
+fig = plot_box_learning(costs, z_lbdn, xr_test, 1)
 save("../results/lbdn_rl.svg", fig) 
 
 
-# -------------------------
-# Compare to DiffLBDN
-# -------------------------
+# ---------------------------------
+# Compare to DiffLBDN and Dense
+# ---------------------------------
+
+# DiffLBDN model
 model_ps2 = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)
-model2 = DiffLBDN(model_ps2)
+diff_lbdn = DiffLBDN(model_ps2)
 
-loss2(model, x0, xref) = cost(rollout(model, x0, xref))
+loss2(model, x0, xref, uref) = cost(rollout(model, x0, xref), xref, uref)
 
-train_box_ctrl!(model2, loss2; epochs=1); # Dummy run for just-in-time compiler
-t_diff_lbdn = @elapsed (costs2 = train_box_ctrl!(model2, loss2))
+train_box_ctrl!(diff_lbdn, loss2; epochs=1);
+t_diff_lbdn = @elapsed (train_box_ctrl!(diff_lbdn, loss2))
+z_diff_lbdn = rollout(diff_lbdn, x0_test, xr_test)
 
-
-# -------------------------
-# Compare to Dense
-# -------------------------
-
-# Train new model with smaller γ
+# Dense model
 initb(n) = glorot_normal(rng,n)
-model3 = Chain(
+dense = Chain(
     Dense(nu => nh[1], relu; init=glorot_normal, bias=initb(nh[1])),
     Dense(nh[1] => nh[2], relu; init=glorot_normal, bias=initb(nh[2])),
     Dense(nh[2] => ny; init=glorot_normal, bias=initb(ny)),
 )
-train_box_ctrl!(model3, loss2; lr=5e-3) # Dummy run for just-in-time compiler
-t_dense = @elapsed (costs3 = train_box_ctrl!(model3, loss2; lr=5e-3))
 
-# Test robustness
-ϵ = 10.0
-ztest  = rollout(model, zeros(nx,1), xtest; ϵ)
-ztest3 = rollout(model3, zeros(nx,1), xtest; ϵ)
-plot_box_learning(costs, ztest, xtest)
-plot_box_learning(costs3, ztest3, xtest)
+train_box_ctrl!(dense, loss2; lr=5e-3, epochs=1)
+t_dense = @elapsed (train_box_ctrl!(dense, loss2; lr=5e-3))
+z_dense = rollout(dense, x0_test, xr_test)
+
+# Print some results
+@printf "Test cost for LBDN:     %.2f\n" cost(z_lbdn, xr_test, k*xr_test)
+@printf "Test cost for DiffLBDN: %.2f\n" cost(z_diff_lbdn, xr_test, k*xr_test)
+@printf "Test cost for Dense:    %.2f\n\n" cost(z_dense, xr_test, k*xr_test)
 
 @printf "Training time for LBDN:     %.2fs\n" t_lbdn
 @printf "Training time for DiffLBDN: %.2fs\n" t_diff_lbdn
