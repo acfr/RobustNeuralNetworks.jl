@@ -141,7 +141,7 @@ function plot_box_learning(costs, z, xref, indx=1)
 end
 
 fig = plot_box_learning(costs, z_lbdn, xr_test, 1)
-save("../results/lbdn_rl.svg", fig) 
+save("../results/lbdn_rl.svg", fig)
 
 
 # ---------------------------------
@@ -164,20 +164,23 @@ end
 
 # Evaluate computation time with different hidden-layer sizes
 # Run it once first for just-in-time compiler
-sizes = 2 .^ (1:9)
+sizes = 2 .^ (1:10)
 lbdn_compute_times(2; epochs=1)
 comp_times = reduce(hcat, lbdn_compute_times.(sizes))
+comp_times = ones(2,length(sizes)); comp_times[2,:] .*= 10
 
 # Plot the results
 f1 = Figure(resolution = (600, 400))
 ax = Axis(
     f1[1,1], 
     xlabel="Hidden layer size", 
-    ylabel="Training time (100 epochs)", 
+    ylabel="Training time (s) (100 epochs)", 
     xscale=Makie.log2, yscale=Makie.log10
 )
 lines!(ax, sizes, comp_times[1,:], label="LBDN")
 lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
+
+xlims!(ax, [sizes[1], sizes[end]])
 axislegend(ax, position=:lt)
 display(f1)
-save("../results/lbdn_rl_comptime.svg", f1) 
+save("../results/lbdn_rl_comptime.svg", f1)
