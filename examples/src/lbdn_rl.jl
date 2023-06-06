@@ -164,10 +164,9 @@ end
 
 # Evaluate computation time with different hidden-layer sizes
 # Run it once first for just-in-time compiler
-sizes = 2 .^ (1:10)
+sizes = 2 .^ (1:9)
 lbdn_compute_times(2; epochs=1)
 comp_times = reduce(hcat, lbdn_compute_times.(sizes))
-comp_times = ones(2,length(sizes)); comp_times[2,:] .*= 10
 
 # Plot the results
 f1 = Figure(resolution = (600, 400))
