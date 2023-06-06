@@ -50,7 +50,7 @@ model = Flux.Chain(
     SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng=rng),
     SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng=rng),
     (x) -> (√γ * x),
-    SandwichFC(nh[2] => ny, Flux.relu; output_layer=true, T=Float64, rng=rng),
+    SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng=rng),
 )
 
 # Evaluate on dummy inputs
