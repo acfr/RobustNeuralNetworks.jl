@@ -167,13 +167,14 @@ println(typeof(model_params.direct))
 println(typeof(model.explicit))
 ```
 
-In some applications (eg: reinforcement learning or system identification), a model is called many times with the same explicit parameters ``\bar{\theta}`` before its learnable parameters ``\theta`` are updated. It's therefore efficient to store the explicit parameters, use them many times, and then update them only when the learnable parameters change. We can't store the direct and explicit parameters in the same `model` object because [`Flux.jl` does not permit array mutation](https://fluxml.ai/Zygote.jl/stable/limitations/). Instead, we separate the two.
+In some applications (eg: reinforcement learning), a model is called many times with the same explicit parameters ``\bar{\theta}`` before its learnable parameters ``\theta`` are updated. It's therefore efficient to store the explicit parameters, use them many times, and then update them only when the learnable parameters change. We can't store the direct and explicit parameters in the same `model` object because [`Flux.jl` does not permit array mutation](https://fluxml.ai/Zygote.jl/stable/limitations/). Instead, we separate the two.
 
 !!! info "Which wrapper should I use?"
 	Model wrappers like [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref) re-compute the explicit parameters every time the model is called. They are the most convenient choice for applications where the learnable parameters are updated after one model call (eg: image classification, curve fitting, etc.). 
 	
 	For applications where the model is called many times (eg: in a feedback loop) before updating it, use [`REN`](@ref) and [`LBDN`](@ref). They compute the explicit model when constructed and store it for later use, making them more efficient.
 
+See [Can't I just use `DiffLBDN`?](@ref) in [Reinforcement Learning with LBDN](@ref) for a demonstration of this trade-off.
 
 ## Robustness metrics and IQCs
 

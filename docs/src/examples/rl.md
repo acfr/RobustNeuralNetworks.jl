@@ -2,7 +2,7 @@
 
 *[Example coming soon. Some examples of RL with REN can be found in [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193).]*
 
-One of the original motivations for developing `RobustNeuralNetworks.jl` was to learn robust models for applications in control engineering. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193)) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for all linear or nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
+One of the original motivations for developing `RobustNeuralNetworks.jl` was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193)) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
 
 In this example, we'll demonstrate how to train an LBDN controller with *Reinforcement Learning* (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
 
@@ -18,7 +18,7 @@ where ``\mu`` is the viscous friction coefficient due to the box moving through 
 @html_str """<p align="center"> <object type="image/png" data=$(joinpath(Main.buildpath, "../assets/lbdn-rl/mass_rl.png")) width="35%"></object> </p>""" #hide
 ```
 
-We can write this as a (nonlinear) state-space model with state ``x = (q,\dot{q}),`` control input ``u,`` and dynamics
+We can write this as a (nonlinear) state-space model with state ``x = (q,\dot{q})^\top,`` control input ``u,`` and dynamics
 ```math
 \dot{x} = f(x,u) = \begin{bmatrix}
 \dot{q} \\ (u - kq - \mu \dot{q}^2)/m
@@ -30,7 +30,7 @@ x_{t+1} = x_t + \Delta t \cdot f(x_t, u_t)
 ```
 where ``\Delta t`` is the time-step. This approximation typically requires a very small time-step for numerical stability, but will be fine for our simple example. A more robust method is to use a fourth (or higher) order [Runge-Kutta scheme](https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods).
 
-Our aim is to learn a controller ``u = \mathcal{K}_\theta(x),`` defined by some learnable parameters ``\theta,`` that can push the box to any goal position we choose. Specifically, we want the box to:
+Our aim is to learn a controller ``u = \mathcal{K}_\theta(x, q_\mathrm{ref}),`` defined by some learnable parameters ``\theta,`` that can push the box to any goal position ``q_\mathrm{ref}`` that we choose. Specifically, we want the box to:
 - Reach a (stationary) goal position ``q_\mathrm{ref}``
 - Within a time period ``T``
 - Using minimal control force ``u``
@@ -46,7 +46,7 @@ where ``c_1, c_2, c_3`` are cost weightings, and the expectation is over differe
 
 ## 2. Problem setup
 
-Let's define some parameters for our system and translate the dynamics into Julia code. We'll consider a box of mass ``m=1`` with a spring constant of ``k=5`` and viscous damping coefficient ``\mu = 0.5``. We'll simulate the system over time horizons of ``T = 4``s with a time-step of ``\Delta t = 0.02``s.
+Let's define some parameters for our system and translate the dynamics into Julia code. We'll consider a box of mass ``m=1``, a spring constant of ``k=5,`` and a viscous damping coefficient ``\mu = 0.5``. We'll simulate the system over ``T = 4``s time horizons with a time-step of ``\Delta t = 0.02``s.
 
 ```julia
 m = 1                   # Mass (kg)
@@ -69,15 +69,15 @@ qref = 2*rand(rng, nref, batches) .- 1
 uref = k*qref
 ```
 
-It's good practice (and faster) to simulate all of these simulation batches at once using matrix algebra, so we can define our dynamics functions to operate on matrices of states and controls. Each row is a different state or control, and each column is a simulation for a particular goal position.
+It's good practice (and faster) to simulate all of these simulation batches at once, so we define our dynamics functions to operate on matrices of states and controls. Each row is a different state or control, and each column corresponds to a simulation for a particular goal position.
 ```julia
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 ```
 
-Reinforcement learning problems generally involve simulating the system over some time horizon and collecting a series of rewards or costs at each time step. Control policies are then trained using approximations of the cost gradient ``\nabla J_\theta``because it is often difficult (or impossible) to differentiate through a dynamics simulator and compute the exact gradient. [ReinforcementLearning.jl](https://juliareinforcementlearning.org/) is the home of all things RL in Julia.
+Reinforcement learning problems generally involve simulating the system over some time horizon and collecting a series of rewards or costs at each time step. Control policies are then trained using approximations of the cost gradient ``\nabla J_\theta`` because it is often difficult (or impossible) to compute the exact gradient. [ReinforcementLearning.jl](https://juliareinforcementlearning.org/) is the home of all things RL in Julia.
 
-For this simple example, we can just write a differentiable simulator of the dynamics. The simulator takes a batch of initial states, goal positions, and a controller model whose inputs are ``[x; q_\mathrm{ref}]``. It computes a batch of trajectories of states and controls ``z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}`` for later use. To get around the well-known issue of [array mutation with auto-differentiation](https://fluxml.ai/Zygote.jl/stable/limitations/), we use a [Zygote.Buffer](https://fluxml.ai/Zygote.jl/stable/utils/#Zygote.Buffer) to iteratively store the outputs.
+For this simple example, we can just write a differentiable simulator of the dynamics. The simulator takes a batch of initial states, goal positions, and a controller `model` whose inputs are ``[x; q_\mathrm{ref}]``. It computes a batch of trajectories of states and controls ``z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}`` for later use. To get around the well-known issue of [array mutation with auto-differentiation](https://fluxml.ai/Zygote.jl/stable/limitations/), we use a [Zygote.Buffer](https://fluxml.ai/Zygote.jl/stable/utils/#Zygote.Buffer) to iteratively store the outputs.
 
 ```julia
 using Zygote: Buffer
@@ -108,7 +108,7 @@ cost(z::AbstractVector, qref, uref) = mean(_cost.(z, (qref,), (uref,)))
 
 ## 3. Define a model
 
-For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how small Lipschitz bounds are useful in designing robust controllers, please see [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193).
+For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193).
 
 ```julia
 using Flux
@@ -215,22 +215,22 @@ The box clearly moves to the required position within the time frame and stays t
 
 ## Can't I just use `DiffLBDN`?
 
-Readers who have worked through the [Fitting a Curve with LBDN](@ref) and [Image Classification with LBDN](@ref) examples will know that we have included the [`DiffLBDN`](@ref) and [`DiffREN`](@ref) wrappers to make the user experience easier when training models. These wrappers convert a model parameterisation to an explicit model each time they are called. This means the user would **not** have to re-construct the model in the loss function, and could simply use the following.
+Readers who have worked through the [Fitting a Curve with LBDN](@ref) and [Image Classification with LBDN](@ref) examples will know that we have included the [`DiffLBDN`](@ref) and [`DiffREN`](@ref) wrappers to make training models more like `Flux.jl`. These wrappers convert a model parameterisation to an explicit model each time they are called. This means the user does **not** have to re-construct the model in the loss function, and can simply use the following.
 ```julia
 loss2(model, x0, qref, uref) = cost(rollout(model, x0, qref), qref, uref)
 ```
 
-The catch is computation speed, particular in an RL context. Careful inspection of the `rollout()` function we defined shows that the `model` is evaluated many times within the loss function before the learner parameters are updated. As discussed in the [Package Overview](@ref), the major computational bottleneck for RENs and LBDNs is the conversion from learnable (direct) parameters to an explicit model. Constructing the model only when the parameters are updated therefore saves considerably on computation time, particularly for large models.
+The catch is computation speed, particular in an RL context. Careful inspection of the `rollout()` function shows that the `model` is evaluated many times within the loss function before the learnable parameters are updated with `Flux.update!()`. As discussed in the [Package Overview](@ref), the major computational bottleneck for RENs and LBDNs is the conversion from learnable (direct) parameters to an explicit model. Constructing the model only when the parameters are updated therefore saves considerably on computation time, particularly for large models.
 
-For example, let's train single-hidden-layer LBDNs with ``n`` neurons over 100 training epochs on this RL problem,  and log the time taken to train a model both using [`LBDN`](@ref) and [`DiffLBDN`](@ref).
+For example, let's train single-hidden-layer LBDNs with ``n`` neurons over 100 training epochs on this RL problem,  and log the time taken to train a model when using [`LBDN`](@ref) and [`DiffLBDN`](@ref).
 ```julia
 function lbdn_compute_times(n; epochs=100)
 
     lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
     diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
 
-    t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)
-    t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)
+    t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)            # Build LBDN in loss
+    t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)    # Use DiffLBDN
     return [t_lbdn, t_diff_lbdn]
 
 end
@@ -262,11 +262,11 @@ display(f1)
 
 ![](../assets/lbdn-rl/lbdn_rl_comptime.svg)
 
-Even for a single-layer LBDN with 512 neurons, using [`DiffLBDN`](@ref) takes an order of magnitude longer to train than only constructing the [`LBDN`](@ref) model each time the `loss()` function is called. We therefore offer the following advice.
+Even for a single-layer LBDN with ``2^9 = 512`` neurons, using [`DiffLBDN`](@ref) takes an order of magnitude longer to train than only constructing the [`LBDN`](@ref) model each time the `loss()` function is called. We offer the following advice.
 
 !!! info "When to use LBDN vs. DiffLBDN"
-    If many evaluations of the model are required before `Flux.update!` (or equivalent) is called, use [`LBDN`](@ref) to define the model once, evaluate it many times, then construct it again once the learnable parameters change.
+    If many evaluations of the model are required before `Flux.update!()` (or equivalent) is called, use [`LBDN`](@ref) to define the model once, evaluate it many times, then construct it again once the learnable parameters change.
 
-    If `Flux.update!` is called after each model evaluation (eg: [Image Classification with LBDN](@ref)), it is often more convenient and equally fast to use [`DiffLBDN`](@ref).
+    If `Flux.update!()` is called after each model evaluation (eg: [Image Classification with LBDN](@ref)), it is often more convenient and equally fast to use [`DiffLBDN`](@ref).
 
     The same applies for [`REN`](@ref) and [`DiffREN`](@ref).
