@@ -12,7 +12,7 @@ using RobustNeuralNetworks
 using Statistics
 
 
-# TODO: Get this working with Float32, will be faster
+# TODO: Do this with Float32, will be faster
 # TODO: Would be even better to get it working on the GPU. For later...
 dtype = Float64
 

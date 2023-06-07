@@ -65,7 +65,7 @@ Note that we first constructed the model parameters `model_ps`, and *then* creat
         SandwichFC(nh[2] => nh[3], Flux.relu; T=Float64, rng=rng),
         SandwichFC(nh[3] => nh[4], Flux.relu; T=Float64, rng=rng),
         (x) -> (√γ * x),
-        SandwichFC(nh[4] => ny, Flux.relu; output_layer=true, T=Float64, rng=rng),
+        SandwichFC(nh[4] => ny; output_layer=true, T=Float64, rng=rng),
     )
     ```
 
