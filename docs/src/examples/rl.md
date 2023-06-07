@@ -1,7 +1,5 @@
 # Reinforcement Learning with LBDN
 
-*[Example coming soon. Some examples of RL with REN can be found in [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193).]*
-
 One of the original motivations for developing `RobustNeuralNetworks.jl` was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara et al. (2023)](https://doi.org/10.48550/arXiv.2304.06193)) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
 
 In this example, we'll demonstrate how to train an LBDN controller with *Reinforcement Learning* (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
