@@ -1,3 +1,5 @@
+# This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 """
     glorot_normal(n::Int, m::Int; T=Float64, rng=Random.GLOBAL_RNG)
 

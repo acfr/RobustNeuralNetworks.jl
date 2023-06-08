@@ -1,3 +1,5 @@
+# This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
