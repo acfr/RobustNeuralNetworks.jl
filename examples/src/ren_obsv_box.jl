@@ -27,19 +27,10 @@ ts = 1:Int(Tmax/dt)     # Time array indices
 # Continuous and discrete dynamics and measurements
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
 fd(x,u) = x + dt*f(x,u)
-# fd(x,u) = x + dt*f(x + dt*f(x,u)/2,u)
 gd(x::Matrix) = x[1:1,:]
 
-# function fd(x,u)
-#     k1 = f(x,u)
-#     k2 = f(x + dt*k1/2, u)
-#     k3 = f(x + dt*k2/2, u)
-#     k4 = f(x + dt*k3, u)
-#     return x + dt*(k1 + 2k2 + 2k3 + k4)/6
-# end
-
 # Generate training data
-batches = 50
+batches = 200
 u  = fill(zeros(1, batches), length(ts)-1)
 X  = fill(zeros(1, batches), length(ts))
 X[1] = 0.5*(2*rand(rng, nx, batches) .-1)
@@ -75,7 +66,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4, verbose=false)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -87,7 +78,7 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4, verbose=f
             Flux.update!(opt_state, model, ∇J[1])
             push!(batch_loss, train_loss)
         end
-        verbose && @printf "Epoch: %d, Lr: %.1g, Loss: %.4g\n" epoch lr mean(batch_loss)
+        @printf "Epoch: %d, Lr: %.1g, Loss: %.4g\n" epoch lr mean(batch_loss)
 
         # Drop learning rate if mean loss is stuck or growing
         push!(mean_loss, mean(batch_loss))
@@ -98,14 +89,14 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4, verbose=f
     end
     return mean_loss
 end
-tloss = train_observer!(model, data; epochs=50, verbose=true)
+tloss = train_observer!(model, data; epochs=100)
 
 
 #####################################################################
 # Generate test data
 
 # Generate test data (a bunch of initial conditions)
-batches   = 20
+batches   = 50
 ts_test   = 1:Int(10/dt)
 u_test    = fill(zeros(1, batches), length(ts_test))
 x_test    = fill(zeros(nx,batches), length(ts_test))
@@ -173,4 +164,4 @@ function plot_results(x, x̂, ts)
     return fig
 end
 fig = plot_results(x_test, xhat, ts_test)
-println()
+save("../results/ren_box_obsv.svg", fig)
