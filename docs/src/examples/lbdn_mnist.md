@@ -189,6 +189,6 @@ for i in eachindex(indx)
     ax.yticklabelsvisible = false
 
 end
-save("lbdn_mnist.svg", f1)
+save("lbdn_mnist.png", f1)
 ```
-![](lbdn_mnist.svg)
+![](lbdn_mnist.png)

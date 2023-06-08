@@ -12,7 +12,7 @@ using RobustNeuralNetworks
 using Statistics
 
 # Random seed for consistency
-rng = MersenneTwister(24)
+rng = MersenneTwister(42)
 
 # Model specification
 nu = 28*28              # Number of inputs (size of image)
@@ -112,4 +112,5 @@ for i in eachindex(indx)
 
 end
 display(f1)
-save("../results/lbdn_mnist.svg", f1)
+# save("../results/lbdn_mnist.svg", f1)
+save("../results/lbdn_mnist.png", f1)
