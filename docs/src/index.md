@@ -23,7 +23,7 @@ Depth = 1
 ## Examples
 
 ```@contents
-Pages = ["examples/lbdn_curvefit.md", "examples/lbdn_mnist.md", "examples/rl.md", "examples/pde_obsv.md", "examples/echo_ren.md"]
+Pages = ["examples/lbdn_curvefit.md", "examples/lbdn_mnist.md", "examples/rl.md", "examples/box_obsv.md", "examples/echo_ren.md"]
 Depth = 1
 ```
 

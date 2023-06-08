@@ -1,3 +1,5 @@
+# This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 cd(@__DIR__)
 using Pkg
 Pkg.activate("..")
@@ -20,9 +22,6 @@ m = 1                   # Mass (kg)
 k = 5                   # Spring constant (N/m)
 μ = 0.5                 # Viscous damping coefficient (kg/m)
 nx = 2                  # Number of states
-dt = 0.01               # Time-step (s)
-Tmax = 10               # Simulation horizon
-ts = 1:Int(Tmax/dt)     # Time array indices
 
 # Continuous and discrete dynamics and measurements
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
@@ -30,6 +29,10 @@ fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 
 # Generate training data
+dt = 0.01               # Time-step (s)
+Tmax = 10               # Simulation horizon
+ts = 1:Int(Tmax/dt)     # Time array indices
+
 batches = 200
 u  = fill(zeros(1, batches), length(ts)-1)
 X  = fill(zeros(1, batches), length(ts))
@@ -66,7 +69,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4)
+function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -89,7 +92,7 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4)
     end
     return mean_loss
 end
-tloss = train_observer!(model, data; epochs=100)
+tloss = train_observer!(model, data)
 
 
 #####################################################################
