@@ -1,13 +1,13 @@
 # Image Classification with LBDN
 
-Our next example features an LBDN trained to classify the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. We showed in [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) that tuning the built-in Lipschitz bounds of LBDNs is an efficient way of designing neural networks that are robust to adversarial attacks. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:
+Our next example features an LBDN trained to classify the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. We showed in [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) that training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:
 1. Load the training and test data
 2. Define a Lipschitz-bounded model
 3. Define a loss function
 4. Train the model to minimise the loss function
 5. Evaluate the trained model
 
-For details on how tuning the Lipschitz bound increases the model robustness, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
+For details on how Lipschitz bounds increase classification robustness and reliability, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
 
 ## 1. Load the data
 
@@ -57,7 +57,7 @@ Features are now stored in a `Matrix` where each column contains pixel data from
 
 ## 2. Define a model
 
-We can now construct an LBDN model to train on the MNIST dataset. In our [paper](https://doi.org/10.48550/arXiv.2301.11526) we use LBDN models with three hidden layers of (256, 356, 128) neurons (respectively) to achieve a classification accuracy of approximately 99% on the full MNIST dataset. For this example, we'll consider a smaller network and set a Lipschitz bound of `γ = 5.0` to demonstrate the method.
+We can now construct an LBDN model to train on the MNIST dataset. The larger the model, the better the classification accuracy will be, at the cost of longer training time. For example, using an LBDN with three hidden layers of 128 neurons each would achieve a classification accuracy of approximately 99% on the full MNIST dataset. For this example, we'll use a smaller network and set a Lipschitz bound of `γ = 5.0` just to demonstrate the method.
 
 ```@example mnist
 using Random
@@ -189,6 +189,6 @@ for i in eachindex(indx)
     ax.yticklabelsvisible = false
 
 end
-save("lbdn_mnist.png", f1)
+save("lbdn_mnist.svg", f1)
 ```
-![](lbdn_mnist.png)
+![](lbdn_mnist.svg)
