@@ -1,3 +1,5 @@
+# This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 mutable struct SandwichFC{F, T, D, B}
     σ ::F
     XY::AbstractMatrix{T}       # [X; Y] in the paper
