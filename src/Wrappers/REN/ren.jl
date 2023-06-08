@@ -70,8 +70,8 @@ function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
 end
 
 function (m::AbstractREN{T})(
-    xt::AbstractVecOrMat{T}, 
-    ut::AbstractVecOrMat{T},
+    xt::AbstractVecOrMat, 
+    ut::AbstractVecOrMat,
     explicit::ExplicitRENParams{T}
 ) where T
 

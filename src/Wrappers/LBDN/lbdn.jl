@@ -68,7 +68,7 @@ function (m::AbstractLBDN)(u::AbstractVecOrMat)
     return m(u, m.explicit)
 end
 
-function (m::AbstractLBDN{T})(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
+function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     # Extract explicit params
     σ   = m.nl

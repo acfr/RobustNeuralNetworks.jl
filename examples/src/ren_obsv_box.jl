@@ -12,9 +12,8 @@ using Statistics
 rng = MersenneTwister(42)
 
 
-# -------------------------
+#####################################################################
 # Problem setup
-# -------------------------
 
 # System parameters
 m = 1                   # Mass (kg)
@@ -28,26 +27,20 @@ ts = 1:Int(Tmax/dt)     # Time array indices
 # Continuous and discrete dynamics and measurements
 f(x::Vector,u::Vector) = [x[2]; (u[1] - k*x[1] - μ*x[2].^2)/m]
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
-fd(x,u) = x + dt*f(x,u)
-# fd(x,u) = x + dt*f(x + dt*f(x,u)/2,u)
 
-gd(x::Vector) = x[1]
+fd(x,u) = x + dt*f(x + dt*f(x,u)/2,u)
 gd(x::Matrix) = x[1:1,:]
 
-# Generate test data
-function get_data(ts; σu=5, init=zeros)
+# Generate training data
+u = zeros(1,  length(ts))
+X = zeros(nx, length(ts))
+X[:,1] = 0.1*ones(nx)
 
-    npoints = length(ts)
-    X = init(nx, npoints)
-    U = σu*randn(rng, 1, npoints)
-
-    for t in 1:npoints-1
-        X[:,t+1] = fd(X[:,t], U[:,t])
-    end
-    return X, U
+for t in ts[1:end-1]
+    X[:,t+1] = fd(X[:,t], u[:,t])
+    u[t+1] = u[t] + 0.01*randn(rng)
 end
 
-X, u = get_data(ts)
 Xt = X[:, 1:end-1]
 Xn = X[:, 2:end]
 y = gd(X)
@@ -57,11 +50,15 @@ input_data = [u; y][:,1:end-1]
 batchsize = 200
 data = Flux.Data.DataLoader((Xn, Xt, input_data); rng, batchsize, shuffle=true)
 
+
+#####################################################################
+# Train a model
+
 # Define a REN model for the observer
-nv = 10
+nv = 100                     # Works with 100, and works ok with 50 (vel known)
 nu = size(input_data, 1)
 ny = nx
-model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; nl=tanh, is_output=false)
+model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false)
 model = DiffREN(model_ps)
 
 # Loss function: one step ahead error (average over time)
@@ -71,7 +68,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-7, verbose=false)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6, verbose=false)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -87,48 +84,73 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-7, verbose=f
 
         # Drop learning rate if mean loss is stuck or growing
         push!(mean_loss, mean(batch_loss))
-        if mean_loss[end] >= mean_loss[end-1]
-            lr *= 0.1
+        if (mean_loss[end] >= mean_loss[end-1]) && (lr > min_lr)
+            lr = 0.1lr
             Flux.adjust!(opt_state, lr)
-            (lr <= min_lr) && (return mean_loss)
         end
     end
     return mean_loss
 end
-tloss = train_observer!(model, data; epochs=100, verbose=true)
+tloss = train_observer!(model, data; epochs=50, verbose=true)
 
-# Generate test data: a bunch of initial conditions
-function test_data(ts, batches=20)
 
-    x_test = fill(zeros(nx,batches), length(ts))
-    x_test[1] = randn(rng, nx, batches)
-    u_test = fill(zeros(1, batches), length(ts))
+#####################################################################
+# Generate test data
 
-    for t in 1:length(ts)-1
-        x_test[t+1] = fd(x_test[t], u_test[t])
-    end
-    input_test = [[u;y] for (u,y) in zip(u_test,gd.(x_test))]
-    return x_test, input_test
+# Generate test data (a bunch of initial conditions)
+batches   = 5
+ts_test   = 1:Int(10/dt)
+u_test    = fill(zeros(1, batches), length(ts_test))
+x_test    = fill(zeros(nx,batches), length(ts_test))
+x_test[1] = 0.2*(2*rand(rng, nx, batches) .-1)
+
+for t in ts_test[1:end-1]
+    x_test[t+1] = fd(x_test[t], u_test[t])
+end
+observer_inputs = [[u;y] for (u,y) in zip(u_test, gd.(x_test))]
+
+
+#####################################################################
+# Test one-step-ahead prediction error on test data
+
+xh = fill(zeros(nx,batches), length(ts_test)-1)
+for t in ts_test[1:end-1]
+    xh[t] = model(x_test[t], observer_inputs[t])[1]
 end
 
-t_test = 1:Int(10/dt)
-x_test, input_test = test_data(t_test, 50)
-x_pred = [model(x, u)[1] for (x,u) in zip(x_test, input_test)]
-Δx_test = x_test[2:end] .- x_pred[1:end-1]
+a = x_test[2:end]
+b = xh
+do_diff(at,bt) = mean(sum((at - bt).^2, dims=1))
+c = do_diff.(a,b)
+@printf "Loss on test data: %.2g\n" mean(c)
 
 
-# TODO: This is not quite right yet. I need to plot on same axes scales, and probably roll out the learned REN itself instead of one-step-ahead prediction. TEST THIS AND CHECK.
+#######################################################################
+# Simulate observer error
 
-# Plot the states for now
-function plot_results(x, Δx, ts)
+# Simulate the model through time
+function simulate(model::AbstractREN, x0, u)
+    recurrent = Flux.Recur(model, x0)
+    output = recurrent.(u)
+    return output
+end
+x0hat = init_states(model, batches)
+xhat = simulate(model, x0hat, observer_inputs)
 
-    ts1 = ts[1:end-1]
+# Plot results
+function plot_results(x, x̂, ts)
+
+    # Observer error
+    Δx = x .- x̂
+
+    ts = ts.*dt
     _get_pv(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
-    pos = _get_pv(x,1)
-    vel = _get_pv(x,2)
-
-    Δpos = _get_pv(Δx,1)
-    Δvel = _get_pv(Δx,2)
+    q   = _get_pv(x,1)
+    q̂   = _get_pv(x̂,1)
+    qd  = _get_pv(x,2)
+    q̂d  = _get_pv(x̂,2)
+    Δq  = _get_pv(Δx,1)
+    Δqd = _get_pv(Δx,2)
 
     fig = Figure(resolution = (800, 400))
     ga = fig[1,1] = GridLayout()
@@ -137,16 +159,26 @@ function plot_results(x, Δx, ts)
     ax2 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position (m)", title="Observer Error")
     ax3 = Axis(ga[2,1], xlabel="Time (s)", ylabel="Velocity (m/s)")
     ax4 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Velocity (m/s)")
+    axs = [ax1, ax2, ax3, ax4]
 
-    for k in axes(pos,2)
-        lines!(ax1, ts.*dt,   pos[:,k], linewidth=0.5, color=:grey)
-        lines!(ax2, ts1.*dt, Δpos[:,k], linewidth=0.5, color=:grey)
-        lines!(ax3, ts.*dt,   vel[:,k], linewidth=0.5, color=:grey)
-        lines!(ax4, ts1.*dt, Δvel[:,k], linewidth=0.5, color=:grey)
+    for k in axes(q,2)
+        lines!(ax1, ts,  q[:,k],  linewidth=0.5,  color=:grey)
+        lines!(ax1, ts,  q̂[:,k],  linewidth=0.25, color=:red)
+        lines!(ax2, ts, Δq[:,k],  linewidth=0.5,  color=:grey)
+        lines!(ax3, ts,  qd[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax3, ts,  q̂d[:,k], linewidth=0.25, color=:red)
+        lines!(ax4, ts, Δqd[:,k], linewidth=0.5,  color=:grey)
     end
 
+    qmin, qmax = minimum(minimum.((q,q̂))), maximum(maximum.((q,q̂)))
+    qdmin, qdmax = minimum(minimum.((qd,q̂d))), maximum(maximum.((qd,q̂d)))
+    ylims!(ax1, qmin, qmax)
+    ylims!(ax2, qmin, qmax)
+    ylims!(ax3, qdmin, qdmax)
+    ylims!(ax4, qdmin, qdmax)
+    xlims!.(axs, ts[1], ts[end])
     display(fig)
-    return fig
+    return fig, axs
 end
-plot_results(x_test, Δx_test, t_test)
+out = plot_results(x_test, xhat, ts_test)
 println()
