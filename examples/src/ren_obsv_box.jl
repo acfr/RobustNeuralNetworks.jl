@@ -9,7 +9,7 @@ using Random
 using RobustNeuralNetworks
 using Statistics
 
-rng = MersenneTwister(42)
+rng = MersenneTwister(0)
 
 
 #####################################################################
@@ -20,45 +20,52 @@ m = 1                   # Mass (kg)
 k = 5                   # Spring constant (N/m)
 μ = 0.5                 # Viscous damping coefficient (kg/m)
 nx = 2                  # Number of states
-dt = 0.001              # Time-step (s)
-Tmax = 100              # Simulation horizon
+dt = 0.01               # Time-step (s)
+Tmax = 10               # Simulation horizon
 ts = 1:Int(Tmax/dt)     # Time array indices
 
 # Continuous and discrete dynamics and measurements
-f(x::Vector,u::Vector) = [x[2]; (u[1] - k*x[1] - μ*x[2].^2)/m]
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
-
-fd(x,u) = x + dt*f(x + dt*f(x,u)/2,u)
+fd(x,u) = x + dt*f(x,u)
+# fd(x,u) = x + dt*f(x + dt*f(x,u)/2,u)
 gd(x::Matrix) = x[1:1,:]
 
+# function fd(x,u)
+#     k1 = f(x,u)
+#     k2 = f(x + dt*k1/2, u)
+#     k3 = f(x + dt*k2/2, u)
+#     k4 = f(x + dt*k3, u)
+#     return x + dt*(k1 + 2k2 + 2k3 + k4)/6
+# end
+
 # Generate training data
-u = zeros(1,  length(ts))
-X = zeros(nx, length(ts))
-X[:,1] = 0.1*ones(nx)
+batches = 50
+u  = fill(zeros(1, batches), length(ts)-1)
+X  = fill(zeros(1, batches), length(ts))
+X[1] = 0.5*(2*rand(rng, nx, batches) .-1)
 
 for t in ts[1:end-1]
-    X[:,t+1] = fd(X[:,t], u[:,t])
-    u[t+1] = u[t] + 0.01*randn(rng)
+    X[t+1] = fd(X[t],u[t])
 end
 
-Xt = X[:, 1:end-1]
-Xn = X[:, 2:end]
-y = gd(X)
+Xt = X[1:end-1]
+Xn = X[2:end]
+y = gd.(Xt)
 
 # Store data for training
-input_data = [u; y][:,1:end-1]
-batchsize = 200
-data = Flux.Data.DataLoader((Xn, Xt, input_data); rng, batchsize, shuffle=true)
+observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
+indx = shuffle(rng, 1:length(observer_data))
+data = zip(Xn[indx], Xt[indx], observer_data[indx])
 
 
 #####################################################################
 # Train a model
 
 # Define a REN model for the observer
-nv = 100                     # Works with 100, and works ok with 50 (vel known)
-nu = size(input_data, 1)
+nv = 100
+nu = size(observer_data[1], 1)
 ny = nx
-model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false)
+model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng)
 model = DiffREN(model_ps)
 
 # Loss function: one step ahead error (average over time)
@@ -68,7 +75,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6, verbose=false)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-4, verbose=false)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -84,7 +91,7 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6, verbose=f
 
         # Drop learning rate if mean loss is stuck or growing
         push!(mean_loss, mean(batch_loss))
-        if (mean_loss[end] >= mean_loss[end-1]) && (lr > min_lr)
+        if (mean_loss[end] >= mean_loss[end-1]) && !(lr <= min_lr)
             lr = 0.1lr
             Flux.adjust!(opt_state, lr)
         end
@@ -98,7 +105,7 @@ tloss = train_observer!(model, data; epochs=50, verbose=true)
 # Generate test data
 
 # Generate test data (a bunch of initial conditions)
-batches   = 5
+batches   = 20
 ts_test   = 1:Int(10/dt)
 u_test    = fill(zeros(1, batches), length(ts_test))
 x_test    = fill(zeros(nx,batches), length(ts_test))
@@ -108,21 +115,6 @@ for t in ts_test[1:end-1]
     x_test[t+1] = fd(x_test[t], u_test[t])
 end
 observer_inputs = [[u;y] for (u,y) in zip(u_test, gd.(x_test))]
-
-
-#####################################################################
-# Test one-step-ahead prediction error on test data
-
-xh = fill(zeros(nx,batches), length(ts_test)-1)
-for t in ts_test[1:end-1]
-    xh[t] = model(x_test[t], observer_inputs[t])[1]
-end
-
-a = x_test[2:end]
-b = xh
-do_diff(at,bt) = mean(sum((at - bt).^2, dims=1))
-c = do_diff.(a,b)
-@printf "Loss on test data: %.2g\n" mean(c)
 
 
 #######################################################################
@@ -178,7 +170,7 @@ function plot_results(x, x̂, ts)
     ylims!(ax4, qdmin, qdmax)
     xlims!.(axs, ts[1], ts[end])
     display(fig)
-    return fig, axs
+    return fig
 end
-out = plot_results(x_test, xhat, ts_test)
+fig = plot_results(x_test, xhat, ts_test)
 println()
