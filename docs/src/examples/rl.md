@@ -31,7 +31,6 @@ where ``\Delta t`` is the time-step. This approximation typically requires a ver
 Our aim is to learn a controller ``u = \mathcal{K}_\theta(x, q_\mathrm{ref}),`` defined by some learnable parameters ``\theta,`` that can push the box to any goal position ``q_\mathrm{ref}`` that we choose. Specifically, we want the box to:
 - Reach a (stationary) goal position ``q_\mathrm{ref}``
 - Within a time period ``T``
-- Using minimal control force ``u``
 
 Note that the force required to keep the box an equilibrium position ``q_\mathrm{ref}`` is simply ``u_\mathrm{ref} = k q_\mathrm{ref}`` (set the derivative terms in the dynamics to zero and re-arrange for ``u``). We can encode these objectives into a cost function ``J_\theta`` and write our RL problem as
 ```math
@@ -163,52 +162,57 @@ costs = train_box_ctrl!(model_ps, loss; verbose=true)
 
 ## 6. Evaluate the trained model
 
-Once we've trained the model to move the box, we should check that it actually works. As an example, let's get the controller to move the box through the fluid to ``q_\mathrm{ref} = 1.0``. We'll plot the states and controls alongside the loss curve from training below.
+Once we've trained the model to move the box, we should check that it actually works. In the code below, we generate 100 batches of test data. In each one, the box starts at the origin at rest, and is moved through the fluid to a different (random) goal position ``q_\mathrm{ref} \in [-1,1].`` We plot the states and controls alongside the loss curve from training.
 
 ```julia
 using CairoMakie
 
 lbdn = LBDN(model_ps)
-x0_test = zeros(2,1)
-qr_test = ones(1,1)
+x0_test = zeros(2,100)
+qr_test = 2*rand(rng, 1, 100) .- 1
 z_lbdn = rollout(lbdn, x0_test, qr_test)
 
 # Plot position, velocity, and control input over time
-function plot_box_learning(costs, z, qref, indx=1)
+function plot_box_learning(costs, z, qr)
 
-    x = [z[t][1,indx] for t in ts]
-    v = [z[t][2,indx] for t in ts]
-    u = [z[t][3,indx] for t in ts]
-
-    xr = qref[indx]
-    ur = k*xr
+    _get_vec(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
+    q = _get_vec(z, 1)
+    v = _get_vec(z, 2)
+    u = _get_vec(z, 3)
+    t = dt*ts
+    
+    Δq = q .- qr .* ones(length(z), length(qr_test))
+    Δu = u .- k*qr .* ones(length(z), length(qr_test))
 
     f1 = Figure(resolution = (600, 400))
     ga = f1[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
-    ax1 = Axis(ga[1,2], xlabel="Time steps", ylabel="Position (m)", )
-    ax2 = Axis(ga[2,1], xlabel="Time steps", ylabel="Velocity (m/s)")
-    ax3 = Axis(ga[2,2], xlabel="Time steps", ylabel="Control (N)")
+    ax1 = Axis(ga[1,2], xlabel="Time (s))", ylabel="Position error (m)", )
+    ax2 = Axis(ga[2,1], xlabel="Time (s))", ylabel="Velocity (m/s)")
+    ax3 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Control error (N)")
 
     lines!(ax0, costs, color=:black)
-    lines!(ax1, ts, x, color=:black)
-    lines!(ax2, ts, v, color=:black)
-    lines!(ax3, ts, u, color=:black)
+    for k in axes(q,2)
+        lines!(ax1, t, Δq[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax2, t,  v[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax3, t, Δu[:,k], linewidth=0.5,  color=:grey)
+    end
 
-    lines!(ax1, ts, qr*ones(size(ts)), color=:red, linestyle=:dash)
-    lines!(ax2, ts, zeros(size(ts)), color=:red, linestyle=:dash)
-    lines!(ax3, ts, ur*ones(size(ts)), color=:red, linestyle=:dash)
-
+    lines!(ax1, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax2, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax3, t, zeros(size(t)), color=:red, linestyle=:dash)
+    
+    xlims!.((ax1,ax2,ax3), (t[1],), (t[end],))
     display(f1)
     return f1
 end
 
-fig = plot_box_learning(costs, z_lbdn, qr_test, 1)
+fig = plot_box_learning(costs, z_lbdn, qr_test)
 ```
 ![](../assets/lbdn-rl/lbdn_rl.svg)
 
-The box clearly moves to the required position within the time frame and stays there.
+The box clearly moves to the required position within the time frame and stays there in all cases, showing that the control is up to the task.
 
 
 ## Can't I just use `DiffLBDN`?

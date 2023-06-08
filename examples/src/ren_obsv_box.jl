@@ -127,13 +127,13 @@ function plot_results(x, x̂, ts)
     Δx = x .- x̂
 
     ts = ts.*dt
-    _get_pv(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
-    q   = _get_pv(x,1)
-    q̂   = _get_pv(x̂,1)
-    qd  = _get_pv(x,2)
-    q̂d  = _get_pv(x̂,2)
-    Δq  = _get_pv(Δx,1)
-    Δqd = _get_pv(Δx,2)
+    _get_vec(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
+    q   = _get_vec(x,1)
+    q̂   = _get_vec(x̂,1)
+    qd  = _get_vec(x,2)
+    q̂d  = _get_vec(x̂,2)
+    Δq  = _get_vec(Δx,1)
+    Δqd = _get_vec(Δx,2)
 
     fig = Figure(resolution = (800, 400))
     ga = fig[1,1] = GridLayout()
