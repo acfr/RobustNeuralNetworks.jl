@@ -6,6 +6,7 @@ Our next example features an LBDN trained to classify the [MNIST](https://en.wik
 3. Define a loss function
 4. Train the model to minimise the loss function
 5. Evaluate the trained model
+6. Investigate robustness
 
 For details on how Lipschitz bounds increase classification robustness and reliability, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
 
@@ -17,7 +18,7 @@ Let's start by loading the training and test data. [`MLDatasets.jl`](https://jul
 using MLDatasets: MNIST
 
 # Get MNIST training and test data
-T = Float64
+T = Float32
 x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 ```
@@ -44,9 +45,10 @@ using Flux: OneHotMatrix
 x_train = Flux.flatten(x_train)
 x_test  = Flux.flatten(x_test)
 
-# Encode categorical variables on output
+# Encode categorical outputs and store training data
 y_train = Flux.onehotbatch(y_train, 0:9)
 y_test  = Flux.onehotbatch(y_test,  0:9)
+train_data = [(x_train, y_train)]
 
 println("Features: ", size(x_test))
 println("Labels:   ", size(y_test))
@@ -73,7 +75,8 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 γ  = 5                  # Lipschitz bound of 5.0
 
 # Set up model: define parameters, then create model
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
+T = Float32
+model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng)
 model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 println(typeof(model))
@@ -112,22 +115,22 @@ function progress(model, iter)
 end
 ```
 
-Let's train the model over 600 epochs using two learning rates: `1e-3` for the first 300, and `1e-4` for the last 300. In both cases, we'll use the [`Adam`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam) optimiser and the default [`Flux.train!`](https://fluxml.ai/Flux.jl/stable/training/reference/#Flux.Optimise.train!-NTuple{4,%20Any}) method. Once the model has been trained, we can save it for later with the [`BSON`](https://github.com/JuliaIO/BSON.jl) package.
+Let's train the model over 600 epochs using two learning rates: `1e-3` for the first 300, and `1e-4` for the last 300. We'll use the [`Adam`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam) optimiser and the default [`Flux.train!`](https://fluxml.ai/Flux.jl/stable/training/reference/#Flux.Optimise.train!-NTuple{4,%20Any}) method. Once the model has been trained, we can save it for later with the [`BSON`](https://github.com/JuliaIO/BSON.jl) package.
 
 ```julia
 using BSON
 
-# Define hyperparameters and zip up data
-num_epochs = 300
-lrs = [1e-3, 1e-4]
-data = [(x_train, y_train)]
-
 # Train with the Adam optimiser, and display progress every 50 steps
-for k in eachindex(lrs)
-    opt_state = Flux.setup(Adam(lrs[k]), model)
-    for i in 1:num_epochs
-        Flux.train!(loss, model, data, opt_state)
-        (i % 50 == 0) && progress(model, i)
+function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
+
+    opt_state = Flux.setup(Adam(lrs[1]), model)
+    for k in eachindex(lrs)
+        opt_state = Flux.setup(Adam(lrs[k]), model)
+        for i in 1:num_epochs
+            Flux.train!(loss, model, data, opt_state)
+            (i % 50 == 0) && progress(model, i)
+        end
+        (k != length(lrs)) && Flux.adjust!(opt_state, lrs[k+1])
     end
 end
 
@@ -144,7 +147,7 @@ println(typeof(model))
 
 ## 5. Evaluate the trained model
 
-Our final model has a test accuracy of about 99% on this small subset of the MNIST dataset. For those interested, it achieves 97.5% accuracy on the full 10,000-image test set. We could improve this further by (for example) using a larger model, training the model for longer, or fine-tuning the learning rate. 
+Our final model has a test accuracy of about 98% on this small subset of the MNIST dataset. For those interested, it achieves 97.6% accuracy on the full 10,000-image test set. We could improve this further by (for example) using a larger model, training the model for longer, or fine-tuning the learning rate. 
 
 ```@example mnist
 # Print final results
@@ -192,3 +195,59 @@ end
 save("lbdn_mnist.svg", f1)
 ```
 ![](lbdn_mnist.svg)
+
+
+## 6. Investigate robustness
+
+The main advantage of using an LBDN for image classification is its built-in robustness to noise (or attacks) added to the image data. This robustness is given by the Lipschitz bound. As explained in the [Package Overview](@ref), a Lipschitz bound effectively defines how "smooth" the network is: the smaller the Lipschitz bound, the less the network outputs will change as the inputs vary. For example, small amounts of noise added to the image will be less likely to change its classification. A detailed investigation into this effect is presented in [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526).
+
+We can see this effect first-hand by comparing the LBDN to a standard MLP built from `Flux.Dense` layers. Let's first create a `dense` network with the same layer structure as the LBDN.
+```@example mnist
+init = Flux.glorot_normal(rng)
+initb(n) = Flux.glorot_normal(rng, n)
+dense = Chain(
+    Dense(nu, nh[1], Flux.relu; init, bias=initb(nh[1])),
+    Dense(nh[1], nh[2], Flux.relu; init, bias=initb(nh[2])),
+    Dense(nh[2], ny; init, bias=initb(ny)),
+    Flux.softmax
+)
+```
+
+We can train it with the same `train_mnist!()` function from earlier, which takes a few minutes to run. Here's one we prepared earlier, with some statistics on its performance. On the full data set, it achieves a test accuracy of 96.9%.
+```@example mnist
+# Load the model
+dense = BSON.load("../../src/assets/lbdn-mnist/dense_mnist.bson")["model"]
+
+# Print final results
+train_acc = accuracy(dense, x_train, y_train)*100
+test_acc  = accuracy(dense, x_test,  y_test)*100
+println("Training accuracy: $(round(train_acc,digits=2))%")
+println("Test accuracy:     $(round(test_acc,digits=2))%")
+```
+
+To test robustness, we'll add uniformly-sampled random noise in the range ``[-\epsilon, \epsilon]`` to the test data for a range of noise magnitudes ``\epsilon \in [0, 200/255].`` We can record the test accuracy for each perturbation size and store it for plotting.
+```@example mnist
+# Get test accuracy as we add noise
+uniform(x) = 2*rand(rng, T, size(x)...) .- 1
+function noisy_test_error(model, ϵ=0)
+    noisy_xtest = x_test .+ ϵ*uniform(x_test)
+    accuracy(model, noisy_xtest,  y_test)*100
+end
+
+ϵs = T.(LinRange(0, 200, 10)) ./ 255
+lbdn_error = noisy_test_error.((model,), ϵs)
+dense_error = noisy_test_error.((dense,), ϵs)
+
+# Plot results
+fig = Figure(resolution=(500,300))
+ax1 = Axis(fig[1,1], xlabel="Perturbation size", ylabel="Test accuracy (%)")
+lines!(ax1, ϵs, lbdn_error, label="LBDN (γ=5)")
+lines!(ax1, ϵs, dense_error, label="Dense")
+
+xlims!(ax1, 0, 0.8)
+axislegend(ax1, position=:lb)
+save("lbdn_mnist_robust.svg", fig)
+```
+![](lbdn_mnist_robust.svg)
+
+Plotting the results very clearly shows that the `dense` network, which has no guarantees on its Lipschitz bound, quickly loses its accuracy as small amounts of noise are added to the image. On the other hand, the LBDN `model` maintains its accuracy even when the (maximum) perturbation size is as much as 80% of the maximum pixel values. Image classification is one of the most promising use-cases of LBDN models, and this is exactly why.
