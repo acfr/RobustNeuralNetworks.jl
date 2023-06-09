@@ -21,25 +21,33 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 γ  = 5                  # Lipschitz bound of 5
 
 # Set up model: define parameters, then create model
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+T = Float32
+model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng)
 model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 # Get MNIST training and test data
-T = Float64
 x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 
+# # Save a subset for later, useful for the docs
+# bson("assets/lbdn-mnist/mnist_data.bson", Dict(
+#     "x_train" => x_train[:,:,1:1000],
+#     "y_train" => y_train[1:1000],
+#     "x_test" => x_test[:,:,1:100],
+#     "y_test" => y_test[1:100]
+# ))
 # data = BSON.load("assets/lbdn-mnist/mnist_data.bson")
 # x_train, y_train = data["x_train"], data["y_train"]
-# x_test, y_test = data["x_test"], data["y_test"]
+# x_test, y_test = data["x_test"], data["y_test"] 
 
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
 x_test  = Flux.flatten(x_test)
 
-# Encode categorical variables on output
+# Encode categorical outputs and store data
 y_train = Flux.onehotbatch(y_train, 0:9)
 y_test  = Flux.onehotbatch(y_test,  0:9)
+train_data = [(x_train, y_train)]
 
 # Loss function
 loss(model,x,y) = Flux.crossentropy(model(x), y)
@@ -56,29 +64,32 @@ function progress(model, iter)
     println()
 end
 
-# Define hyperparameters
-num_epochs = 300
-lrs = [1e-3, 1e-4]
-data = [(x_train, y_train)]
+# Train the model with the ADAM optimiser
+function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
 
-# Train with the Adam optimiser
-for k in eachindex(lrs)
-    opt_state = Flux.setup(Adam(lrs[k]), model)
-    for i in 1:num_epochs
-        Flux.train!(loss, model, data, opt_state)
-        (i % 50 == 0) && progress(model, i)
+    opt_state = Flux.setup(Adam(lrs[1]), model)
+    for k in eachindex(lrs)
+        
+        opt_state = Flux.setup(Adam(lrs[k]), model)
+        for i in 1:num_epochs
+            Flux.train!(loss, model, data, opt_state)
+            (i % 50 == 0) && progress(model, i)
+        end
+        (k != length(lrs)) && Flux.adjust!(opt_state, lrs[k+1])
     end
 end
 
-# Save the model for later use
-bson("../results/lbdn_mnist.bson", Dict("model" => model))
-# model = BSON.load("../results/lbdn_mnist.bson")["model"]
+# Train and save the model for later use
+# train_mnist!(model, train_data)
+# bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
+model = BSON.load("assets/lbdn-mnist/lbdn_mnist.bson")["model"]
 
 # Print final results
 train_acc = accuracy(model, x_train, y_train)*100
 test_acc  = accuracy(model, x_test,  y_test)*100
+println("LBDN Results: ")
 println("Training accuracy: $(round(train_acc,digits=2))%")
-println("Test accuracy:     $(round(test_acc,digits=2))%")
+println("Test accuracy:     $(round(test_acc,digits=2))%\n")
 
 # Make a couple of example plots
 indx = rand(rng, 1:100, 3)
@@ -112,5 +123,52 @@ for i in eachindex(indx)
 
 end
 display(f1)
-# save("../results/lbdn_mnist.svg", f1)
-save("../results/lbdn_mnist.png", f1)
+save("../results/lbdn_mnist.svg", f1)
+
+
+#######################################################################
+# Compare robustness to Dense network
+
+# Create a Dense network 
+init = Flux.glorot_normal(rng)
+initb(n) = Flux.glorot_normal(rng, n)
+dense = Chain(
+    Dense(nu, nh[1], Flux.relu; init, bias=initb(nh[1])),
+    Dense(nh[1], nh[2], Flux.relu; init, bias=initb(nh[2])),
+    Dense(nh[2], ny; init, bias=initb(ny)),
+    Flux.softmax
+)
+
+# Train it and save for later
+# train_mnist!(dense, train_data)
+# bson("assets/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
+dense = BSON.load("assets/lbdn-mnist/dense_mnist.bson")["model"]
+
+# Print final results
+train_acc = accuracy(dense, x_train, y_train)*100
+test_acc  = accuracy(dense, x_test,  y_test)*100
+println("Dense results:")
+println("Training accuracy: $(round(train_acc,digits=2))%")
+println("Test accuracy:     $(round(test_acc,digits=2))%")
+
+# Get test accuracy as we add noise
+uniform(x) = 2*rand(rng, T, size(x)...) .- 1
+function noisy_test_error(model, ϵ=0)
+    noisy_xtest = x_test .+ ϵ*uniform(x_test)
+    accuracy(model, noisy_xtest,  y_test)*100
+end
+
+ϵs = T.(LinRange(0, 200, 10)) ./ 255
+lbdn_error = noisy_test_error.((model,), ϵs)
+dense_error = noisy_test_error.((dense,), ϵs)
+
+# Plot results
+fig = Figure(resolution=(500,300))
+ax1 = Axis(fig[1,1], xlabel="Perturbation size", ylabel="Test accuracy (%)")
+lines!(ax1, ϵs, lbdn_error, label="LBDN γ=5")
+lines!(ax1, ϵs, dense_error, label="Dense")
+
+xlims!(ax1, 0, 0.8)
+axislegend(ax1, position=:lb)
+display(fig)
+save("../results/lbdn_mnist_robust.svg", fig)

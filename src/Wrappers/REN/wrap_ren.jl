@@ -36,11 +36,11 @@ R = 0.1^2 * Matrix{Float64}(I(nu))
 S = zeros(Float64, nu, ny)
 
 # Construct a REN
-ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R; rng=rng)
+ren_ps = GeneralRENParams{Float64}(nu, nx, nv, ny, Q, S, R; rng)
 ren = WrapREN(ren_ps)
 
 # Some dummy inputs
-x0 = init_states(ren, batches; rng=rng)
+x0 = init_states(ren, batches; rng)
 u0 = randn(rng, ren.nu, batches)
 
 # Evaluate the REN over one timestep

@@ -4,6 +4,7 @@ Pkg.activate("../")
 
 using CairoMakie
 using Flux
+using Printf
 using Random
 using RobustNeuralNetworks
 
@@ -13,20 +14,19 @@ rng = MersenneTwister(42)
 # Model specification
 nu = 1                  # Number of inputs
 ny = 1                  # Number of outputs
-nh = fill(15,4)         # 4 hidden layers, each with 15 neurons
-γ = 1                   # Lipschitz bound of 1
+nh = fill(16,4)         # 4 hidden layers, each with 16 neurons
+γ = 10                  # Lipschitz bound of 10
 
 # Set up model: define parameters, then create model
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 model = DiffLBDN(model_ps)
 
 # Function to estimate
-N = 5
-f(x) = sin(x)+(1/N)*sin(N*x)
+f(x) = x < 0 ? 0 : 1
 
 # Training data
-dx = 0.1
-xs = 0:dx:2π
+dx = 0.01
+xs = -0.3:dx:0.3
 ys = f.(xs)
 data = zip(xs,ys)
 
@@ -58,17 +58,21 @@ for k in eachindex(lrs)
     end
 end
 
+# Print out lower-bound on Lipschitz constant
+Empirical_Lipschitz = lip(model, xs, dx)
+@printf "Empirical lower Lipschitz bound: %.2f\n" Empirical_Lipschitz
+
 # Create a figure
 f1 = Figure(resolution = (600, 400))
 ax = Axis(f1[1,1], xlabel="x", ylabel="y")
 
+get_best(x) = x<-0.05 ? 0 : (x<0.05 ? 10x + 0.5 : 1)
+ybest = get_best.(xs)
 ŷ = map(x -> model([x])[1], xs)
+
 lines!(xs, ys, label = "Data")
-lines!(xs, ŷ, label = "LBDN")
-axislegend(ax)
+lines!(xs, ybest, label = "Maximum slope = 10.0")
+lines!(xs, ŷ, label = "LBDN: slope = $(round(Empirical_Lipschitz; digits=2))")
+axislegend(ax, position=:lt)
 display(f1)
 save("../results/lbdn_curve_fit.svg", f1)
-
-# Print out lower-bound on Lipschitz constant
-Empirical_Lipschitz = lip(model, xs, dx)
-println("Empirical lower Lipschitz bound: ", round(Empirical_Lipschitz; digits=2))

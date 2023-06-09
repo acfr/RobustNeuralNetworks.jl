@@ -48,7 +48,7 @@ save("../results/echo_ren_inputs.svg", f)
 nu = 1
 nx, nv = 50, 500
 ny = nx + nv + nu
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng)
 model  = REN(ren_ps)
 
 model.explicit.C2  .= [I(nx); zeros(nv, nx); zeros(nu, nx)]

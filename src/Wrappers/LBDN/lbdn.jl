@@ -50,7 +50,7 @@ batches = 10
 nu, ny = 4, 1
 nh = [5, 10, 5, 15]
 
-lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 lbdn = LBDN(lbdn_ps)
 
 # Evaluate model with a batch of random inputs

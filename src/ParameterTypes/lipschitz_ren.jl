@@ -33,15 +33,15 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRE
 """
 function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
-    nl::Function = Flux.relu, 
-    αbar::T = T(1),
-    init = :random,
+    nl::Function      = Flux.relu, 
+    αbar::T           = T(1),
+    init              = :random,
     polar_param::Bool = true,
-    bx_scale::T = T(0), 
-    bv_scale::T = T(1), 
-    ϵ::T = T(1e-12), 
-    D22_zero = false,
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    bx_scale::T       = T(0), 
+    bv_scale::T       = T(1), 
+    ϵ::T              = T(1e-12), 
+    D22_zero          = false,
+    rng::AbstractRNG  = Random.GLOBAL_RNG
 ) where T
 
     # If D22 fixed at 0, it should not be constructed from other
@@ -51,9 +51,8 @@ function LipschitzRENParams{T}(
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
-        init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, D22_free=D22_free, D22_zero=D22_zero,
-        rng=rng
+        init, ϵ, bx_scale, bv_scale, polar_param, 
+        D22_free, D22_zero, rng,
     )
 
     return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, T(γ))

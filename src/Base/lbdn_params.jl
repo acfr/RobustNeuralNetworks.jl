@@ -48,8 +48,8 @@ See also [`DenseLBDNParams`](@ref).
 """
 function DirectLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int;
-    initW::Function = Flux.glorot_normal,
-    initb::Function = Flux.glorot_normal,
+    initW::Function  = Flux.glorot_normal,
+    initb::Function  = Flux.glorot_normal,
     rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
