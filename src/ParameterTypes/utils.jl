@@ -1,3 +1,5 @@
+# This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 """
     direct_to_explicit(ps::AbstractRENParams{T}, return_h=false) where T
 
