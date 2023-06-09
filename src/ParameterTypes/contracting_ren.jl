@@ -48,9 +48,8 @@ function ContractingRENParams{T}(
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
-        init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, D22_free=true, D22_zero=D22_zero,
-        is_output=is_output, rng=rng
+        init, ϵ, bx_scale, bv_scale, polar_param, 
+        D22_free=true, D22_zero, is_output, rng,
     )
 
     return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)
@@ -126,9 +125,9 @@ function ContractingRENParams(
     X = Matrix{T}(cholesky(H).U)
 
     # Add bias terms
-    bv = T(bv_scale) * glorot_normal(nv; T=T, rng=rng)
-    bx = T(bx_scale) * glorot_normal(nx; T=T, rng=rng)
-    by = glorot_normal(ny; T=T, rng=rng)
+    bv = T(bv_scale) * glorot_normal(nv; T, rng)
+    bx = T(bx_scale) * glorot_normal(nx; T, rng)
+    by = glorot_normal(ny; T, rng)
 
     # D22 parameterisation
     D22_free = true

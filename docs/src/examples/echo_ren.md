@@ -184,7 +184,7 @@ using RobustNeuralNetworks
 nu = 1
 nx, nv = 50, 500
 ny = nx + nv + nu
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng=rng)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; rng)
 model  = REN(ren_ps)
 
 # Make sure the outputs are yt = [xt; wt; ut]

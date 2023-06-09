@@ -23,11 +23,11 @@ nu, nx, nv, ny = 4, 10, 20, 1
 γ = 1
 
 # Construct a REN
-lipschitz_ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng=rng)
+lipschitz_ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
 ren = REN(lipschitz_ren_ps)
 
 # Some random inputs
-x0 = init_states(ren, batches; rng=rng)
+x0 = init_states(ren, batches; rng)
 u0 = randn(rng, ren.nu, batches)
 
 # Evaluate the REN over one timestep
@@ -66,7 +66,7 @@ nu, nx, nv, ny = 4, 10, 20, 1
 Now we can construct the REN parameters. The variable `lipschitz_ren_ps` contains all the parameters required to build a Lipschitz-bounded REN. Note that we separate the model parameterisation and its "explicit" (callable) form in `RobustNeuralNetworks.jl`. See the [Package Overview](@ref) for more details.
 
 ```@example walkthrough
-lipschitz_ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng=rng)
+lipschitz_ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
 ```
 
 Once the parameters are defined, we can create a REN object in its explicit form.

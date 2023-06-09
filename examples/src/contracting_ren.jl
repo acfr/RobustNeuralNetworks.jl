@@ -10,7 +10,7 @@ rng = MersenneTwister(42)
 
 # Create a contracting REN with just its state as an output 
 nu, nx, nv, ny = 1, 1, 10, 1
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng=rng, init=:cholesky)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng, init=:cholesky)
 ren = REN(ren_ps)
 
 # Make it converge a little faster...

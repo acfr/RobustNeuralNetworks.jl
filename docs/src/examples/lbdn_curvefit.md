@@ -47,7 +47,7 @@ nh = fill(16,4)         # 4 hidden layers, each with 16 neurons
 γ = 10                  # Lipschitz bound of 10
 
 # Set up model: define parameters, then create model
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 model = DiffLBDN(model_ps)
 ```
 
@@ -62,12 +62,12 @@ Note that we first constructed the model parameters `model_ps`, and *then* creat
 
     chain_model = Flux.Chain(
         (x) -> (√γ * x),
-        SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng=rng),
-        SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng=rng),
-        SandwichFC(nh[2] => nh[3], Flux.relu; T=Float64, rng=rng),
-        SandwichFC(nh[3] => nh[4], Flux.relu; T=Float64, rng=rng),
+        SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng),
+        SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng),
+        SandwichFC(nh[2] => nh[3], Flux.relu; T=Float64, rng),
+        SandwichFC(nh[3] => nh[4], Flux.relu; T=Float64, rng),
         (x) -> (√γ * x),
-        SandwichFC(nh[4] => ny; output_layer=true, T=Float64, rng=rng),
+        SandwichFC(nh[4] => ny; output_layer=true, T=Float64, rng),
     )
     ```
 

@@ -21,7 +21,7 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 γ  = 5                  # Lipschitz bound of 5
 
 # Set up model: define parameters, then create model
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 # Get MNIST training and test data
@@ -112,5 +112,4 @@ for i in eachindex(indx)
 
 end
 display(f1)
-# save("../results/lbdn_mnist.svg", f1)
-save("../results/lbdn_mnist.png", f1)
+save("../results/lbdn_mnist.svg", f1)
