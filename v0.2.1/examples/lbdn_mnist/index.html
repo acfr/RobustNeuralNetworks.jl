@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Image Classification · RobustNeuralNetworks.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="RobustNeuralNetworks.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RobustNeuralNetworks.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Introduction</span><ul><li><a class="tocitem" href="../../introduction/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../introduction/package_overview/">Package Overview</a></li><li><a class="tocitem" href="../../introduction/developing/">Contributing to the Package</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../lbdn_curvefit/">Fitting a Curve</a></li><li class="is-active"><a class="tocitem" href>Image Classification</a><ul class="internal"><li><a class="tocitem" href="#.-Load-the-data"><span>1. Load the data</span></a></li><li><a class="tocitem" href="#.-Define-a-model"><span>2. Define a model</span></a></li><li><a class="tocitem" href="#.-Define-a-loss-function"><span>3. Define a loss function</span></a></li><li><a class="tocitem" href="#.-Train-the-model"><span>4. Train the model</span></a></li><li><a class="tocitem" href="#.-Evaluate-the-trained-model"><span>5. Evaluate the trained model</span></a></li><li><a class="tocitem" href="#.-Investigate-robustness"><span>6. Investigate robustness</span></a></li></ul></li><li><a class="tocitem" href="../rl/">Reinforcement Learning</a></li><li><a class="tocitem" href="../box_obsv/">Observer Design</a></li><li><a class="tocitem" href="../echo_ren/">(Convex) Nonlinear Control</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../../lib/models/">Model Wrappers</a></li><li><a class="tocitem" href="../../lib/model_params/">Model Parameterisations</a></li><li><a class="tocitem" href="../../lib/functions/">Functions</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Image Classification</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Image Classification</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/docs/src/examples/lbdn_mnist.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Image-Classification-with-LBDN"><a class="docs-heading-anchor" href="#Image-Classification-with-LBDN">Image Classification with LBDN</a><a id="Image-Classification-with-LBDN-1"></a><a class="docs-heading-anchor-permalink" href="#Image-Classification-with-LBDN" title="Permalink"></a></h1><p>Our next example features an LBDN trained to classify the <a href="https://en.wikipedia.org/wiki/MNIST_database">MNIST</a> dataset. We showed in <a href="https://doi.org/10.48550/arXiv.2301.11526">Wang &amp; Manchester (2023)</a> that training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:</p><ol><li>Load the training and test data</li><li>Define a Lipschitz-bounded model</li><li>Define a loss function</li><li>Train the model to minimise the loss function</li><li>Evaluate the trained model</li><li>Investigate robustness</li></ol><p>For details on how Lipschitz bounds increase classification robustness and reliability, please see the <a href="https://doi.org/10.48550/arXiv.2301.11526">paper</a>.</p><h2 id=".-Load-the-data"><a class="docs-heading-anchor" href="#.-Load-the-data">1. Load the data</a><a id=".-Load-the-data-1"></a><a class="docs-heading-anchor-permalink" href="#.-Load-the-data" title="Permalink"></a></h2><p>Let&#39;s start by loading the training and test data. <a href="https://juliaml.github.io/MLDatasets.jl/stable/"><code>MLDatasets.jl</code></a> contains a number of common machine-learning datasets, including the <a href="https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST">MNIST dataset</a>. To load the full dataset of 60,000 training images and 10,000 test images, one would run the following code.</p><pre><code class="language-julia hljs">using MLDatasets: MNIST
+
+# Get MNIST training and test data
+T = Float32
+x_train, y_train = MNIST(T, split=:train)[:]
+x_test,  y_test  = MNIST(T, split=:test)[:]</code></pre><p>For the purposes of this example, we&#39;ll load a small subset of the dataset.</p><pre><code class="language-julia hljs">using BSON
+
+data = BSON.load(&quot;../../src/assets/lbdn-mnist/mnist_data.bson&quot;)
+x_train, y_train = data[&quot;x_train&quot;], data[&quot;y_train&quot;]
+x_test,  y_test  = data[&quot;x_test&quot;],  data[&quot;y_test&quot;]
+
+println(&quot;Train/test features: &quot;, size(x_train), &quot; / &quot;, size(x_test))
+println(&quot;Train/test labels:   &quot;, size(y_train), &quot; / &quot;, size(y_test))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Train/test features: (28, 28, 1000) / (28, 28, 100)
+Train/test labels:   (1000,) / (100,)</code></pre><p>The feature matrices <code>x_train</code> and <code>x_test</code> are three-dimensional arrays where each 28x28 layer contains pixel data for a single handwritten number from 0 to 9. The labels <code>y_train</code> and <code>y_test</code> are vectors containing the classification of each image as a number from 0 to 9. We can convert each of these to an input/output format better suited to training with <a href="https://fluxml.ai/"><code>Flux.jl</code></a>.</p><pre><code class="language-julia hljs">using Flux
+using Flux: OneHotMatrix
+
+# Reshape features for model input
+x_train = Flux.flatten(x_train)
+x_test  = Flux.flatten(x_test)
+
+# Encode categorical outputs and store training data
+y_train = Flux.onehotbatch(y_train, 0:9)
+y_test  = Flux.onehotbatch(y_test,  0:9)
+train_data = [(x_train, y_train)]
+
+println(&quot;Features: &quot;, size(x_test))
+println(&quot;Labels:   &quot;, size(y_test))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Features: (784, 100)
+Labels:   (10, 100)</code></pre><p>Features are now stored in a <code>Matrix</code> where each column contains pixel data from a single image, and the labels have been converted to a <code>OneHotMatrix</code> where each column contains a 1 in the row corresponding to the image&#39;s classification (eg: row 3 for an image showing the number 2).</p><h2 id=".-Define-a-model"><a class="docs-heading-anchor" href="#.-Define-a-model">2. Define a model</a><a id=".-Define-a-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-model" title="Permalink"></a></h2><p>We can now construct an LBDN model to train on the MNIST dataset. The larger the model, the better the classification accuracy will be, at the cost of longer training time. For example, using an LBDN with three hidden layers of 128 neurons each would achieve a classification accuracy of approximately 99% on the full MNIST dataset. For this example, we&#39;ll use a smaller network and set a Lipschitz bound of <code>γ = 5.0</code> just to demonstrate the method.</p><pre><code class="language-julia hljs">using Random
+using RobustNeuralNetworks
+
+# Random seed for consistency
+rng = MersenneTwister(42)
+
+# Model specification
+nu = 28*28              # Number of inputs (size of image)
+ny = 10                 # Number of outputs (possible classifications)
+nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
+γ  = 5                  # Lipschitz bound of 5.0
+
+# Set up model: define parameters, then create model
+T = Float32
+model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng)
+model = Chain(DiffLBDN(model_ps), Flux.softmax)
+
+println(typeof(model))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Flux.Chain{Tuple{DiffLBDN{Float32}, typeof(NNlib.softmax)}}</code></pre><p>The <code>model</code> contains a callable <a href="../../lib/models/#RobustNeuralNetworks.DiffLBDN"><code>DiffLBDN</code></a> model constructed from its direct parameterisation, which is defined by an instance of <a href="../../lib/model_params/#RobustNeuralNetworks.DenseLBDNParams"><code>DenseLBDNParams</code></a> (see the <a href="../../introduction/package_overview/#Package-Overview">Package Overview</a> for more detail). The output is converted to a probability distribution using a <a href="https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax"><code>softmax</code></a> layer. Note that all <a href="../../lib/models/#RobustNeuralNetworks.AbstractLBDN"><code>AbstractLBDN</code></a> models can be combined with traditional neural network layers using <a href="https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain"><code>Flux.Chain</code></a>. An alternative approach would be to use <a href="../../lib/models/#RobustNeuralNetworks.SandwichFC"><code>SandwichFC</code></a> layers to build the network.</p><h2 id=".-Define-a-loss-function"><a class="docs-heading-anchor" href="#.-Define-a-loss-function">3. Define a loss function</a><a id=".-Define-a-loss-function-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-loss-function" title="Permalink"></a></h2><p>A typical loss function for training on datasets with discrete labels is the cross entropy loss. We can use the <a href="https://fluxml.ai/Flux.jl/stable/models/losses/#Flux.Losses.crossentropy"><code>crossentropy</code></a> loss function shipped with <code>Flux.jl</code>.</p><pre><code class="language-julia hljs"># Loss function
+loss(model,x,y) = Flux.crossentropy(model(x), y)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">loss (generic function with 1 method)</code></pre><h2 id=".-Train-the-model"><a class="docs-heading-anchor" href="#.-Train-the-model">4. Train the model</a><a id=".-Train-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Train-the-model" title="Permalink"></a></h2><p>Before training the model to minimise the cross entropy loss, we can set up a callback function to evaluate the model performance during training.</p><pre><code class="language-julia hljs">using Statistics
+
+# Check test accuracy during training
+compare(y::OneHotMatrix, ŷ) = maximum(ŷ, dims=1) .== maximum(y.*ŷ, dims=1)
+accuracy(model, x, y::OneHotMatrix) = mean(compare(y, model(x)))
+
+# Callback function to show results while training
+function progress(model, iter)
+    train_loss = round(loss(model, x_train, y_train), digits=4)
+    test_acc = round(accuracy(model, x_test, y_test), digits=4)
+    @show iter train_loss test_acc
+    println()
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">progress (generic function with 1 method)</code></pre><p>Let&#39;s train the model over 600 epochs using two learning rates: <code>1e-3</code> for the first 300, and <code>1e-4</code> for the last 300. We&#39;ll use the <a href="https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam"><code>Adam</code></a> optimiser and the default <a href="https://fluxml.ai/Flux.jl/stable/training/reference/#Flux.Optimise.train!-NTuple{4,%20Any}"><code>Flux.train!</code></a> method. Once the model has been trained, we can save it for later with the <a href="https://github.com/JuliaIO/BSON.jl"><code>BSON</code></a> package.</p><pre><code class="language-julia hljs">using BSON
+
+# Train with the Adam optimiser, and display progress every 50 steps
+function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
+
+    opt_state = Flux.setup(Adam(lrs[1]), model)
+    for k in eachindex(lrs)
+        opt_state = Flux.setup(Adam(lrs[k]), model)
+        for i in 1:num_epochs
+            Flux.train!(loss, model, data, opt_state)
+            (i % 50 == 0) &amp;&amp; progress(model, i)
+        end
+        (k != length(lrs)) &amp;&amp; Flux.adjust!(opt_state, lrs[k+1])
+    end
+end
+
+# Save the model for later
+bson(&quot;lbdn_mnist.bson&quot;, Dict(&quot;model&quot; =&gt; model))</code></pre><p>Running the training loop can take a few minutes, so here&#39;s one we prepared earlier. The model was trained on the full MNIST dataset (60,000 training images, 10,000 test images).</p><pre><code class="language-julia hljs">model = BSON.load(&quot;../../src/assets/lbdn-mnist/lbdn_mnist.bson&quot;)[&quot;model&quot;]
+println(typeof(model))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Flux.Chain{Tuple{DiffLBDN{Float32}, typeof(NNlib.softmax)}}</code></pre><h2 id=".-Evaluate-the-trained-model"><a class="docs-heading-anchor" href="#.-Evaluate-the-trained-model">5. Evaluate the trained model</a><a id=".-Evaluate-the-trained-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Evaluate-the-trained-model" title="Permalink"></a></h2><p>Our final model has a test accuracy of about 98% on this small subset of the MNIST dataset. For those interested, it achieves 97.6% accuracy on the full 10,000-image test set. We could improve this further by (for example) using a larger model, training the model for longer, or fine-tuning the learning rate. </p><pre><code class="language-julia hljs"># Print final results
+train_acc = accuracy(model, x_train, y_train)*100
+test_acc  = accuracy(model, x_test,  y_test)*100
+println(&quot;Training accuracy: $(round(train_acc,digits=2))%&quot;)
+println(&quot;Test accuracy:     $(round(test_acc,digits=2))%&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Training accuracy: 98.8%
+Test accuracy:     98.0%</code></pre><p>Let&#39;s have a look at some examples too.</p><pre><code class="language-julia hljs">using CairoMakie
+
+# Make a couple of example plots
+indx = rand(rng, 1:100, 3)
+f1 = Figure(resolution = (800, 300))
+for i in eachindex(indx)
+
+    # Get data and do prediction
+    x = x_test[:,indx[i]]
+    y = y_test[:,indx[i]]
+    ŷ = model(x)
+
+    # Reshape data for plotting
+    xmat = reshape(x, 28, 28)
+    yval = (0:9)[y][1]
+    ŷval = (0:9)[ŷ .== maximum(ŷ)][1]
+
+    # Plot results
+    ax, _ = image(
+        f1[1,i], xmat, axis=(
+            yreversed = true,
+            aspect = DataAspect(),
+            title = &quot;True class: $(yval), Prediction: $(ŷval)&quot;
+        )
+    )
+
+    # Format the plot
+    ax.xticksvisible = false
+    ax.yticksvisible = false
+    ax.xticklabelsvisible = false
+    ax.yticklabelsvisible = false
+
+end
+save(&quot;lbdn_mnist.svg&quot;, f1)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">CairoMakie.Screen{SVG}
+</code></pre><p><img src="../lbdn_mnist.svg" alt/></p><h2 id=".-Investigate-robustness"><a class="docs-heading-anchor" href="#.-Investigate-robustness">6. Investigate robustness</a><a id=".-Investigate-robustness-1"></a><a class="docs-heading-anchor-permalink" href="#.-Investigate-robustness" title="Permalink"></a></h2><p>The main advantage of using an LBDN for image classification is its built-in robustness to noise (or attacks) added to the image data. This robustness is given by the Lipschitz bound. As explained in the <a href="../../introduction/package_overview/#Package-Overview">Package Overview</a>, a Lipschitz bound effectively defines how &quot;smooth&quot; the network is: the smaller the Lipschitz bound, the less the network outputs will change as the inputs vary. For example, small amounts of noise added to the image will be less likely to change its classification. A detailed investigation into this effect is presented in <a href="https://doi.org/10.48550/arXiv.2301.11526">Wang &amp; Manchester (2023)</a>.</p><p>We can see this effect first-hand by comparing the LBDN to a standard MLP built from <code>Flux.Dense</code> layers. Let&#39;s first create a <code>dense</code> network with the same layer structure as the LBDN.</p><pre><code class="language-julia hljs">init = Flux.glorot_normal(rng)
+initb(n) = Flux.glorot_normal(rng, n)
+dense = Chain(
+    Dense(nu, nh[1], Flux.relu; init, bias=initb(nh[1])),
+    Dense(nh[1], nh[2], Flux.relu; init, bias=initb(nh[2])),
+    Dense(nh[2], ny; init, bias=initb(ny)),
+    Flux.softmax
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Chain(
+  Dense(784 =&gt; 64, relu),               # 50_240 parameters
+  Dense(64 =&gt; 64, relu),                # 4_160 parameters
+  Dense(64 =&gt; 10),                      # 650 parameters
+  NNlib.softmax,
+)                   # Total: 6 arrays, 55_050 parameters, 215.414 KiB.</code></pre><p>We can train it with the same <code>train_mnist!()</code> function from earlier, which takes a few minutes to run. Here&#39;s one we prepared earlier, with some statistics on its performance. On the full data set, it achieves a test accuracy of 96.9%.</p><pre><code class="language-julia hljs"># Load the model
+dense = BSON.load(&quot;../../src/assets/lbdn-mnist/dense_mnist.bson&quot;)[&quot;model&quot;]
+
+# Print final results
+train_acc = accuracy(dense, x_train, y_train)*100
+test_acc  = accuracy(dense, x_test,  y_test)*100
+println(&quot;Training accuracy: $(round(train_acc,digits=2))%&quot;)
+println(&quot;Test accuracy:     $(round(test_acc,digits=2))%&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Training accuracy: 98.4%
+Test accuracy:     99.0%</code></pre><p>To test robustness, we&#39;ll add uniformly-sampled random noise in the range <span>$[-\epsilon, \epsilon]$</span> to the test data for a range of noise magnitudes <span>$\epsilon \in [0, 200/255].$</span> We can record the test accuracy for each perturbation size and store it for plotting.</p><pre><code class="language-julia hljs"># Get test accuracy as we add noise
+uniform(x) = 2*rand(rng, T, size(x)...) .- 1
+function noisy_test_error(model, ϵ=0)
+    noisy_xtest = x_test .+ ϵ*uniform(x_test)
+    accuracy(model, noisy_xtest,  y_test)*100
+end
+
+ϵs = T.(LinRange(0, 200, 10)) ./ 255
+lbdn_error = noisy_test_error.((model,), ϵs)
+dense_error = noisy_test_error.((dense,), ϵs)
+
+# Plot results
+fig = Figure(resolution=(500,300))
+ax1 = Axis(fig[1,1], xlabel=&quot;Perturbation size&quot;, ylabel=&quot;Test accuracy (%)&quot;)
+lines!(ax1, ϵs, lbdn_error, label=&quot;LBDN (γ=5)&quot;)
+lines!(ax1, ϵs, dense_error, label=&quot;Dense&quot;)
+
+xlims!(ax1, 0, 0.8)
+axislegend(ax1, position=:lb)
+save(&quot;lbdn_mnist_robust.svg&quot;, fig)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">CairoMakie.Screen{SVG}
+</code></pre><p><img src="../lbdn_mnist_robust.svg" alt/></p><p>Plotting the results very clearly shows that the <code>dense</code> network, which has no guarantees on its Lipschitz bound, quickly loses its accuracy as small amounts of noise are added to the image. On the other hand, the LBDN <code>model</code> maintains its accuracy even when the (maximum) perturbation size is as much as 80% of the maximum pixel values. Image classification is one of the most promising use-cases of LBDN models, and this is exactly why.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../lbdn_curvefit/">« Fitting a Curve</a><a class="docs-footer-nextpage" href="../rl/">Reinforcement Learning »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Friday 9 June 2023 04:39">Friday 9 June 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Reinforcement Learning · RobustNeuralNetworks.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="RobustNeuralNetworks.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RobustNeuralNetworks.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Introduction</span><ul><li><a class="tocitem" href="../../introduction/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../introduction/package_overview/">Package Overview</a></li><li><a class="tocitem" href="../../introduction/developing/">Contributing to the Package</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../lbdn_curvefit/">Fitting a Curve</a></li><li><a class="tocitem" href="../lbdn_mnist/">Image Classification</a></li><li class="is-active"><a class="tocitem" href>Reinforcement Learning</a><ul class="internal"><li><a class="tocitem" href="#.-Overview"><span>1. Overview</span></a></li><li><a class="tocitem" href="#.-Problem-setup"><span>2. Problem setup</span></a></li><li><a class="tocitem" href="#.-Define-a-model"><span>3. Define a model</span></a></li><li><a class="tocitem" href="#.-Define-a-loss-function"><span>4. Define a loss function</span></a></li><li><a class="tocitem" href="#.-Train-the-model"><span>5. Train the model</span></a></li><li><a class="tocitem" href="#.-Evaluate-the-trained-model"><span>6. Evaluate the trained model</span></a></li><li><a class="tocitem" href="#Can&#39;t-I-just-use-DiffLBDN?"><span>Can&#39;t I just use <code>DiffLBDN</code>?</span></a></li></ul></li><li><a class="tocitem" href="../box_obsv/">Observer Design</a></li><li><a class="tocitem" href="../echo_ren/">(Convex) Nonlinear Control</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../../lib/models/">Model Wrappers</a></li><li><a class="tocitem" href="../../lib/model_params/">Model Parameterisations</a></li><li><a class="tocitem" href="../../lib/functions/">Functions</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Reinforcement Learning</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Reinforcement Learning</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/docs/src/examples/rl.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Reinforcement-Learning-with-LBDN"><a class="docs-heading-anchor" href="#Reinforcement-Learning-with-LBDN">Reinforcement Learning with LBDN</a><a id="Reinforcement-Learning-with-LBDN-1"></a><a class="docs-heading-anchor-permalink" href="#Reinforcement-Learning-with-LBDN" title="Permalink"></a></h1><p>One of the original motivations for developing <code>RobustNeuralNetworks.jl</code> was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: <a href="https://ieeexplore.ieee.org/abstract/document/9802667">Wang et al. (2022)</a> and <a href="https://doi.org/10.48550/arXiv.2304.06193">Barbara, Wang &amp; Manchester (2023)</a>) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also <a href="../echo_ren/#(Convex)-Nonlinear-Control-with-REN">(Convex) Nonlinear Control with REN</a>).</p><p>In this example, we&#39;ll demonstrate how to train an LBDN controller with <em>Reinforcement Learning</em> (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.</p><h2 id=".-Overview"><a class="docs-heading-anchor" href="#.-Overview">1. Overview</a><a id=".-Overview-1"></a><a class="docs-heading-anchor-permalink" href="#.-Overview" title="Permalink"></a></h2><p>Let&#39;s consider the simple mechanical system shown below: a box of mass <span>$m$</span> sits in a tub of fluid, held between the walls of the tub by two springs, each with spring constant <span>$k/2.$</span> We can push the box with force <span>$u.$</span> Its dynamics are</p><p class="math-container">\[m\ddot{q} = u - kq - \mu \dot{q}^2\]</p><p>where <span>$\mu$</span> is the viscous friction coefficient due to the box moving through the fluid.</p><p align="center"> <object type="image/png" data=../../assets/lbdn-rl/mass_rl.png width="35%"></object> </p><p>We can write this as a (nonlinear) state-space model with state <span>$x = (q,\dot{q})^\top,$</span> control input <span>$u,$</span> and dynamics</p><p class="math-container">\[\dot{x} = f(x,u) = \begin{bmatrix}
+\dot{q} \\ (u - kq - \mu \dot{q}^2)/m
+\end{bmatrix}.\]</p><p>This is a continous-time model of the dynamics. For our purposes, we&#39;ll need a discrete-time model. We can discretise the dynamics using a <a href="https://en.wikipedia.org/wiki/Euler_method">forward Euler approximation</a> such that</p><p class="math-container">\[x_{t+1} = x_t + \Delta t \cdot f(x_t, u_t)\]</p><p>where <span>$\Delta t$</span> is the time-step. This approximation typically requires a very small time-step for numerical stability, but will be fine for our simple example. A more robust method is to use a fourth (or higher) order <a href="https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods">Runge-Kutta scheme</a>.</p><p>Our aim is to learn a controller <span>$u = \mathcal{K}_\theta(x, q_\mathrm{ref}),$</span> defined by some learnable parameters <span>$\theta,$</span> that can push the box to any goal position <span>$q_\mathrm{ref}$</span> that we choose. Specifically, we want the box to:</p><ul><li>Reach a (stationary) goal position <span>$q_\mathrm{ref}$</span></li><li>Within a time period <span>$T$</span></li></ul><p>Note that the force required to keep the box an equilibrium position <span>$q_\mathrm{ref}$</span> is simply <span>$u_\mathrm{ref} = k q_\mathrm{ref}$</span> (set the derivative terms in the dynamics to zero and re-arrange for <span>$u$</span>). We can encode these objectives into a cost function <span>$J_\theta$</span> and write our RL problem as</p><p class="math-container">\[\min_\theta \mathbb{E} \left[ J_\theta \right]
+\quad \text{where} \quad
+J_\theta = \sum_{t=0}^{T-1} c_1 (q_t - q_\mathrm{ref})^2 + c_2 \dot{q}_t^2 + c_3 (u_t - u_\mathrm{ref})^2\]</p><p>where <span>$c_1, c_2, c_3$</span> are cost weightings, and the expectation is over different initial and goal positions of the box.</p><h2 id=".-Problem-setup"><a class="docs-heading-anchor" href="#.-Problem-setup">2. Problem setup</a><a id=".-Problem-setup-1"></a><a class="docs-heading-anchor-permalink" href="#.-Problem-setup" title="Permalink"></a></h2><p>Let&#39;s define some parameters for our system and translate the dynamics into Julia code. We&#39;ll consider a box of mass <span>$m=1$</span>, a spring constant of <span>$k=5,$</span> and a viscous damping coefficient <span>$\mu = 0.5$</span>. We&#39;ll simulate the system over <span>$T = 4$</span>s time horizons with a time-step of <span>$\Delta t = 0.02$</span>s.</p><pre><code class="language-julia hljs">m = 1                   # Mass (kg)
+k = 5                   # Spring constant (N/m)
+μ = 0.5                 # Viscous damping coefficient (kg/m)
+
+Tmax = 4                # Simulation horizon (s)
+dt = 0.02               # Time step (s)
+ts = 1:Int(Tmax/dt)     # Array of time indices</code></pre><p>Now we can generate some training data. Suppose the box always starts at rest from the zero position, and the goal position could be anywhere in the range <span>$q_\mathrm{ref} \in [-1,1]$</span>. Our training data consists of a batch of 80 initial conditions (all zeros) and 80 randomly-sampled goal positions.</p><pre><code class="language-julia hljs">using Random
+rng = MersenneTwister(42)
+
+nx, nref, batches = 2, 1, 80
+x0 = zeros(nx, batches)
+qref = 2*rand(rng, nref, batches) .- 1
+uref = k*qref</code></pre><p>It&#39;s good practice (and faster) to simulate all of these simulation batches at once, so we define our dynamics functions to operate on matrices of states and controls. Each row is a different state or control, and each column corresponds to a simulation for a particular goal position.</p><pre><code class="language-julia hljs">f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+fd(x::Matrix,u::Matrix) = x + dt*f(x,u)</code></pre><p>Reinforcement learning problems generally involve simulating the system over some time horizon and collecting a series of rewards or costs at each time step. Control policies are then trained using approximations of the cost gradient <span>$\nabla J_\theta$</span> because it is often difficult (or impossible) to compute the exact gradient. <a href="https://juliareinforcementlearning.org/">ReinforcementLearning.jl</a> is the home of all things RL in Julia.</p><p>For this simple example, we can just write a differentiable simulator of the dynamics. The simulator takes a batch of initial states, goal positions, and a controller <code>model</code> whose inputs are <span>$[x; q_\mathrm{ref}]$</span>. It computes a batch of trajectories of states and controls <span>$z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}$</span> for later use. To get around the well-known issue of <a href="https://fluxml.ai/Zygote.jl/stable/limitations/">array mutation with auto-differentiation</a>, we use a <a href="https://fluxml.ai/Zygote.jl/stable/utils/#Zygote.Buffer">Zygote.Buffer</a> to iteratively store the outputs.</p><pre><code class="language-julia hljs">using Zygote: Buffer
+
+function rollout(model, x0, qref)
+    z = Buffer([zero([x0;qref])], length(ts))
+    x = x0
+    for t in ts
+        u = model([x;qref])
+        z[t] = vcat(x,u)
+        x = fd(x,u)
+    end
+    return copy(z)
+end</code></pre><p>Once we have our trajectories, we just need a function to evaluate the cost given some weightings <span>$c_1,c_2,c_3$</span>.</p><pre><code class="language-julia hljs">using Statistics
+
+weights = [10,1,0.1]
+function _cost(z, qref, uref)
+    Δz = z .- [qref; zero(qref); uref]
+    return mean(sum(weights .* Δz.^2; dims=1))
+end
+cost(z::AbstractVector, qref, uref) = mean(_cost.(z, (qref,), (uref,)))</code></pre><h2 id=".-Define-a-model"><a class="docs-heading-anchor" href="#.-Define-a-model">3. Define a model</a><a id=".-Define-a-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-model" title="Permalink"></a></h2><p>For this example, we&#39;ll learn an LBDN controller with a Lipschitz bound of <span>$\gamma = 20$</span>. Its inputs are the state <span>$x_t$</span> and goal position <span>$q_\mathrm{ref}$</span>, while its outputs are the control force <span>$u_t$</span>. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see <a href="https://doi.org/10.48550/arXiv.2304.06193">Barbara, Wang &amp; Manchester (2023)</a>.</p><pre><code class="language-julia hljs">using Flux
+using RobustNeuralNetworks
+
+nu = nx + nref          # Inputs (states and reference)
+ny = 1                  # Outputs (control action u)
+nh = fill(32, 2)        # Hidden layers
+γ = 20                  # Lipschitz bound
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; nl=relu, rng)</code></pre><h2 id=".-Define-a-loss-function"><a class="docs-heading-anchor" href="#.-Define-a-loss-function">4. Define a loss function</a><a id=".-Define-a-loss-function-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-loss-function" title="Permalink"></a></h2><p>This is where things get interesting. The <code>model_ps</code> above contain all the information required to define a dense LBDN model. However, <code>model_ps</code> is not a model that can be evaluated on data: it is a <em>model parameterisation</em>, and contains the learnable parameters <span>$\theta$</span>. If we want to evaluate an LBDN on data, we first need to construct the model using the <a href="../../lib/models/#RobustNeuralNetworks.LBDN"><code>LBDN</code></a> wrapper. This converts the model parameterisation to an &quot;explicit&quot; form for evaluation, as described in detail in the <a href="../../introduction/package_overview/#Package-Overview">Package Overview</a>. Our loss function therefore looks like this.</p><pre><code class="language-julia hljs">function loss(model_ps, x0, qref, uref)
+    model = LBDN(model_ps)
+    z = rollout(model, x0, qref)
+    return cost(z, qref, uref)
+end</code></pre><div class="admonition is-info"><header class="admonition-header">Include model construction in the loss function</header><div class="admonition-body"><p>We need to include this mapping in the loss function, because it describes how the learnable parameters <span>$\theta$</span> in <code>model_ps</code> affect the data. If we don&#39;t include it, then <code>loss()</code> does not depend on the model parameters, and their gradients will be zero!</p><p>See <a href="#Can&#39;t-I-just-use-DiffLBDN?">Can&#39;t I just use <code>DiffLBDN</code>?</a> below for more details.</p></div></div><h2 id=".-Train-the-model"><a class="docs-heading-anchor" href="#.-Train-the-model">5. Train the model</a><a id=".-Train-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Train-the-model" title="Permalink"></a></h2><p>Now that we have set up the RL problem, all that remains is to train the controller model. We&#39;ve written a function that trains the controller and keeps track of the loss (cost <span>$J_\theta$</span>) for each simulation in our batch of 80. Note that we pass in the <code>model_ps</code>, which are converted to a <code>model</code> inside the <code>loss()</code> function during training.</p><pre><code class="language-julia hljs">using Printf
+
+function train_box_ctrl!(model_ps, loss_func; lr=1e-3, epochs=250, verbose=false)
+    costs = Vector{Float64}()
+    opt_state = Flux.setup(Adam(lr), model_ps)
+    for k in 1:epochs
+
+        train_loss, ∇J = Flux.withgradient(loss_func, model_ps, x0, qref, uref)
+        Flux.update!(opt_state, model_ps, ∇J[1])
+
+        push!(costs, train_loss)
+        verbose &amp;&amp; @printf &quot;Iter %d loss: %.2f\n&quot; k train_loss
+    end
+    return costs
+end
+
+costs = train_box_ctrl!(model_ps, loss; verbose=true)</code></pre><h2 id=".-Evaluate-the-trained-model"><a class="docs-heading-anchor" href="#.-Evaluate-the-trained-model">6. Evaluate the trained model</a><a id=".-Evaluate-the-trained-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Evaluate-the-trained-model" title="Permalink"></a></h2><p>Once we&#39;ve trained the model to move the box, we should check that it actually works. In the code below, we generate 100 batches of test data. In each one, the box starts at the origin at rest, and is moved through the fluid to a different (random) goal position <span>$q_\mathrm{ref} \in [-1,1].$</span> We plot the states and controls alongside the loss curve from training.</p><pre><code class="language-julia hljs">using CairoMakie
+
+lbdn = LBDN(model_ps)
+x0_test = zeros(2,100)
+qr_test = 2*rand(rng, 1, 100) .- 1
+z_lbdn = rollout(lbdn, x0_test, qr_test)
+
+# Plot position, velocity, and control input over time
+function plot_box_learning(costs, z, qr)
+
+    _get_vec(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
+    q = _get_vec(z, 1)
+    v = _get_vec(z, 2)
+    u = _get_vec(z, 3)
+    t = dt*ts
+    
+    Δq = q .- qr .* ones(length(z), length(qr_test))
+    Δu = u .- k*qr .* ones(length(z), length(qr_test))
+
+    f1 = Figure(resolution = (600, 400))
+    ga = f1[1,1] = GridLayout()
+
+    ax0 = Axis(ga[1,1], xlabel=&quot;Training epochs&quot;, ylabel=&quot;Cost&quot;)
+    ax1 = Axis(ga[1,2], xlabel=&quot;Time (s))&quot;, ylabel=&quot;Position error (m)&quot;, )
+    ax2 = Axis(ga[2,1], xlabel=&quot;Time (s))&quot;, ylabel=&quot;Velocity (m/s)&quot;)
+    ax3 = Axis(ga[2,2], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Control error (N)&quot;)
+
+    lines!(ax0, costs, color=:black)
+    for k in axes(q,2)
+        lines!(ax1, t, Δq[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax2, t,  v[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax3, t, Δu[:,k], linewidth=0.5,  color=:grey)
+    end
+
+    lines!(ax1, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax2, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax3, t, zeros(size(t)), color=:red, linestyle=:dash)
+    
+    xlims!.((ax1,ax2,ax3), (t[1],), (t[end],))
+    display(f1)
+    return f1
+end
+
+fig = plot_box_learning(costs, z_lbdn, qr_test)</code></pre><p><img src="../../assets/lbdn-rl/lbdn_rl.svg" alt/></p><p>The box clearly moves to the required position within the time frame and stays there in all cases, showing that the control is up to the task.</p><h2 id="Can&#39;t-I-just-use-DiffLBDN?"><a class="docs-heading-anchor" href="#Can&#39;t-I-just-use-DiffLBDN?">Can&#39;t I just use <code>DiffLBDN</code>?</a><a id="Can&#39;t-I-just-use-DiffLBDN?-1"></a><a class="docs-heading-anchor-permalink" href="#Can&#39;t-I-just-use-DiffLBDN?" title="Permalink"></a></h2><p>Readers who have worked through the <a href="../lbdn_curvefit/#Fitting-a-Curve-with-LBDN">Fitting a Curve with LBDN</a> and <a href="../lbdn_mnist/#Image-Classification-with-LBDN">Image Classification with LBDN</a> examples will know that we have included the <a href="../../lib/models/#RobustNeuralNetworks.DiffLBDN"><code>DiffLBDN</code></a> and <a href="../../lib/models/#RobustNeuralNetworks.DiffREN"><code>DiffREN</code></a> wrappers to make training models more like <code>Flux.jl</code>. These wrappers convert a model parameterisation to an explicit model each time they are called. This means the user does <strong>not</strong> have to re-construct the model in the loss function, and can simply use the following.</p><pre><code class="language-julia hljs">loss2(model, x0, qref, uref) = cost(rollout(model, x0, qref), qref, uref)</code></pre><p>The catch is computation speed, particular in an RL context. Careful inspection of the <code>rollout()</code> function shows that the <code>model</code> is evaluated many times within the loss function before the learnable parameters are updated with <code>Flux.update!()</code>. As discussed in the <a href="../../introduction/package_overview/#Package-Overview">Package Overview</a>, the major computational bottleneck for RENs and LBDNs is the conversion from learnable (direct) parameters to an explicit model. Constructing the model only when the parameters are updated therefore saves considerably on computation time, particularly for large models.</p><p>For example, let&#39;s train single-hidden-layer LBDNs with <span>$n$</span> neurons over 100 training epochs on this RL problem,  and log the time taken to train a model when using <a href="../../lib/models/#RobustNeuralNetworks.LBDN"><code>LBDN</code></a> and <a href="../../lib/models/#RobustNeuralNetworks.DiffLBDN"><code>DiffLBDN</code></a>.</p><pre><code class="language-julia hljs">function lbdn_compute_times(n; epochs=100)
+
+    lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
+    diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
+
+    t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)            # Build LBDN in loss
+    t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)    # Use DiffLBDN
+    return [t_lbdn, t_diff_lbdn]
+
+end</code></pre><p>Let&#39;s run this function over hidden layers of size <span>$n = 2, 2^2, \ldots, 2^9$</span> and plot the results.</p><pre><code class="language-julia hljs"># Evaluate computation time with different hidden-layer sizes
+# Run it once first for just-in-time compiler
+sizes = 2 .^ (1:9)
+lbdn_compute_times(2; epochs=1)
+comp_times = reduce(hcat, lbdn_compute_times.(sizes))
+
+# Plot the results
+f1 = Figure(resolution = (600, 400))
+ax = Axis(
+    f1[1,1], 
+    xlabel=&quot;Hidden layer size&quot;, 
+    ylabel=&quot;Training time (s) (100 epochs)&quot;, 
+    xscale=Makie.log2, yscale=Makie.log10
+)
+lines!(ax, sizes, comp_times[1,:], label=&quot;LBDN&quot;)
+lines!(ax, sizes, comp_times[2,:], label=&quot;DiffLBDN&quot;)
+
+xlims!(ax, [sizes[1], sizes[end]])
+axislegend(ax, position=:lt)
+display(f1)</code></pre><p><img src="../../assets/lbdn-rl/lbdn_rl_comptime.svg" alt/></p><p>Even for a single-layer LBDN with <span>$2^9 = 512$</span> neurons, using <a href="../../lib/models/#RobustNeuralNetworks.DiffLBDN"><code>DiffLBDN</code></a> takes an order of magnitude longer to train than only constructing the <a href="../../lib/models/#RobustNeuralNetworks.LBDN"><code>LBDN</code></a> model each time the <code>loss()</code> function is called. We offer the following advice.</p><div class="admonition is-info"><header class="admonition-header">When to use LBDN vs. DiffLBDN</header><div class="admonition-body"><p>If many evaluations of the model are required before <code>Flux.update!()</code> (or equivalent) is called, use <a href="../../lib/models/#RobustNeuralNetworks.LBDN"><code>LBDN</code></a> to define the model once, evaluate it many times, then construct it again once the learnable parameters change.</p><p>If <code>Flux.update!()</code> is called after each model evaluation (eg: <a href="../lbdn_mnist/#Image-Classification-with-LBDN">Image Classification with LBDN</a>), it is often more convenient and equally fast to use <a href="../../lib/models/#RobustNeuralNetworks.DiffLBDN"><code>DiffLBDN</code></a>.</p><p>The same applies for <a href="../../lib/models/#RobustNeuralNetworks.REN"><code>REN</code></a> and <a href="../../lib/models/#RobustNeuralNetworks.DiffREN"><code>DiffREN</code></a>.</p></div></div></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../lbdn_mnist/">« Image Classification</a><a class="docs-footer-nextpage" href="../box_obsv/">Observer Design »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Friday 9 June 2023 04:39">Friday 9 June 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

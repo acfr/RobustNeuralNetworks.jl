@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Observer Design · RobustNeuralNetworks.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="RobustNeuralNetworks.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RobustNeuralNetworks.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Introduction</span><ul><li><a class="tocitem" href="../../introduction/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../introduction/package_overview/">Package Overview</a></li><li><a class="tocitem" href="../../introduction/developing/">Contributing to the Package</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../lbdn_curvefit/">Fitting a Curve</a></li><li><a class="tocitem" href="../lbdn_mnist/">Image Classification</a></li><li><a class="tocitem" href="../rl/">Reinforcement Learning</a></li><li class="is-active"><a class="tocitem" href>Observer Design</a><ul class="internal"><li><a class="tocitem" href="#.-Background-theory"><span>1. Background theory</span></a></li><li><a class="tocitem" href="#.-Generate-training-data"><span>2. Generate training data</span></a></li><li><a class="tocitem" href="#.-Define-a-model"><span>3. Define a model</span></a></li><li><a class="tocitem" href="#.-Train-the-model"><span>4. Train the model</span></a></li><li><a class="tocitem" href="#.-Evaluate-the-trained-model"><span>5. Evaluate the trained model</span></a></li></ul></li><li><a class="tocitem" href="../echo_ren/">(Convex) Nonlinear Control</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../../lib/models/">Model Wrappers</a></li><li><a class="tocitem" href="../../lib/model_params/">Model Parameterisations</a></li><li><a class="tocitem" href="../../lib/functions/">Functions</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Observer Design</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Observer Design</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/docs/src/examples/box_obsv.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Observer-Design-with-REN"><a class="docs-heading-anchor" href="#Observer-Design-with-REN">Observer Design with REN</a><a id="Observer-Design-with-REN-1"></a><a class="docs-heading-anchor-permalink" href="#Observer-Design-with-REN" title="Permalink"></a></h1><p>In <a href="../rl/#Reinforcement-Learning-with-LBDN">Reinforcement Learning with LBDN</a>, we designed a controller for a simple nonlinear system consisting of a box sitting in a tub of fluid, suspended between two springs. We assumed the controller had <em>full state knowledge</em>: i.e, it had access to both the position and velocity of the box. In many practical situations, we might only be able to measure some of the system states. For example, our box may have a camera to estimate its position but not its velocity. In these cases, we need a <a href="https://en.wikipedia.org/wiki/State_observer"><em>state observer</em></a> to estimate the full state of the system for feedback control.</p><p>In this example, we will show how a contracting REN can be used to learn stable observers for dynamical systems. A common approach to designing state estimators for nonlinear systems is the <em>Extended Kalman Filter</em> (<a href="https://en.wikipedia.org/wiki/Extended_Kalman_filter">EKF</a>). In our case, we&#39;ll consider observer design as a supervised learning problem. For a detailed explanation of the theory behind this example, please refer to Section VIII of <a href="https://doi.org/10.48550/arXiv.2104.05942">Revay, Wang &amp; Manchester (2021)</a>. See <a href="../pde_obsv/#PDE-Observer-Design-with-REN">PDE Observer Design with REN</a> for explanation of a more complex example from the paper.</p><h2 id=".-Background-theory"><a class="docs-heading-anchor" href="#.-Background-theory">1. Background theory</a><a id=".-Background-theory-1"></a><a class="docs-heading-anchor-permalink" href="#.-Background-theory" title="Permalink"></a></h2><p>Suppose we have a discrete-time, nonlinear dynamical system of the form</p><p class="math-container">\[\begin{aligned}
+x_{t+1} &amp;= f_d(x_t, u_t) \\
+y_t &amp;= g_d(x_t, u_t)
+\end{aligned}\]</p><p>with state vector <span>$x_t,$</span> controlled inputs <span>$u_t,$</span> and measured outputs <span>$y_t.$</span> Our aim is to estimate the sequence <span>$\{x_0, x_1, \ldots, x_T \}$</span> over some time period <span>$[0,T]$</span> given only the measurements <span>$y_t$</span> and inputs <span>$u_t$</span> at each time step. We&#39;ll use a very general form for an observer</p><p class="math-container">\[\hat{x}_{t+1} = f_o(\hat{x}_t, u_t, y_t)\]</p><p>where <span>$\hat{x}$</span> is the state estimate. For those interested, a more common structure is the <a href="https://en.wikipedia.org/wiki/State_observer">Luenberger observer</a>.</p><p>We want the observer error to converge to zero as time progresses, or <span>$\hat{x}_t \rightarrow x_t$</span> as <span>$t \rightarrow \infty$</span>. It turns out that our observer only has to satisfy the following two conditions to guarantee this.</p><ol><li>The observer must be a constracting system (see <a href="../../introduction/package_overview/#Contracting-systems">Contracting systems</a>).</li><li>The observer must satisfy a &quot;correctness&quot; condition which says that, given perfect knowledge of the state, measurements, and inputs, the observer can exactly predict the next state. Mathematically, we write this as</li></ol><p class="math-container">\[f_o(x_t,u_t,y_t) = f_d(x_t,u_t).\]</p><p>Note the use of <span>$x_t$</span> not <span>$\hat{x}_t$</span> above. It turns out that if the correctness condition is only approximately satisfied so that <span>$|f_o(x_t,u_t,y_t) - f_d(x_t,u_t)| &lt; \rho$</span> for some small number <span>$\rho$</span>, then the observer error will still be bounded. See Appendix E of the <a href="https://doi.org/10.48550/arXiv.2104.05942">paper</a> for details.</p><p>Lucky for us, <code>RobustNeuralNetworks.jl</code> contains REN models that are guaranteed to be contracting. To learn a stable observer with RENs, all we have to do is minimise the one-step-ahead prediction error. I.e: if we have a batch of data <span>$z = \{x_i, u_i, y_i, \ i = 1,2,\ldots,N\},$</span> then we should train our model to minimise the loss function</p><p class="math-container">\[\mathcal{L}(z, \theta) = \sum_{i=1}^N |f_o(x_i,u_i,y_i) - f_d(x_i,u_i)|^2,\]</p><p>where <span>$\theta$</span> contains the learnable parameters of the REN.</p><h2 id=".-Generate-training-data"><a class="docs-heading-anchor" href="#.-Generate-training-data">2. Generate training data</a><a id=".-Generate-training-data-1"></a><a class="docs-heading-anchor-permalink" href="#.-Generate-training-data" title="Permalink"></a></h2><p>Consider the same nonlinear box system we used for <a href="../rl/#Reinforcement-Learning-with-LBDN">Reinforcement Learning with LBDN</a>, this time with a measurement function <code>gd</code> to give <span>$y_t = g_d(x_t,u_t)$</span>. We&#39;ll assume that only the position of the box is known, so <span>$y_t = x_t$</span>.</p><pre><code class="language-julia hljs">m = 1                   # Mass (kg)
+k = 5                   # Spring constant (N/m)
+μ = 0.5                 # Viscous damping coefficient (kg/m)
+nx = 2                  # Number of states
+
+# Continuous and discrete dynamics and measurements
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+fd(x,u) = x + dt*f(x,u)
+gd(x::Matrix) = x[1:1,:]</code></pre><p>We&#39;ll assume for this example that the box always starts at rest in a random initial position between <span>$\pm0.5$</span>m, after which it is released and allowed to osciallte freely with no added forces (so <span>$u = 0$</span>). Learning an observer typically requires a large amount of training data to capture the behaviour of the system in different scenarios, so we&#39;ll consider 200 batches simulating 10s of motion.</p><pre><code class="language-julia hljs">using Random
+rng = MersenneTwister(0)
+
+dt = 0.01               # Time-step (s)
+Tmax = 10               # Simulation horizon
+ts = 1:Int(Tmax/dt)     # Time array indices
+
+batches = 200
+u  = fill(zeros(1, batches), length(ts)-1)
+X  = fill(zeros(1, batches), length(ts))
+X[1] = 0.5*(2*rand(rng, nx, batches) .-1)
+
+for t in ts[1:end-1]
+    X[t+1] = fd(X[t],u[t])
+end</code></pre><p>We&#39;ve stored the states of the system across each batch in <code>X</code>. To compute the one-step-ahead loss <span>$\mathcal{L},$</span> we&#39;ll need to separate this data into the states at the &quot;current&quot; time <code>Xt</code> and at the &quot;next&quot; time <code>Xn,</code> then compute the measurement outputs.</p><pre><code class="language-julia hljs">Xt = X[1:end-1]
+Xn = X[2:end]
+y = gd.(Xt)</code></pre><p>With that done, we store the data for training, shuffling it so there is the data is not in simulation order.</p><pre><code class="language-julia hljs">observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
+indx = shuffle(rng, 1:length(observer_data))
+data = zip(Xn[indx], Xt[indx], observer_data[indx])</code></pre><h2 id=".-Define-a-model"><a class="docs-heading-anchor" href="#.-Define-a-model">3. Define a model</a><a id=".-Define-a-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-model" title="Permalink"></a></h2><p>Since we need our model to be a contracting dynamical system, the obvious choice is to use <a href="../../lib/model_params/#RobustNeuralNetworks.ContractingRENParams"><code>ContractingRENParams</code></a>. The inputs to the model are <span>$[u_t;y_t]$</span>, and its outputs should be the state estimate <span>$\hat{x}_{t+1}$</span>. The flag <code>is_output=false</code> sets the output map of the REN to just return its own internal state. That way, the internal state of the REN is exactly the state estimate <span>$\hat{x}$</span>.</p><pre><code class="language-julia hljs">using RobustNeuralNetworks
+
+nv = 100
+nu = size(observer_data[1], 1)
+ny = nx
+model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng)
+model = DiffREN(model_ps)</code></pre><h2 id=".-Train-the-model"><a class="docs-heading-anchor" href="#.-Train-the-model">4. Train the model</a><a id=".-Train-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Train-the-model" title="Permalink"></a></h2><p>As mentioned above, our loss function should be the one-step-ahead prediction error of the REN observer. We can write this as follows.</p><pre><code class="language-julia hljs">using Statistics
+
+function loss(model, xn, xt, inputs)
+    xpred = model(xt, inputs)[1]
+    return mean(sum((xn - xpred).^2, dims=1))
+end</code></pre><p>We&#39;ve written a function to train the observer that decreases the learning rate by a factor of 10 if the mean gets stuck or starts to increase. The core of this function is just a simple <code>Flux.jl</code> training loop. We also report the mean loss at each epoch to inform the user how training is progressing.</p><pre><code class="language-julia hljs">using Flux
+using Printf
+
+function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
+
+    opt_state = Flux.setup(Adam(lr), model)
+    mean_loss = [1e5]
+    for epoch in 1:epochs
+
+        # Gradient descent update
+        batch_loss = []
+        for (xn, xt, inputs) in data
+            train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
+            Flux.update!(opt_state, model, ∇J[1])
+            push!(batch_loss, train_loss)
+        end
+        @printf &quot;Epoch: %d, Lr: %.1g, Loss: %.4g\n&quot; epoch lr mean(batch_loss)
+
+        # Drop learning rate if mean loss is stuck or growing
+        push!(mean_loss, mean(batch_loss))
+        if (mean_loss[end] &gt;= mean_loss[end-1]) &amp;&amp; !(lr &lt;= min_lr)
+            lr = 0.1lr
+            Flux.adjust!(opt_state, lr)
+        end
+    end
+    return mean_loss
+end
+tloss = train_observer!(model, data)</code></pre><h2 id=".-Evaluate-the-trained-model"><a class="docs-heading-anchor" href="#.-Evaluate-the-trained-model">5. Evaluate the trained model</a><a id=".-Evaluate-the-trained-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Evaluate-the-trained-model" title="Permalink"></a></h2><p>Now that we&#39;ve trained the REN observer to minimise the one-step-ahead prediction error, let&#39;s see if the observer error actually does converge to zero. First, we&#39;ll need some test data. </p><pre><code class="language-julia hljs">batches   = 50
+ts_test   = 1:Int(10/dt)
+u_test    = fill(zeros(1, batches), length(ts_test))
+x_test    = fill(zeros(nx,batches), length(ts_test))
+x_test[1] = 0.2*(2*rand(rng, nx, batches) .-1)
+
+for t in ts_test[1:end-1]
+    x_test[t+1] = fd(x_test[t], u_test[t])
+end
+observer_inputs = [[u;y] for (u,y) in zip(u_test, gd.(x_test))]</code></pre><p>Next, we&#39;ll need a function to simulate the REN observer using its own state <span>$\hat{x}$</span> rather than the true system state. We can use the very neat tool <a href="https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Recur"><code>Flux.Recur</code></a> for this. We&#39;ll assume the observer has no idea what the initial state is, so guess that <span>$\hat{x}_0 = 0$</span>.</p><pre><code class="language-julia hljs">function simulate(model::AbstractREN, x0, u)
+    recurrent = Flux.Recur(model, x0)
+    output = recurrent.(u)
+    return output
+end
+x0hat = init_states(model, batches)
+xhat = simulate(model, x0hat, observer_inputs)</code></pre><p>Having simulated the state estimate on the test data, it&#39;s time to plot our results. This takes a little bit of setting up to make it look nice, but all the code below is just formatting and plotting.</p><pre><code class="language-julia hljs">using CairoMakie
+
+function plot_results(x, x̂, ts)
+
+    # Observer error
+    Δx = x .- x̂
+
+    ts = ts.*dt
+    _get_vec(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
+    q   = _get_vec(x,1)
+    q̂   = _get_vec(x̂,1)
+    qd  = _get_vec(x,2)
+    q̂d  = _get_vec(x̂,2)
+    Δq  = _get_vec(Δx,1)
+    Δqd = _get_vec(Δx,2)
+
+    fig = Figure(resolution = (800, 400))
+    ga = fig[1,1] = GridLayout()
+
+    ax1 = Axis(ga[1,1], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Position (m)&quot;, title=&quot;Actual&quot;)
+    ax2 = Axis(ga[1,2], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Position (m)&quot;, title=&quot;Observer Error&quot;)
+    ax3 = Axis(ga[2,1], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Velocity (m/s)&quot;)
+    ax4 = Axis(ga[2,2], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Velocity (m/s)&quot;)
+    axs = [ax1, ax2, ax3, ax4]
+
+    for k in axes(q,2)
+        lines!(ax1, ts,  q[:,k],  linewidth=0.5,  color=:grey)
+        lines!(ax1, ts,  q̂[:,k],  linewidth=0.25, color=:red)
+        lines!(ax2, ts, Δq[:,k],  linewidth=0.5,  color=:grey)
+        lines!(ax3, ts,  qd[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax3, ts,  q̂d[:,k], linewidth=0.25, color=:red)
+        lines!(ax4, ts, Δqd[:,k], linewidth=0.5,  color=:grey)
+    end
+
+    qmin, qmax = minimum(minimum.((q,q̂))), maximum(maximum.((q,q̂)))
+    qdmin, qdmax = minimum(minimum.((qd,q̂d))), maximum(maximum.((qd,q̂d)))
+    ylims!(ax1, qmin, qmax)
+    ylims!(ax2, qmin, qmax)
+    ylims!(ax3, qdmin, qdmax)
+    ylims!(ax4, qdmin, qdmax)
+    xlims!.(axs, ts[1], ts[end])
+    display(fig)
+    return fig
+end
+fig = plot_results(x_test, xhat, ts_test)</code></pre><p><img src="../../assets/ren-obsv/ren_box_obsv.svg" alt/></p><p>In the left-hand panels, grey lines represent the true states of the system, while red lines are for the observer prediction. In the right-hand panels, we see the observer error nicely converging to zero as the observer identifies the correct velocity for all simulation runs. </p><p>It&#39;s worth noting that at no point did we directly train the REN to minimise the observer error. This is a natural result of using a model that is guaranteed to be contracting, and training it to minimise the one-step-ahead prediction error. Note that there is still some residual observer error in the velocity, since our observer is only trained to approximately satisfy the correctness condition.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rl/">« Reinforcement Learning</a><a class="docs-footer-nextpage" href="../echo_ren/">(Convex) Nonlinear Control »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Friday 9 June 2023 04:39">Friday 9 June 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
