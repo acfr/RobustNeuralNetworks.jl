@@ -53,6 +53,9 @@ y &= W_L z_L + b_L
 
 See [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) and [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) for more details on RENs and LBDNs, respectively.
 
+!!! info "Acyclic REN models"
+	[Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) make special mention of "acyclic" RENs, which have a lower-triangular ``D_{11}``. These are significantly more efficient to evaluate and train than a REN with dense ``D_{11},`` and they perform similarly. All RENs in `RobustNeuralNetworks.jl` are therefore acyclic RENs.
+
 
 ## Direct & explicit parameterisations
 
