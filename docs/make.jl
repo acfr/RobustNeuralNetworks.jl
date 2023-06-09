@@ -9,8 +9,7 @@ makedocs(
     sitename = "RobustNeuralNetworks.jl", 
     modules = [RobustNeuralNetworks],
     format = Documenter.HTML(prettyurls = haskey(ENV, "CI")),
-    
-    # Need to format this nicely
+
     pages = [
         "Home" => "index.md",
         "Introduction" => Any[
@@ -22,7 +21,7 @@ makedocs(
             "Fitting a Curve" => "examples/lbdn_curvefit.md",
             "Image Classification" => "examples/lbdn_mnist.md",
             "Reinforcement Learning" => "examples/rl.md",
-            "PDE Observer" => "examples/pde_obsv.md",
+            "Observer Design" => "examples/box_obsv.md",
             "(Convex) Nonlinear Control" => "examples/echo_ren.md",
         ],
         "Library" => Any[
@@ -33,13 +32,8 @@ makedocs(
         "API" => "api.md"
     ],
 
-    doctest = true, # Can set to false while testing!
+    doctest = true,
     checkdocs=:exports
 )
 
 deploydocs(repo = "github.com/acfr/RobustNeuralNetworks.jl.git")
-
-# To generate the documentation locally:
-# ] activate docs
-# using LiveServer
-# servedocs()

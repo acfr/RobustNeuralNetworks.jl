@@ -107,41 +107,46 @@ costs = train_box_ctrl!(model_ps, loss)
 # Evaluate final model on an example
 lbdn = LBDN(model_ps)
 x0_test = zeros(2,100)
-qr_test = hcat(ones(1,1), 2*rand(rng, 1, 99) .- 1)
+qr_test = 2*rand(rng, 1, 100) .- 1
 z_lbdn = rollout(lbdn, x0_test, qr_test)
 
 # Plot position, velocity, and control input over time
-function plot_box_learning(costs, z, qref, indx=1)
+function plot_box_learning(costs, z, qr)
 
-    x = [z[t][1,indx] for t in ts]
-    v = [z[t][2,indx] for t in ts]
-    u = [z[t][3,indx] for t in ts]
-
-    qr = qref[indx]
-    ur = k*qr
+    _get_vec(x, i) = reduce(vcat, [xt[i:i,:] for xt in x])
+    q = _get_vec(z, 1)
+    v = _get_vec(z, 2)
+    u = _get_vec(z, 3)
+    t = dt*ts
+    
+    Δq = q .- qr .* ones(length(z), length(qr_test))
+    Δu = u .- k*qr .* ones(length(z), length(qr_test))
 
     f1 = Figure(resolution = (600, 400))
     ga = f1[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
-    ax1 = Axis(ga[1,2], xlabel="Time steps", ylabel="Position (m)", )
-    ax2 = Axis(ga[2,1], xlabel="Time steps", ylabel="Velocity (m/s)")
-    ax3 = Axis(ga[2,2], xlabel="Time steps", ylabel="Control (N)")
+    ax1 = Axis(ga[1,2], xlabel="Time (s))", ylabel="Position error (m)", )
+    ax2 = Axis(ga[2,1], xlabel="Time (s))", ylabel="Velocity (m/s)")
+    ax3 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Control error (N)")
 
     lines!(ax0, costs, color=:black)
-    lines!(ax1, ts, x, color=:black)
-    lines!(ax2, ts, v, color=:black)
-    lines!(ax3, ts, u, color=:black)
+    for k in axes(q,2)
+        lines!(ax1, t, Δq[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax2, t,  v[:,k], linewidth=0.5,  color=:grey)
+        lines!(ax3, t, Δu[:,k], linewidth=0.5,  color=:grey)
+    end
 
-    lines!(ax1, ts, qr*ones(size(ts)), color=:red, linestyle=:dash)
-    lines!(ax2, ts, zeros(size(ts)), color=:red, linestyle=:dash)
-    lines!(ax3, ts, ur*ones(size(ts)), color=:red, linestyle=:dash)
-
+    lines!(ax1, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax2, t, zeros(size(t)), color=:red, linestyle=:dash)
+    lines!(ax3, t, zeros(size(t)), color=:red, linestyle=:dash)
+    
+    xlims!.((ax1,ax2,ax3), (t[1],), (t[end],))
     display(f1)
     return f1
 end
 
-fig = plot_box_learning(costs, z_lbdn, qr_test, 1)
+fig = plot_box_learning(costs, z_lbdn, qr_test)
 save("../results/lbdn_rl.svg", fig)
 
 

@@ -31,13 +31,13 @@ See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `
 """
 function DenseLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
-    nl::Function = Flux.relu, 
-    initW::Function = Flux.glorot_normal,
-    initb::Function = Flux.glorot_normal,
+    nl::Function     = Flux.relu, 
+    initW::Function  = Flux.glorot_normal,
+    initb::Function  = Flux.glorot_normal,
     rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
-    direct = DirectLBDNParams{T}(nu, nh, ny; initW=initW, initb=initb, rng=rng)
+    direct = DirectLBDNParams{T}(nu, nh, ny; initW, initb, rng)
     return DenseLBDNParams{T}(nl, nu, nh, ny, T(γ), direct)
 
 end

@@ -37,15 +37,15 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`Lipschitz
 """
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    ν::T = T(0),
-    nl::Function = Flux.relu, 
-    αbar::T = T(1),
-    init = :random,
+    ν::T              = T(0),
+    nl::Function      = Flux.relu, 
+    αbar::T           = T(1),
+    init              = :random,
     polar_param::Bool = true,
-    bx_scale::T = T(0), 
-    bv_scale::T = T(1), 
-    ϵ::T = T(1e-12), 
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    bx_scale::T       = T(0), 
+    bv_scale::T       = T(1), 
+    ϵ::T              = T(1e-12), 
+    rng::AbstractRNG  = Random.GLOBAL_RNG
 ) where T
 
     # Check input output pair dimensions
@@ -56,8 +56,8 @@ function PassiveRENParams{T}(
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
-        init=init, ϵ=ϵ, bx_scale=bx_scale, bv_scale=bv_scale, 
-        polar_param=polar_param, D22_free=false, rng=rng
+        init, ϵ, bx_scale, bv_scale, polar_param, 
+        D22_free=false, rng,
     )
 
     return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν)

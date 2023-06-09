@@ -49,10 +49,10 @@ nh = fill(16,2)         # 2 hidden layers, each with 16 neurons
 # Set up dense LBDN model
 model = Flux.Chain(
     (x) -> (√γ * x),
-    SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng=rng),
-    SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng=rng),
+    SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng),
+    SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng),
     (x) -> (√γ * x),
-    SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng=rng),
+    SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng),
 )
 
 # Evaluate on dummy inputs
@@ -70,12 +70,12 @@ See also [`DenseLBDNParams`](@ref), [`DiffLBDN`](@ref).
 """
 function SandwichFC(
     (in, out)::Pair{<:Integer, <:Integer},
-    σ::F                = Flux.identity;
-    init::Function      = Flux.glorot_normal,
-    bias::Bool          = true,
-    output_layer::Bool  = false, 
-    T::DataType         = Float32,
-    rng::AbstractRNG    = Random.GLOBAL_RNG,
+    σ::F               = Flux.identity;
+    init::Function     = Flux.glorot_normal,
+    bias::Bool         = true,
+    output_layer::Bool = false, 
+    T::DataType        = Float32,
+    rng::AbstractRNG   = Random.GLOBAL_RNG,
 ) where F
 
     # Matrices and polar param always required

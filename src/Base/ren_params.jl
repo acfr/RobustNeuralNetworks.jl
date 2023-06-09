@@ -136,11 +136,11 @@ function DirectRENParams{T}(
     # Random sampling
     if init == :random
 
-        B2  = glorot_normal(nx, nu; T=T, rng=rng)
-        D12 = glorot_normal(nv, nu; T=T, rng=rng)
+        B2  = glorot_normal(nx, nu; T, rng)
+        D12 = glorot_normal(nv, nu; T, rng)
         
         # Make orthogonal X
-        X = glorot_normal(2nx + nv, 2nx + nv; T=T, rng=rng)
+        X = glorot_normal(2nx + nv, 2nx + nv; T, rng)
         X = Matrix(qr(X).Q)
 
     # Specify H and compute X
@@ -151,10 +151,10 @@ function DirectRENParams{T}(
         P = Matrix{T}(I, nx, nx)
 
         B1 = zeros(T, nx, nv)
-        B2 = glorot_normal(nx, nu; T=T, rng=rng)
+        B2 = glorot_normal(nx, nu; T, rng)
 
         C1  = zeros(T, nv, nx)
-        D11 = glorot_normal(nv, nv; T=T, rng=rng)
+        D11 = glorot_normal(nv, nv; T, rng)
         D12 = zeros(T, nv, nu)
 
         # TODO: This is prone to errors. Needs a bugfix!
@@ -174,12 +174,12 @@ function DirectRENParams{T}(
     ρ = [norm(X)]
 
     # Free parameter for E
-    Y1 = glorot_normal(nx, nx; T=T, rng=rng)
+    Y1 = glorot_normal(nx, nx; T, rng)
 
     # Output layer
     if is_output
-        C2  = glorot_normal(ny,nx; rng=rng)
-        D21 = glorot_normal(ny,nv; rng=rng)
+        C2  = glorot_normal(ny,nx; rng)
+        D21 = glorot_normal(ny,nv; rng)
         D22 = zeros(T, ny, nu)
     else
         C2  = Matrix{T}(I, nx, nx)
@@ -200,9 +200,9 @@ function DirectRENParams{T}(
     end
     
     # Bias terms
-    bv = T(bv_scale) * glorot_normal(nv; T=T, rng=rng)
-    bx = T(bx_scale) * glorot_normal(nx; T=T, rng=rng)
-    by = is_output ? glorot_normal(ny; rng=rng) : zeros(T, ny)
+    bv = T(bv_scale) * glorot_normal(nv; T, rng)
+    bx = T(bx_scale) * glorot_normal(nx; T, rng)
+    by = is_output ? glorot_normal(ny; rng) : zeros(T, ny)
 
     return DirectRENParams(
         X, 

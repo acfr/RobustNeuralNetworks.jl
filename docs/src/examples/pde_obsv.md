@@ -1,40 +1,10 @@
 # PDE Observer Design with REN
 *This example was first presented in Section VIII of [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942).*
 
-In this example, we'll show how RENs can be used to learn stable observers of nonlinear systems. State estimation (observer design) is an important problem in many practical applications. It is often difficult to design a stable observer model for a nonlinear system. A common approach is the *Extended Kalman Filter* ([EKF](https://en.wikipedia.org/wiki/Extended_Kalman_filter)). In our case, we'll pose the problem as a supervised learning problem using a contracting REN. For a detailed explanation of the theory behind this example, please refer to Section VIII of the original [paper](https://doi.org/10.48550/arXiv.2104.05942).
+
+This example considers learning a state observer for a reaction-diffusion PDE. See [Observer Design with REN](@ref) for a brief explanation of the theory, and [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) for a detailed overview of the original problem.
 
 ## 1. Problem statement
-
-### Observer design
-
-We'll start with some background on the observer design. Consider a nonlinear system of the following form with state vector to be estimated ``x_t``, known control signal ``u_t``, unkown disturbances ``w_t``, and measured output ``y_t.``
-
-```math
-\begin{aligned}
-x_{t+1} &= f_m(x_t, u_t, w_t) \\
-y_t &= g_m(x_t, u_t, w_t)
-\end{aligned}
-```
-
-An observer is a dynamical system whose purpose is to estimate the true state of the original system. A standard [Luenberger observer](https://en.wikipedia.org/wiki/State_observer) strucure is a combination of a function ``f_m(\cdot)`` to predict the dynamics of the system and a measurement correction function ``l(\cdot),`` where ``\hat{x}`` is the state of the observer itself, and also the estimated state of the original system.
-
-```math
-\hat{x}_{t+1} = f_m(\hat{x}_{t}, u_t, 0)+l(\hat{x}_{t}, u_t, y_t)
-```
-
-A more general structure for an observer is any system of the form
-
-```math
-\hat{x}_{t+1} = f_o(\hat{x}_{t}, u_t, y_t).
-```
-If we want the state estimate to converge to the true system state, we need two properties: the observer must be contracting (see the [Package Overview](@ref) for a overview of contracting systems) and the following condition must hold:
-
-```math
-f_m(x, u, 0)=f_o(x, u, g_m(x, u, 0))
-```
-That is, when ``w=0`` we have ``\hat{x}_t \rightarrow x_t`` as time progresses. This implies that if ``\hat{x}_0 = x_0`` then ``\hat{x}_t=x_t`` for all ``t>0``, which means the true state is a particular solution of the observer. The contraction implies all solutions of the observer converge to the true state. For more details, please refer to Section VIII and Appendix E of the [paper](https://doi.org/10.48550/arXiv.2104.05942).
-
-### Reaction-diffusion PDE
 
 We consider designing an observer for the following semi-linear reaction-diffusion partial differential equation.
 
@@ -215,12 +185,11 @@ bson("../results/pde_obsv.bson",
 )
 ```
 
-Running the training loop can take an hour or two, so here's one we prepared earlier.
+Running the training loop can take an hour or two, so we've saved one in `/examples/results/pde_obsv.bson`. You can load it with the following code (you may need to change the file path depending on where you run this from).
 
-```@example pde_bosv
+```julia
 using BSON
-model = BSON.load("../../src/assets/ren-pde/pde_obsv.bson")["model"]
-println(typeof(model))
+model = BSON.load("./examples/results/pde_obsv.bson")["model"]
 ```
 ## 5. Evaluate the model
 
@@ -275,5 +244,6 @@ Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
 
 display(f1)
 ```
+
 In the plot, the x-axis is the time dimension and the y-axis is the spatial dimension.
-![](../assets/ren-pde/ren_pde.png)
+![](../assets/ren-obsv/ren_pde.png)

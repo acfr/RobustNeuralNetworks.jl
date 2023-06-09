@@ -52,7 +52,7 @@ batches = 10
 nu, ny = 4, 1
 nh = [5, 10, 5, 15]
 
-lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng=rng)
+lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 lbdn = LBDN(lbdn_ps)
 
 # Evaluate model with a batch of random inputs
@@ -70,7 +70,7 @@ function (m::AbstractLBDN)(u::AbstractVecOrMat)
     return m(u, m.explicit)
 end
 
-function (m::AbstractLBDN{T})(u::AbstractVecOrMat{T}, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
+function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{T,N,M}) where {T,N,M}
 
     # Extract explicit params
     σ   = m.nl
