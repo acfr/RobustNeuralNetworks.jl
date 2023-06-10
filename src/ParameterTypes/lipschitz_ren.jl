@@ -8,7 +8,8 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    γ::T
+    γ::Vector{T}
+    learn_γ::Bool
 end
 
 """
@@ -29,6 +30,8 @@ Construct direct parameterisation of a REN with a Lipschitz bound of γ.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
+- `learn_γ::Bool=false:` Whether to make the Lipschitz bound γ a learnable parameter.
+
 See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `rng`.
 
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRENParams`](@ref).
@@ -37,6 +40,7 @@ function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
     nl::Function      = Flux.relu, 
     αbar::T           = T(1),
+    learn_γ::Bool     = false,
     init              = :random,
     polar_param::Bool = true,
     bx_scale::T       = T(0), 
@@ -57,11 +61,14 @@ function LipschitzRENParams{T}(
         D22_free, D22_zero, rng,
     )
 
-    return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, T(γ))
+    return LipschitzRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, [T(γ)], learn_γ)
 
 end
 
-Flux.@functor LipschitzRENParams (direct,)
+Flux.@functor LipschitzRENParams
+function Flux.trainable(m::LipschitzRENParams)
+    m.learn_γ ? (direct = m.direct, γ = m.γ) : (direct = m.direct,)
+end
 
 function Flux.gpu(m::LipschitzRENParams{T}) where T
     # TODO: Test and complete this
@@ -87,7 +94,7 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     ny = ps.ny
 
     # Dissipation parameters
-    γ = ps.γ
+    γ = ps.γ[1]
 
     # Implicit parameters
     ϵ = ps.direct.ϵ
