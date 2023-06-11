@@ -22,7 +22,7 @@ where ``\hat{x}`` is the state estimate. For those interested, a more common str
 
 We want the observer error to converge to zero as time progresses, or ``\hat{x}_t \rightarrow x_t`` as ``t \rightarrow \infty``. It turns out that our observer only has to satisfy the following two conditions to guarantee this.
 
-1. The observer must be a constracting system (see [Contracting systems](@ref)).
+1. The observer must be a contracting system (see [Contracting systems](@ref)).
 2. The observer must satisfy a "correctness" condition which says that, given perfect knowledge of the state, measurements, and inputs, the observer can exactly predict the next state. Mathematically, we write this as
 ```math
 f_o(x_t,u_t,y_t) = f_d(x_t,u_t).
