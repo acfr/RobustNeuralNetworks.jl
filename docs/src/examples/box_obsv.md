@@ -52,7 +52,7 @@ fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 ```
 
-We'll assume for this example that the box always starts at rest in a random initial position between ``\pm0.5``m, after which it is released and allowed to osciallte freely with no added forces (so ``u = 0``). Learning an observer typically requires a large amount of training data to capture the behaviour of the system in different scenarios, so we'll consider 200 batches simulating 10s of motion.
+We'll assume for this example that the box always starts at rest in a random initial position between ``\pm0.5``m, after which it is released and allowed to oscillate freely with no added forces (so ``u = 0``). Learning an observer typically requires a large amount of training data to capture the behaviour of the system in different scenarios, so we'll consider 200 batches simulating 10s of motion.
 ```julia
 using Random
 rng = MersenneTwister(0)
