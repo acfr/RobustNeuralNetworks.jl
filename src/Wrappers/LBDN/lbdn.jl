@@ -5,7 +5,6 @@ mutable struct LBDN{T} <: AbstractLBDN{T}
     nu::Int
     nh::Vector{Int}
     ny::Int
-    sqrt_γ::T
     explicit::ExplicitLBDNParams{T}
 end
 
@@ -19,9 +18,8 @@ This constructor takes a direct parameterisation of LBDN (eg: a [`DenseLBDNParam
 See also [`AbstractLBDN`](@ref), [`DiffLBDN`](@ref).
 """
 function LBDN(ps::AbstractLBDNParams{T}) where T
-    sqrt_γ = sqrt(ps.γ)
     explicit = direct_to_explicit(ps)
-    return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, sqrt_γ, explicit)
+    return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
 end
 
 """
@@ -80,7 +78,7 @@ function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{
     b   = explicit.b
 
     sqrt2 = T(√2)
-    sqrtγ = m.sqrt_γ
+    sqrtγ = explicit.sqrtγ
 
     # Evaluate LBDN (extracting Ψd[k] is faster for backprop)
     # Note: backpropagation is similarly fast with for loops as with Flux chains (tested)

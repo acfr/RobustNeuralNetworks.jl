@@ -22,7 +22,7 @@ where ``\hat{x}`` is the state estimate. For those interested, a more common str
 
 We want the observer error to converge to zero as time progresses, or ``\hat{x}_t \rightarrow x_t`` as ``t \rightarrow \infty``. It turns out that our observer only has to satisfy the following two conditions to guarantee this.
 
-1. The observer must be a constracting system (see [Contracting systems](@ref)).
+1. The observer must be a contracting system (see [Contracting systems](@ref)).
 2. The observer must satisfy a "correctness" condition which says that, given perfect knowledge of the state, measurements, and inputs, the observer can exactly predict the next state. Mathematically, we write this as
 ```math
 f_o(x_t,u_t,y_t) = f_d(x_t,u_t).
@@ -52,7 +52,7 @@ fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 ```
 
-We'll assume for this example that the box always starts at rest in a random initial position between ``\pm0.5``m, after which it is released and allowed to osciallte freely with no added forces (so ``u = 0``). Learning an observer typically requires a large amount of training data to capture the behaviour of the system in different scenarios, so we'll consider 200 batches simulating 10s of motion.
+We'll assume for this example that the box always starts at rest in a random initial position between ``\pm0.5``m, after which it is released and allowed to oscillate freely with no added forces (so ``u = 0``). Learning an observer typically requires a large amount of training data to capture the behaviour of the system in different scenarios, so we'll consider 200 batches simulating 10s of motion.
 ```julia
 using Random
 rng = MersenneTwister(0)

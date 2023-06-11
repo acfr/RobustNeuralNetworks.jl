@@ -10,10 +10,11 @@ These parameters define the explicit form of a Lipschitz-bounded deep network us
 See [Wang et al. (2023)](https://doi.org/10.48550/arXiv.2301.11526) for more details on explicit parameterisations of LBDN.
 """
 mutable struct ExplicitLBDNParams{T, N, M}
-    A_T::NTuple{N, AbstractMatrix{T}}    # A^T in the paper
+    A_T::NTuple{N, AbstractMatrix{T}}   # A^T in the paper
     B  ::NTuple{N, AbstractMatrix{T}}
-    Ψd ::NTuple{M, AbstractVector{T}}    # Diagonal of matrix Ψ from the paper
+    Ψd ::NTuple{M, AbstractVector{T}}   # Diagonal of matrix Ψ from the paper
     b  ::NTuple{N, AbstractVector{T}}
+    sqrtγ::T
 end
 
 mutable struct DirectLBDNParams{T, N, M}
@@ -21,10 +22,12 @@ mutable struct DirectLBDNParams{T, N, M}
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
+    γ_4root::Vector{T}                  # Store γ^(1/4) so that √γ is valid
+    learn_γ::Bool
 end
 
 """
-    DirectLBDNParams{T}(nu, nh, ny; <keyword arguments>) where T
+    DirectLBDNParams{T}(nu, nh, ny, γ; <keyword arguments>) where T
 
 Construct direct parameterisation for a Lipschitz-bounded deep network.
 
@@ -35,12 +38,15 @@ This is typically used by a higher-level constructor to define an LBDN model, wh
 - `nu::Int`: Number of inputs.
 - `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
 - `ny::Int`: Number of outputs.
+- `γ::Number=T(1)`: Lipschitz upper bound.
 
 # Keyword arguments
 
 - `initW::Function=Flux.glorot_normal`: Initialisation function for implicit params `X,Y,d`.
 
 - `initb::Function=Flux.glorot_normal`: Initialisation function for bias vectors.
+
+- `learn_γ::Bool=false:` Whether to make the Lipschitz bound γ a learnable parameter.
 
 - `rng::AbstractRNG = Random.GLOBAL_RNG`: rng for model initialisation.
 
@@ -49,9 +55,10 @@ See [Wang et al. (2023)](https://doi.org/10.48550/arXiv.2301.11526) for paramete
 See also [`DenseLBDNParams`](@ref).
 """
 function DirectLBDNParams{T}(
-    nu::Int, nh::Vector{Int}, ny::Int;
+    nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
     initW::Function  = Flux.glorot_normal,
     initb::Function  = Flux.glorot_normal,
+    learn_γ::Bool    = false,
     rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
 
@@ -70,12 +77,20 @@ function DirectLBDNParams{T}(
         (k<L+1) && (d[k] = initW(rng, n[k+1]))
     end
 
-    return DirectLBDNParams{T,L+1,L}(tuple(XY...), tuple(α...), tuple(d...), tuple(b...))
-
+    γ_4root = [T(γ^(1/4))]
+    return DirectLBDNParams{T,L+1,L}(
+        tuple(XY...), tuple(α...), tuple(d...), tuple(b...), γ_4root, learn_γ
+    )
 end
 
-Flux.@functor DirectLBDNParams (XY, α, d, b)
-
+Flux.@functor DirectLBDNParams
+function Flux.trainable(m::DirectLBDNParams)
+    if m.learn_γ
+        return (XY=m.XY, α=m.α, d=m.d, b=m.b, γ_4root=m.γ_4root)
+    else 
+        return (XY=m.XY, α=m.α, d=m.d, b=m.b)
+    end
+end
 
 # TODO: Should add compatibility for layer-wise options
 # Eg:

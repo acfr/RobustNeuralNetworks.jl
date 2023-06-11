@@ -5,7 +5,7 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-include("../test_utils.jl")
+# include("../test_utils.jl")
 
 """
 Test that backpropagation runs and parameters change
@@ -13,7 +13,7 @@ Test that backpropagation runs and parameters change
 batches = 10
 nu, ny, γ = 2, 3, 1
 nh = [10,5]
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
+model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; learn_γ=true)
 model = DiffLBDN(model_ps)
 
 # Dummy data
