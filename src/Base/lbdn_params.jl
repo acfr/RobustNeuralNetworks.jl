@@ -22,7 +22,7 @@ mutable struct DirectLBDNParams{T, N, M}
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
-    γ_4root::Vector{T}                  # Store γ^(1/4) so that √γ is valid
+    log_γ::Vector{T}                    # Store ln(γ) so that √exp(logγ) is positive
     learn_γ::Bool
 end
 
@@ -77,16 +77,16 @@ function DirectLBDNParams{T}(
         (k<L+1) && (d[k] = initW(rng, n[k+1]))
     end
 
-    γ_4root = [T(γ^(1/4))]
+    log_γ = [T(log(γ))]
     return DirectLBDNParams{T,L+1,L}(
-        tuple(XY...), tuple(α...), tuple(d...), tuple(b...), γ_4root, learn_γ
+        tuple(XY...), tuple(α...), tuple(d...), tuple(b...), log_γ, learn_γ
     )
 end
 
 Flux.@functor DirectLBDNParams
 function Flux.trainable(m::DirectLBDNParams)
     if m.learn_γ
-        return (XY=m.XY, α=m.α, d=m.d, b=m.b, γ_4root=m.γ_4root)
+        return (XY=m.XY, α=m.α, d=m.d, b=m.b, log_γ=m.log_γ)
     else 
         return (XY=m.XY, α=m.α, d=m.d, b=m.b)
     end

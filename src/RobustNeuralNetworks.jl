@@ -64,6 +64,8 @@ include("Wrappers/LBDN/lbdn.jl")
 include("Wrappers/LBDN/diff_lbdn.jl")
 include("Wrappers/LBDN/sandwich_fc.jl")
 
+include("Wrappers/utils.jl")
+
 
 ############ Exports ############
 
@@ -100,6 +102,7 @@ export SandwichFC
 
 # Functions
 export direct_to_explicit
+export get_lipschitz
 export init_states
 export set_output_zero!
 export update_explicit!
