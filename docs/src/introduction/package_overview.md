@@ -115,7 +115,7 @@ using Flux
 using Random
 
 # Define a model and a loss function
-model = Chain(Flux.Dense(1 => 10, Flux.relu), Flux.Dense(10 => 1), Flux.relu)
+model = Chain(Flux.Dense(1 => 10, Flux.relu), Flux.Dense(10 => 1, Flux.relu))
 loss(model, x, y) = Flux.mse(model(x), y)
 
 # Set up some dummy training data
