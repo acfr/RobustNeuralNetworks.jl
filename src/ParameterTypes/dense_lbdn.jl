@@ -55,12 +55,12 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
     α  = ps.direct.α
     d  = ps.direct.d
     b  = ps.direct.b
-    γ_4root = ps.direct.γ_4root[1]
+    log_γ = ps.direct.log_γ[1]
 
     # Build explicit model
     Ψd     = get_Ψ(d)
     A_T, B = get_AB(XY, α, vcat(nh, ny))
-    sqrtγ  = γ_4root^2
+    sqrtγ  = sqrt(exp(log_γ))
 
     # Faster to backpropagate with tuples than vectors
     return ExplicitLBDNParams{T,L1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), b, sqrtγ)
