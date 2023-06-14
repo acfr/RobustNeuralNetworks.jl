@@ -138,10 +138,10 @@ function plot_results(x, x̂, ts)
     Δq  = _get_vec(Δx,1)
     Δqd = _get_vec(Δx,2)
 
-    fig = Figure(resolution = (800, 400))
+    fig = Figure(resolution = (600, 400))
     ga = fig[1,1] = GridLayout()
 
-    ax1 = Axis(ga[1,1], xlabel="Time (s)", ylabel="Position (m)", title="Actual")
+    ax1 = Axis(ga[1,1], xlabel="Time (s)", ylabel="Position (m)", title="States")
     ax2 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position (m)", title="Observer Error")
     ax3 = Axis(ga[2,1], xlabel="Time (s)", ylabel="Velocity (m/s)")
     ax4 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Velocity (m/s)")

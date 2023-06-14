@@ -95,7 +95,7 @@ println("Test accuracy:     $(round(test_acc,digits=2))%\n")
 
 # Make a couple of example plots
 indx = rand(rng, 1:100, 3)
-f1 = Figure(resolution = (800, 300))
+f1 = Figure(resolution = (800, 300), fontsize=21)
 for i in eachindex(indx)
 
     # Get data and do prediction
@@ -113,7 +113,7 @@ for i in eachindex(indx)
         f1[1,i], xmat, axis=(
             yreversed = true, 
             aspect = DataAspect(), 
-            title = "True class: $(yval), Prediction: $(ŷval)"
+            title = "Label: $(yval), Prediction: $(ŷval)",
         )
     )
 
