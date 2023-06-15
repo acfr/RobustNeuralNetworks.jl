@@ -178,8 +178,8 @@ function DirectRENParams{T}(
 
     # Output layer
     if is_output
-        C2  = glorot_normal(ny,nx; rng)
-        D21 = glorot_normal(ny,nv; rng)
+        C2  = glorot_normal(ny, nx; T, rng)
+        D21 = glorot_normal(ny, nv; T, rng)
         D22 = zeros(T, ny, nu)
     else
         C2  = Matrix{T}(I, nx, nx)
@@ -202,7 +202,7 @@ function DirectRENParams{T}(
     # Bias terms
     bv = T(bv_scale) * glorot_normal(nv; T, rng)
     bx = T(bx_scale) * glorot_normal(nx; T, rng)
-    by = is_output ? glorot_normal(ny; rng) : zeros(T, ny)
+    by = is_output ? glorot_normal(ny; T, rng) : zeros(T, ny)
 
     return DirectRENParams(
         X, 
