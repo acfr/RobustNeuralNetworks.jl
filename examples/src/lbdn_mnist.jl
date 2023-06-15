@@ -68,21 +68,18 @@ end
 
 # Train the model with the ADAM optimiser
 function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
-
-    opt_state = Flux.setup(Adam(lrs[1]), model)
-    for k in eachindex(lrs)
-        
+    for k in eachindex(lrs)    
         opt_state = Flux.setup(Adam(lrs[k]), model)
         for i in 1:num_epochs
             Flux.train!(loss, model, data, opt_state)
             (i % 50 == 0) && progress(model, i)
         end
-        (k != length(lrs)) && Flux.adjust!(opt_state, lrs[k+1])
     end
 end
 
 # Train and save the model for later use
-# train_mnist!(model, train_data)
+train_mnist!(model, train_data)
+stop_here
 # bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
 model = BSON.load("assets/lbdn-mnist/lbdn_mnist.bson")["model"]
 
