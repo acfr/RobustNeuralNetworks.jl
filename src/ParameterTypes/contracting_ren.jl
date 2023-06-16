@@ -29,7 +29,7 @@ The parameters can be used to construct an explicit [`REN`](@ref) model that has
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
-See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `is_output`, `rng`.
+See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ`, `bx_scale`, `bv_scale`, `polar_param`, `D22_zero`, `output_map`, `rng`.
 
 See also [`GeneralRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENParams`](@ref).
 """
@@ -42,7 +42,7 @@ function ContractingRENParams{T}(
     D22_zero::Bool      = false,
     bx_scale::T         = T(0), 
     bv_scale::T         = T(1), 
-    is_output::Bool     = true,
+    output_map::Bool    = true,
     ϵ::T                = T(1e-12), 
     rng::AbstractRNG    = Random.GLOBAL_RNG
 ) where T
@@ -51,7 +51,7 @@ function ContractingRENParams{T}(
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
         init, ϵ, bx_scale, bv_scale, polar_param, 
-        D22_free=true, D22_zero, is_output, rng,
+        D22_free=true, D22_zero, output_map, rng,
     )
 
     return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)

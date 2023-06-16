@@ -85,7 +85,7 @@ data = zip(Xn[indx], Xt[indx], observer_data[indx])
 
 ## 3. Define a model
 
-Since we need our model to be a contracting dynamical system, the obvious choice is to use [`ContractingRENParams`](@ref). The inputs to the model are ``[u_t;y_t]``, and its outputs should be the state estimate ``\hat{x}_{t+1}``. The flag `is_output=false` sets the output map of the REN to just return its own internal state. That way, the internal state of the REN is exactly the state estimate ``\hat{x}``.
+Since we need our model to be a contracting dynamical system, the obvious choice is to use [`ContractingRENParams`](@ref). The inputs to the model are ``[u_t;y_t]``, and its outputs should be the state estimate ``\hat{x}_{t+1}``. The flag `output_map=false` sets the output map of the REN to just return its own internal state. That way, the internal state of the REN is exactly the state estimate ``\hat{x}``.
 
 ```julia
 using RobustNeuralNetworks
@@ -93,7 +93,7 @@ using RobustNeuralNetworks
 nv = 100
 nu = size(observer_data[1], 1)
 ny = nx
-model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng)
+model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng)
 model = DiffREN(model_ps)
 ```
 

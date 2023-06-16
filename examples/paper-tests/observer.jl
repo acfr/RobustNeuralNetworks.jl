@@ -45,7 +45,7 @@ nv = 100
 nu = size(obsv_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{T}(
-    nu, nx, nv, ny; is_output=false)
+    nu, nx, nv, ny; output_map=false)
 model = DiffREN(model_ps)
 
 using Statistics

@@ -59,7 +59,7 @@ data = zip(Xn[indx], Xt[indx], observer_data[indx])
 nv = 100
 nu = size(observer_data[1], 1)
 ny = nx
-model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng)
+model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng)
 model = DiffREN(model_ps)
 
 # Loss function: one step ahead error (average over time)

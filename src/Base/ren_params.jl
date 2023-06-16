@@ -64,7 +64,7 @@ mutable struct DirectRENParams{T}
     polar_param::Bool                   # Whether or not to use polar parameterisation
     D22_free   ::Bool                   # Is D22 free or parameterised by (X3,Y3,Z3)?
     D22_zero   ::Bool                   # Option to remove feedthrough.
-    is_output  ::Bool
+    output_map ::Bool
 end
 
 """
@@ -96,7 +96,7 @@ This is typically used by higher-level constructors when defining a REN, which t
 
 - `bv_scale::T=1`: Set scalse of initial neuron input bias vector `bv`.
 
-- `is_output::Bool=true`: Include output layer ``y_t = C_2 x_t + D_{21} w_t + D_{22} u_t + b_y``. Otherwise, output is just ``y_t = x_t``.
+- `output_map::Bool=true`: Include output layer ``y_t = C_2 x_t + D_{21} w_t + D_{22} u_t + b_y``. Otherwise, output is just ``y_t = x_t``.
 
 - `ϵ::T=1e-12`: Regularising parameter for positive-definite matrices.
 
@@ -114,7 +114,7 @@ function DirectRENParams{T}(
     D22_zero::Bool      = false,
     bx_scale::T         = T(0), 
     bv_scale::T         = T(1), 
-    is_output::Bool     = true,
+    output_map::Bool    = true,
     ϵ::T                = T(1e-12), 
     rng::AbstractRNG    = Random.GLOBAL_RNG
 ) where T
@@ -124,7 +124,7 @@ function DirectRENParams{T}(
         @warn """Setting D22 fixed at 0. Removing feedthrough."""
         D22_free = true
     end
-    if !is_output
+    if !output_map
         D22_zero = true
         D22_free = true
         if nx != ny
@@ -177,7 +177,7 @@ function DirectRENParams{T}(
     Y1 = glorot_normal(nx, nx; T, rng)
 
     # Output layer
-    if is_output
+    if output_map
         C2  = glorot_normal(ny, nx; T, rng)
         D21 = glorot_normal(ny, nv; T, rng)
         D22 = zeros(T, ny, nu)
@@ -202,7 +202,7 @@ function DirectRENParams{T}(
     # Bias terms
     bv = T(bv_scale) * glorot_normal(nv; T, rng)
     bx = T(bx_scale) * glorot_normal(nx; T, rng)
-    by = is_output ? glorot_normal(ny; T, rng) : zeros(T, ny)
+    by = output_map ? glorot_normal(ny; T, rng) : zeros(T, ny)
 
     return DirectRENParams(
         X, 
@@ -210,7 +210,7 @@ function DirectRENParams{T}(
         B2, C2, D12, D21, D22,
         bx, bv, by, T(ϵ), ρ,
         polar_param, D22_free, D22_zero,
-        is_output
+        output_map
     )
 end
 
@@ -219,7 +219,7 @@ Flux.@functor DirectRENParams
 function Flux.trainable(m::DirectRENParams)
 
     # Field names of trainable params, exclude ρ if needed
-    if !m.is_output
+    if !m.output_map
         fs = [:X, :Y1, :B2, :D12, :bx, :bv, :ρ]
     elseif m.D22_free
         if m.D22_zero
