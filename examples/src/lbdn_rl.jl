@@ -159,11 +159,14 @@ loss2(model, x0, qref, uref) = cost(rollout(model, x0, qref), qref, uref)
 
 function lbdn_compute_times(n; epochs=100)
 
+    print("Training models with nh = $n... ")
     lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
     diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
 
     t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)
     t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)
+
+    println("Done!")
     return [t_lbdn, t_diff_lbdn]
 
 end
@@ -175,7 +178,7 @@ lbdn_compute_times(2; epochs=1)
 comp_times = reduce(hcat, lbdn_compute_times.(sizes))
 
 # Plot the results
-f1 = Figure(resolution = (600, 400))
+f1 = Figure(resolution = (500, 300))
 ax = Axis(
     f1[1,1], 
     xlabel="Hidden layer size", 
@@ -189,3 +192,4 @@ xlims!(ax, [sizes[1], sizes[end]])
 axislegend(ax, position=:lt)
 display(f1)
 save("../results/lbdn_rl_comptime.svg", f1)
+

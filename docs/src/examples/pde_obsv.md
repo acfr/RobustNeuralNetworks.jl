@@ -113,7 +113,7 @@ model_params = ContractingRENParams{dtype}(
     nu, nx, nv, ny; 
     nl = tanh, ϵ=0.01,
     polar_param = false, 
-    is_output = false # Define the output mapping
+    output_map = false # Define the output mapping
 )
 model = DiffREN(model_params)
 ```

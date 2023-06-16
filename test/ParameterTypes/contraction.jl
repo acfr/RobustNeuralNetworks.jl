@@ -17,7 +17,7 @@ nu, nx, nv, ny = 4, 5, 10, 5
 
 ren_ps = ContractingRENParams{Float64}(
     nu, nx, nv, ny; 
-    init=:cholesky, αbar=ᾱ, polar_param=false, is_output=false
+    init=:cholesky, αbar=ᾱ, polar_param=false, output_map=false
 )
 ren = REN(ren_ps)
 

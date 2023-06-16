@@ -12,7 +12,7 @@ rng = MersenneTwister(42)
 
 # Create a contracting REN with just its state as an output 
 nu, nx, nv, ny = 1, 1, 10, 1
-ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; is_output=false, rng, init=:cholesky)
+ren_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng, init=:cholesky)
 ren = REN(ren_ps)
 
 # Make it converge a little faster...
@@ -45,8 +45,9 @@ end
 y1, y2 = simulate()
 
 # Plot trajectories
-f1 = Figure(resolution = (600, 400))
-ax = Axis(f1[1,1], xlabel="Time samples", ylabel="Internal state", title="Contracting RENs forget initial conditions")
+f1 = Figure(resolution = (500, 300))
+ax = Axis(f1[1,1], xlabel="Time samples", ylabel="Internal state",
+          title="Contracting RENs forget initial conditions")
 
 lines!(ax, y1, label="Initial condition 1")
 lines!(ax, y2, label="Initial condition 2")
