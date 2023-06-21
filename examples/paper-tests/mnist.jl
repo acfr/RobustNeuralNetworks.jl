@@ -10,7 +10,6 @@ x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 
 using Flux
-using Flux: OneHotMatrix
 
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
