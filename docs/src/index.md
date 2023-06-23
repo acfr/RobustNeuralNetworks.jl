@@ -34,6 +34,21 @@ Pages = ["lib/models.md", "lib/model_params.md", "lib/functions.md"]
 Depth = 1
 ```
 
+## Citing the Package
+
+If you use `RobustNeuralNetworks.jl` for any research or publications, please cite our work as necessary.
+```bibtex
+@article{barbara2023robustneuralnetworksjl,
+   title   = {RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness},
+   author  = {Nicholas H. Barbara and Max Revay and Ruigang Wang and Jing Cheng and Ian R. Manchester},
+   journal = {arXiv preprint arXiv:2306.12612},
+   month   = {6},
+   year    = {2023},
+   url     = {https://arxiv.org/abs/2306.12612v1},
+}
+```
+
+
 ## Research Papers
 
 `RobustNeurlaNetworks.jl` is built on the REN and LBDN model parameterisations described in the following two papers (respectively):
