@@ -40,9 +40,9 @@ function simulate()
         y1[t] = ya[1]
         y2[t] = yb[1]
     end
-    return y1, y2
+    return ts, y1, y2
 end
-y1, y2 = simulate()
+ts, y1, y2 = simulate()
 
 # Plot trajectories
 f1 = Figure(resolution = (500, 300))
@@ -54,3 +54,30 @@ lines!(ax, y2, label="Initial condition 2")
 axislegend(ax, position=:rb)
 display(f1)
 save("../../docs/src/assets/contracting_ren.svg", f1)
+
+# Create an animation
+p1 = Observable(Point2f[(ts[1], y1[1])])
+p2 = Observable(Point2f[(ts[1], y2[1])])
+
+fig = Figure(resolution = (600, 400))
+ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state",
+          title="Contracting models forget initial conditions")
+scatter!(ax, p1, color="blue", markersize=9)
+scatter!(ax, p2, color="orange", markersize=9)
+limits!(ax, 0, 600, -16.5, 12.5)
+
+time = 6
+framerate = 30
+dframe = Int(floor(length(ts) / time / framerate))
+frames = 1:dframe:length(ts)
+
+record(fig, "results/contraction_animation.gif", 1:length(frames); framerate) do i
+    if i > 1
+        indx = frames[(i-1)]:frames[i]
+        new_point1 = Point2f.(ts[indx], y1[indx])
+        new_point2 = Point2f.(ts[indx], y2[indx])
+        p1[] = append!(p1[], new_point1)
+        p2[] = append!(p2[], new_point2)
+    end
+end
+display(fig)
