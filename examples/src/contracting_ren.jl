@@ -59,11 +59,11 @@ save("../../docs/src/assets/contracting_ren.svg", f1)
 p1 = Observable(Point2f[(ts[1], y1[1])])
 p2 = Observable(Point2f[(ts[1], y2[1])])
 
-fig = Figure(resolution = (600, 400))
+fig = Figure(resolution = 2 .*(600, 400), fontsize=36)
 ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state",
-          title="Contracting models forget initial conditions")
-scatter!(ax, p1, color="blue", markersize=9)
-scatter!(ax, p2, color="orange", markersize=9)
+          title="Contracting systems forget initial conditions")
+scatter!(ax, p1, color="blue", markersize=10)
+scatter!(ax, p2, color="orange", markersize=10)
 limits!(ax, 0, 600, -16.5, 12.5)
 
 time = 6
@@ -71,7 +71,7 @@ framerate = 30
 dframe = Int(floor(length(ts) / time / framerate))
 frames = 1:dframe:length(ts)
 
-record(fig, "results/contraction_animation.gif", 1:length(frames); framerate) do i
+record(fig, "../results/contraction_animation.gif", 1:length(frames); framerate) do i
     if i > 1
         indx = frames[(i-1)]:frames[i]
         new_point1 = Point2f.(ts[indx], y1[indx])
