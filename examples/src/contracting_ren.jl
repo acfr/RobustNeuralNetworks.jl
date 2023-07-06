@@ -56,15 +56,17 @@ display(f1)
 save("../../docs/src/assets/contracting_ren.svg", f1)
 
 # Create an animation
+fig = Figure(resolution = 2 .*(600, 400), fontsize=36)
+ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state")
+
 p1 = Observable(Point2f[(ts[1], y1[1])])
 p2 = Observable(Point2f[(ts[1], y2[1])])
 
-fig = Figure(resolution = 2 .*(600, 400), fontsize=36)
-ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state",
-          title="Contracting systems forget initial conditions")
-scatter!(ax, p1, color="blue", markersize=10)
-scatter!(ax, p2, color="orange", markersize=10)
-limits!(ax, 0, 600, -16.5, 12.5)
+scatter!(ax, p1, markersize=10, label="Initial condition 1", color=:orange)
+scatter!(ax, p2, markersize=10, label="Initial condition 2", color=:blue)
+
+axislegend(ax, position=:rb)
+limits!(ax, 0, 625, -16.5, 12.5)
 
 time = 6
 framerate = 30
