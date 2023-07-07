@@ -1,0 +1,29 @@
+title: "RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness"
+keywords:
+  - Robustness
+  - Machine Learning
+  - Image Classification
+  - Reinforcement Learning
+  - State Estimation
+  - Data-Driven Control
+authors:
+  - name: Nicholas H. Barbara
+    orcid: 0000-0002-4885-3307
+    affiliation: 1
+  - name: Max Revay
+    orcid: 0000-0002-8954-8907
+    affiliation: 1
+  - name: Ruigang Wang
+    orcid: 0000-0002-9954-4547
+    affiliation: 1
+  - name: Jing Cheng
+    orcid: 0009-0003-5058-2133
+    affiliation: 1
+  - name: Ian R. Manchester
+    orcid: 0000-0002-7035-3173
+    affiliation: 1
+affiliations:
+  - name: University of Sydney, Australian Centre for Robotics
+    index: 1
+date: 7 July 2023
+bibliography: ref.bib

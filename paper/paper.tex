@@ -1,0 +1,54 @@
+% JuliaCon proceedings template
+\documentclass{juliacon}
+\setcounter{page}{1}
+
+% My packages
+\usepackage{amsmath}
+\usepackage{parskip}
+
+% My commands
+\newcommand{\RW}[1]{{\color{purple} #1}}
+\newcommand{\IM}[1]{{\color{green} #1}}
+\newcommand{\NB}[1]{{\color{red} #1}}
+
+\newtheorem{remark}{Remark}
+
+\begin{document}
+
+\input{header}
+
+\maketitle
+
+
+% Abstract
+\begin{abstract}
+
+Neural networks are typically sensitive to small input perturbations, leading to unexpected or brittle behaviour. 
+We present \verb|RobustNeuralNetworks.jl|: a Julia package for neural network models that are constructed to naturally satisfy a set of user-defined robustness constraints. The package is based on the recently proposed Recurrent Equilibrium Network (REN) and Lipschitz-Bounded Deep Network (LBDN) model classes, and is designed to interface directly with Julia's most widely-used machine learning package, \verb|Flux.jl|. We discuss the theory behind our model parameterization, give an overview of the package, and provide a tutorial demonstrating its use in image classification, reinforcement learning, and nonlinear state-observer design.
+
+\end{abstract}
+
+% Include source files
+\section{Introduction} \label{sec:introduction}
+\input{TexFiles/Introduction}
+
+\section{Package overview} \label{sec:overview}
+\input{TexFiles/PackageOverview}
+
+\section{Examples} \label{sec:examples}
+\input{TexFiles/ExampleIntro}
+\input{TexFiles/ExampleMNIST}
+\input{TexFiles/ExampleRL}
+\input{TexFiles/ExampleObserver}
+
+\section{Summary and conclusions} \label{sec:conc}
+\input{TexFiles/Conclusions}
+
+
+
+
+\input{bib.tex}
+
+\end{document}
+
+% Inspired by the International Journal of Computer Applications template
