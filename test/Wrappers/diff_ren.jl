@@ -5,21 +5,20 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-include("../test_utils.jl")
+# include("../test_utils.jl")
 
 """
 Test that backpropagation runs and parameters change
 """
 batches = 10
-nu, nx, nv, ny = 4, 5, 0, 2
-γ = 10
+nu, nx, nv, ny, γ = 4, 5, 0, 2, 10
 ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
 model = DiffREN(ren_ps)
 
 # Dummy data
 us = randn(nu, batches)
 ys = randn(ny, batches)
-data = [(us[:,k], ys[:,k]) for k in 1:batches]
+data = [(us, ys)]
 
 # Dummy loss function just for testing
 function loss(m, u, y)
@@ -31,7 +30,6 @@ end
 # Debug batch updates
 opt_state = Flux.setup(Adam(0.01), model)
 gs = Flux.gradient(loss, model, us, ys)
-Flux.update!(opt_state, model, gs[1])
 println()
 
 # # Check if parameters change after a Flux update
