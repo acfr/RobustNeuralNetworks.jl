@@ -5,8 +5,6 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-# include("../test_utils.jl")
-
 """
 Test that backpropagation runs and parameters change
 """
