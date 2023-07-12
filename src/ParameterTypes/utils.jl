@@ -78,6 +78,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     B1 = E \ B1_imp
     B2 = E \ ps.direct.B2
 
+    # Current versions of Julia behave poorly when broadcasting over 0-dim arrays
     C1  = (nv == 0) ? zeros(T,0,nx) : broadcast(*, Λ_inv, C1_imp)
     D11 = (nv == 0) ? zeros(T,0,0)  : broadcast(*, Λ_inv, D11_imp)
     D12 = (nv == 0) ? zeros(T,0,nu) : broadcast(*, Λ_inv, ps.direct.D12)

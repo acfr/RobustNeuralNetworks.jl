@@ -11,7 +11,7 @@ using Test
 Test that backpropagation runs and parameters change
 """
 batches = 10
-nu, nx, nv, ny = 1, 10, 0, 1
+nu, nx, nv, ny = 4, 5, 10, 2
 γ = 10
 model_ps = LipschitzRENParams{Float32}(nu, nx, nv, ny, γ)
 
