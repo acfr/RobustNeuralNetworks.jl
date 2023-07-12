@@ -13,7 +13,7 @@ Test that backpropagation runs and parameters change
 batches = 10
 nu, ny, γ = 2, 3, 1
 nh = [10,5]
-model_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; learn_γ=true)
+model_ps = DenseLBDNParams{Float32}(nu, nh, ny, γ; learn_γ=true)
 model = DiffLBDN(model_ps)
 
 # Dummy data
