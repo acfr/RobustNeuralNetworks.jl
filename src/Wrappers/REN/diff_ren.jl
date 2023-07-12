@@ -44,3 +44,7 @@ function (m::DiffREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     explicit = direct_to_explicit(m.params)
     return m(xt, ut, explicit) 
 end
+
+function set_output_zero!(m::DiffREN)
+    set_output_zero!(m.params)
+end

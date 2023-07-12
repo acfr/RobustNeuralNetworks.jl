@@ -47,6 +47,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     # System sizes
     nx = ps.nx
     nv = ps.nv
+    nu = ps.nu
 
     # To be used later
     ᾱ = ps.αbar
@@ -77,9 +78,9 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     B1 = E \ B1_imp
     B2 = E \ ps.direct.B2
 
-    C1 = broadcast(*, Λ_inv, C1_imp)
-    D11 = broadcast(*, Λ_inv, D11_imp)
-    D12 = broadcast(*, Λ_inv, ps.direct.D12)
+    C1  = (nv == 0) ? zeros(T,0,nx) : broadcast(*, Λ_inv, C1_imp)
+    D11 = (nv == 0) ? zeros(T,0,0)  : broadcast(*, Λ_inv, D11_imp)
+    D12 = (nv == 0) ? zeros(T,0,nu) : broadcast(*, Λ_inv, ps.direct.D12)
 
     C2 = ps.direct.C2
     D21 = ps.direct.D21
@@ -96,4 +97,43 @@ end
 
 function x_to_h(X::AbstractMatrix{T}, ϵ::T, polar_param::Bool, ρ::T) where T
     polar_param ? (ρ^2)*(X'*X) / norm(X)^2 + ϵ*I : X'*X + ϵ*I
+end
+
+"""
+    set_output_zero!(m::AbstractRENParams)
+
+Set output map of a REN to zero.
+
+If the resulting model is called with
+```julia
+ren = REN(m)
+x1, y = ren(x, u)
+```
+then `y = 0` for any `x` and `u`.
+"""
+function set_output_zero!(m::AbstractRENParams)
+    m.direct.C2  .= 0
+    m.direct.D21 .= 0
+    m.direct.D22 .= 0
+    m.direct.by  .= 0
+    return nothing
+end
+
+"""
+    set_output_zero!(m::AbstractLBDNParams)
+
+Set output map of an LBDN to zero.
+
+If the resulting model is called with 
+```julia
+lbdn = LBDN(m)
+y = lbdn(u)
+```
+then `y = 0` for any `u`.
+"""
+function set_output_zero!(m::AbstractLBDNParams)
+    m.direct.XY[end][(m.ny+1):end,:] .= 0
+    m.direct.b[end] .= 0
+
+    return nothing
 end
