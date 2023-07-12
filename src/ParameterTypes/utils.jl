@@ -47,6 +47,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     # System sizes
     nx = ps.nx
     nv = ps.nv
+    nu = ps.nu
 
     # To be used later
     ᾱ = ps.αbar
@@ -77,9 +78,9 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     B1 = E \ B1_imp
     B2 = E \ ps.direct.B2
 
-    C1 = broadcast(*, Λ_inv, C1_imp)
-    D11 = broadcast(*, Λ_inv, D11_imp)
-    D12 = broadcast(*, Λ_inv, ps.direct.D12)
+    C1  = (nv == 0) ? zeros(T,0,nx) : broadcast(*, Λ_inv, C1_imp)
+    D11 = (nv == 0) ? zeros(T,0,0)  : broadcast(*, Λ_inv, D11_imp)
+    D12 = (nv == 0) ? zeros(T,0,nu) : broadcast(*, Λ_inv, ps.direct.D12)
 
     C2 = ps.direct.C2
     D21 = ps.direct.D21
