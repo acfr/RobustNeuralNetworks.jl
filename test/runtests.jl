@@ -20,5 +20,6 @@ using Test
     include("Wrappers/wrap_ren.jl")
     include("Wrappers/diff_ren.jl")
     include("Wrappers/diff_lbdn.jl")
+    include("Wrappers/zero_dim.jl")
 
 end

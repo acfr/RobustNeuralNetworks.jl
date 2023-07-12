@@ -6,7 +6,7 @@ module RobustNeuralNetworks
 
 using Flux
 using LinearAlgebra
-using MatrixEquations: lyapd, plyapd
+using MatrixEquations: lyapd
 using Random
 using Zygote: pullback, Buffer
 using Zygote: @adjoint
