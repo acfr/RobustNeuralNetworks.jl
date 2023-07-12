@@ -98,18 +98,11 @@ function init_states(m::AbstractREN{T}; rng=nothing) where T
     return zeros(T, m.nx)
 end
 
-"""
-    set_output_zero!(m::AbstractREN)
-
-Set output map of a REN to zero.
-
-If the resulting model is called with `x1,y = ren(x,u)` then `y = 0` for any `x` and `u`.
-"""
 function set_output_zero!(m::AbstractREN)
-    m.explicit.C2 .*= 0
-    m.explicit.D21 .*= 0
-    m.explicit.D22 .*= 0
-    m.explicit.by .*= 0
+    m.explicit.C2  .= 0
+    m.explicit.D21 .= 0
+    m.explicit.D22 .= 0
+    m.explicit.by  .= 0
 
     return nothing
 end
