@@ -62,7 +62,7 @@ println(round.(y1;digits=2))
 
 # output
 
-[-1.1 0.32 0.27 0.14 -1.23 -0.4 -0.7 0.01 0.19 0.81]
+[1.38 0.56 0.89 2.11 2.14 0.89 1.63 0.44 1.24 1.26]
 ```
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).

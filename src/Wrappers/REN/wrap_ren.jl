@@ -56,7 +56,7 @@ println(round(ren.explicit.B2[10];digits=4))
 
 # output
 
-0.0109
+0.0051
 ```
 
 See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
