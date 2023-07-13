@@ -5,15 +5,13 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-# include("../test_utils.jl")
-
 """
 Test that backpropagation runs and parameters change
 """
 batches = 10
-nu, nx, nv, ny = 4, 5, 10, 3
+nu, nx, nv, ny = 4, 5, 10, 2
 γ = 10
-ren_ps = LipschitzRENParams{Float32}(nu, nx, nv, ny, γ)
+ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
 model = DiffREN(ren_ps)
 
 # Dummy data
