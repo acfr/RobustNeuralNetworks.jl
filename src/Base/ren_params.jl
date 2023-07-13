@@ -82,10 +82,10 @@ This is typically used by higher-level constructors when defining a REN, which t
     
 # Keyword arguments
 
-- `init=:random`: Initialisation method. Options are:
-    - `:random`: Random sampling with Glorot normal distribution.
-    - `:randomQR:` Compute `X` with `glorot_normal` and take the QR decomposition `X = qr(X).Q`. Good for initialising `X` close to the identity when long memory is needed.
-    - `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`.
+- `init=:randomQR`: Initialisation method. Options are:
+    - `:random`: Random sampling with Glorot normal distribution. Typically samples "faster"/short memory dynamic models.
+    - `:randomQR:` Compute `X` with `glorot_normal` and take the QR decomposition `X = qr(X).Q`. Good for initialising `X` close to the identity when long memory is needed. Default as legacy.
+    - `:cholesky`: Compute `X` with cholesky factorisation of `H`, sets `E,F,P = I`. Good for slow/long memory dynamic models.
 
 - `polar_param::Bool=true`: Use polar parameterisation to construct `H` matrix from `X` in REN parameterisation (recommended).
 
@@ -109,7 +109,7 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`Lipschitz
 """
 function DirectRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int; 
-    init                = :random,
+    init                = :randomQR,
     polar_param::Bool   = true,
     D22_free::Bool      = false,
     D22_zero::Bool      = false,
