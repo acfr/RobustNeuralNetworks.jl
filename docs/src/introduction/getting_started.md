@@ -38,7 +38,7 @@ println(round.(y1; digits=2))
 
 # output
 
-[0.23 -0.01 -0.06 0.15 -0.03 -0.11 0.0 0.42 0.24 0.22]
+[0.98 1.24 0.86 1.93 1.08 1.19 1.23 1.4 0.95 0.65]
 ```
 
 For detailed examples of training models from `RobustNeuralNetworks.jl`, we recommend starting with [Fitting a Curve with LBDN](@ref) and working through the subsequent examples.
