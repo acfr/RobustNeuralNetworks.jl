@@ -150,45 +150,45 @@ fig = plot_box_learning(costs, z_lbdn, qr_test)
 save("../results/lbdn_rl.svg", fig)
 
 
-# # ---------------------------------
-# # Compare to DiffLBDN
-# # ---------------------------------
+# ---------------------------------
+# Compare to DiffLBDN
+# ---------------------------------
 
-# # Loss function for differentiable model
-# loss2(model, x0, qref, uref) = cost(rollout(model, x0, qref), qref, uref)
+# Loss function for differentiable model
+loss2(model, x0, qref, uref) = cost(rollout(model, x0, qref), qref, uref)
 
-# function lbdn_compute_times(n; epochs=100)
+function lbdn_compute_times(n; epochs=100)
 
-#     print("Training models with nh = $n... ")
-#     lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
-#     diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
+    print("Training models with nh = $n... ")
+    lbdn_ps = DenseLBDNParams{Float64}(nu, [n], ny, γ; nl=relu, rng)
+    diff_lbdn = DiffLBDN(deepcopy(lbdn_ps))
 
-#     t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)
-#     t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)
+    t_lbdn = @elapsed train_box_ctrl!(lbdn_ps, loss; epochs)
+    t_diff_lbdn = @elapsed train_box_ctrl!(diff_lbdn, loss2; epochs)
 
-#     println("Done!")
-#     return [t_lbdn, t_diff_lbdn]
+    println("Done!")
+    return [t_lbdn, t_diff_lbdn]
 
-# end
+end
 
-# # Evaluate computation time with different hidden-layer sizes
-# # Run it once first for just-in-time compiler
-# sizes = 2 .^ (1:9)
-# lbdn_compute_times(2; epochs=1)
-# comp_times = reduce(hcat, lbdn_compute_times.(sizes))
+# Evaluate computation time with different hidden-layer sizes
+# Run it once first for just-in-time compiler
+sizes = 2 .^ (1:9)
+lbdn_compute_times(2; epochs=1)
+comp_times = reduce(hcat, lbdn_compute_times.(sizes))
 
-# # Plot the results
-# f1 = Figure(resolution = (500, 300))
-# ax = Axis(
-#     f1[1,1], 
-#     xlabel="Hidden layer size", 
-#     ylabel="Training time (s) (100 epochs)", 
-#     xscale=Makie.log2, yscale=Makie.log10
-# )
-# lines!(ax, sizes, comp_times[1,:], label="LBDN")
-# lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
+# Plot the results
+f1 = Figure(resolution = (500, 300))
+ax = Axis(
+    f1[1,1], 
+    xlabel="Hidden layer size", 
+    ylabel="Training time (s) (100 epochs)", 
+    xscale=Makie.log2, yscale=Makie.log10
+)
+lines!(ax, sizes, comp_times[1,:], label="LBDN")
+lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
 
-# xlims!(ax, [sizes[1], sizes[end]])
-# axislegend(ax, position=:lt)
-# display(f1)
-# save("../results/lbdn_rl_comptime.svg", f1)
+xlims!(ax, [sizes[1], sizes[end]])
+axislegend(ax, position=:lt)
+display(f1)
+save("../results/lbdn_rl_comptime.svg", f1)
