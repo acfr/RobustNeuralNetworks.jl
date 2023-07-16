@@ -79,8 +79,7 @@ end
 
 # Train and save the model for later use
 train_mnist!(model, train_data)
-stop_here
-# bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
+bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
 model = BSON.load("assets/lbdn-mnist/lbdn_mnist.bson")["model"]
 
 # Print final results
