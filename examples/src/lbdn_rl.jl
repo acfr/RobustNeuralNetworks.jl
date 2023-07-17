@@ -35,8 +35,9 @@ x0 = zeros(nx, batches)
 qref = 2*rand(rng, nref, batches) .- 1
 uref = k*qref
 
-# Continuous  and discrete dynamics
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+# Continuous and discrete dynamics
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 
 # Simulate the system given initial condition and a controller

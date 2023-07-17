@@ -24,7 +24,8 @@ k = 5                   # Spring constant (N/m)
 nx = 2                  # Number of states
 
 # Continuous and discrete dynamics and measurements
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 
@@ -56,10 +57,10 @@ data = zip(Xn[indx], Xt[indx], observer_data[indx])
 # Train a model
 
 # Define a REN model for the observer
-nv = 100
+nv = 200
 nu = size(observer_data[1], 1)
 ny = nx
-model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng)
+model_ps = ContractingRENParams{Float32}(nu, nx, nv, ny; output_map=false, rng)
 model = DiffREN(model_ps)
 
 # Loss function: one step ahead error (average over time)
@@ -69,7 +70,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-5)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
