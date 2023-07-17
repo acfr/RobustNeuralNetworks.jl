@@ -70,7 +70,7 @@ function loss(model, xn, xt, inputs)
 end
 
 # Train the model
-function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-5)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
