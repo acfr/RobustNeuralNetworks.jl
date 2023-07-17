@@ -47,7 +47,8 @@ k = 5                   # Spring constant (N/m)
 nx = 2                  # Number of states
 
 # Continuous and discrete dynamics and measurements
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 ```
