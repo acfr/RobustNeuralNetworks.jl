@@ -86,7 +86,7 @@ function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
 
         # Drop learning rate if mean loss is stuck or growing
         push!(mean_loss, mean(batch_loss))
-        if (mean_loss[end] >= mean_loss[end-1]) && !(lr <= min_lr)
+        if (mean_loss[end] >= mean_loss[end-1]) && !(lr < min_lr || lr ≈ min_lr)
             lr = 0.1lr
             Flux.adjust!(opt_state, lr)
         end
@@ -101,7 +101,7 @@ tloss = train_observer!(model, data)
 
 # Generate test data (a bunch of initial conditions)
 batches   = 50
-ts_test   = 1:Int(10/dt)
+ts_test   = 1:Int(20/dt)
 u_test    = fill(zeros(1, batches), length(ts_test))
 x_test    = fill(zeros(nx,batches), length(ts_test))
 x_test[1] = 0.2*(2*rand(rng, nx, batches) .-1)
