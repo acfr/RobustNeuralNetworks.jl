@@ -7,6 +7,8 @@ using Test
 
 # include("../test_utils.jl")
 
+rng = MersenneTwister(42)
+
 """
 Test passivity inequality
 """
@@ -15,15 +17,15 @@ nu, nx, nv, ny = 6, 5, 10, 6
 T = 100
 
 # Test constructors
-ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random, ν= 1.0)
+ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random, ν= 1.0, rng)
 ren = REN(ren_ps)
 
 # Different inputs with different initial conditions
-u0 = 10*randn(nu, batches)
-u1 = rand(nu, batches)
+u0 = 10*randn(rng, nu, batches)
+u1 = rand(rng, nu, batches)
 
-x0 = randn(nx, batches)
-x1 = randn(nx, batches)
+x0 = randn(rng, nx, batches)
+x1 = randn(rng, nx, batches)
 
 # Simulate
 x0n, y0 = ren(x0, u0)

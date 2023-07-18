@@ -6,6 +6,8 @@ using Test
 
 # include("../test_utils.jl")
 
+rng = MersenneTwister(42)
+
 """
 Test that the model satisfies a specified Lipschitz bound
 """
@@ -14,12 +16,12 @@ nu, ny = 4, 2
 nh = [10, 5, 20, 4]
 γ = 1e-5
 
-lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ)
+lbdn_ps = DenseLBDNParams{Float64}(nu, nh, ny, γ; rng)
 lbdn = LBDN(lbdn_ps)
 
 # Different inputs with different initial conditions
-u0 = randn(nu, batches)
-u1 = u0 .+ 0.001*rand(nu, batches)
+u0 = randn(rng, nu, batches)
+u1 = u0 .+ 0.001*rand(rng, nu, batches)
 
 # Simulate
 y0 = lbdn(u0)

@@ -5,17 +5,19 @@ using Random
 using RobustNeuralNetworks
 using Test
 
+rng = MersenneTwister(42)
+
 """
 Test that backpropagation runs when nx = 0 and nv = 0
 """
 batches = 10
 nu, nx, nv, ny = 4, 0, 0, 2
 γ = 10
-model_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
+model_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
 
 # Dummy data
-us = randn(nu, batches)
-ys = randn(ny, batches)
+us = randn(rng, nu, batches)
+ys = randn(rng, ny, batches)
 data = [(us, ys)]
 
 # Dummy loss function just for testing
