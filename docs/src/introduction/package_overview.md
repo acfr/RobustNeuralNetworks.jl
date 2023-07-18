@@ -51,17 +51,17 @@ y &= W_L z_L + b_L
 \end{aligned}
 ```
 
-See [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) and [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) for more details on RENs and LBDNs, respectively.
+See [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) and [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html) for more details on RENs and LBDNs, respectively.
 
 !!! info "Acyclic REN models"
-	[Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) make special mention of "acyclic" RENs, which have a lower-triangular ``D_{11}``. These are significantly more efficient to evaluate and train than a REN with dense ``D_{11},`` and they perform similarly. All RENs in `RobustNeuralNetworks.jl` are therefore acyclic RENs.
+	[Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) make special mention of "acyclic" RENs, which have a lower-triangular ``D_{11}``. These are significantly more efficient to evaluate and train than a REN with dense ``D_{11},`` and they perform similarly. All RENs in `RobustNeuralNetworks.jl` are therefore acyclic RENs.
 
 
 ## Direct & explicit parameterisations
 
 The key advantage of the models in `RobustNeuralNetworks.jl` is that they naturally satisfy a set of user-defined robustness constraints (outlined in [Robustness metrics and IQCs](@ref)). This means that we can guarantee the robustness of our neural networks *by construction*. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or LBDN. One can simply use unconstrained optimisation methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
-We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
+We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
 
 In `RobustNeuralNetworks.jl`, RENs are defined by two fundamental types. Any subtype of [`AbstractRENParams`](@ref) holds all the information required to directly parameterise a REN satisfying some robustness properties. For example, to initialise the direct parameters of a *contracting* REN with 1 input, 10 states, 20 neurons, and 1 output, we would use the following.
 
@@ -240,4 +240,4 @@ There are two cases to consider here. In both cases, the network must have the s
 \langle \mathcal{M}_a(u) - \mathcal{M}_b(v), u-v \rangle_T \ge \rho \| \mathcal{M}_a(u) - \mathcal{M}_b(v)\|^2_T
 ```
 
-For more details on IQCs and their use in RENs, please see [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942).
+For more details on IQCs and their use in RENs, please see [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161).

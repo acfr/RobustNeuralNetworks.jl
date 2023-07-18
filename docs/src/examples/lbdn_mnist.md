@@ -1,6 +1,6 @@
 # Image Classification with LBDN
 
-Our next example features an LBDN trained to classify the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. We showed in [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) that training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:
+Our next example features an LBDN trained to classify the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. We showed in [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html) that training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:
 1. Load the training and test data
 2. Define a Lipschitz-bounded model
 3. Define a loss function
@@ -8,7 +8,7 @@ Our next example features an LBDN trained to classify the [MNIST](https://en.wik
 5. Evaluate the trained model
 6. Investigate robustness
 
-For details on how Lipschitz bounds increase classification robustness and reliability, please see the [paper](https://doi.org/10.48550/arXiv.2301.11526).
+For details on how Lipschitz bounds increase classification robustness and reliability, please see the [paper](https://proceedings.mlr.press/v202/wang23v.html).
 
 ## 1. Load the data
 
@@ -197,7 +197,7 @@ save("lbdn_mnist.svg", f1)
 
 ## 6. Investigate robustness
 
-The main advantage of using an LBDN for image classification is its built-in robustness to noise (or attacks) added to the image data. This robustness is given by the Lipschitz bound. As explained in the [Package Overview](@ref), a Lipschitz bound effectively defines how "smooth" the network is: the smaller the Lipschitz bound, the less the network outputs will change as the inputs vary. For example, small amounts of noise added to the image will be less likely to change its classification. A detailed investigation into this effect is presented in [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526).
+The main advantage of using an LBDN for image classification is its built-in robustness to noise (or attacks) added to the image data. This robustness is given by the Lipschitz bound. As explained in the [Package Overview](@ref), a Lipschitz bound effectively defines how "smooth" the network is: the smaller the Lipschitz bound, the less the network outputs will change as the inputs vary. For example, small amounts of noise added to the image will be less likely to change its classification. A detailed investigation into this effect is presented in [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html).
 
 We can see this effect first-hand by comparing the LBDN to a standard MLP built from `Flux.Dense` layers. Let's first create a `dense` network with the same layer structure as the LBDN.
 ```@example mnist

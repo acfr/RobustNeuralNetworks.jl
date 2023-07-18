@@ -71,7 +71,7 @@ Note that we first constructed the model parameters `model_ps`, and *then* creat
     )
     ```
 
-    See Section 3.1 of [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526) for further details.
+    See Section 3.1 of [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html) for further details.
 
 ## 3. Define a loss function
 
