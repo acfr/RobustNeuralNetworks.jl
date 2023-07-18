@@ -1,8 +1,8 @@
 # PDE Observer Design with REN
-*This example was first presented in Section VIII of [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942).*
+*This example was first presented in Section VIII of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161).*
 
 
-This example considers learning a state observer for a reaction-diffusion PDE. See [Observer Design with REN](@ref) for a brief explanation of the theory, and [Revay, Wang & Manchester (2021)](https://doi.org/10.48550/arXiv.2104.05942) for a detailed overview of the original problem.
+This example considers learning a state observer for a reaction-diffusion PDE. See [Observer Design with REN](@ref) for a brief explanation of the theory, and [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for a detailed overview of the original problem.
 
 ## 1. Problem statement
 

@@ -51,13 +51,13 @@ If you use `RobustNeuralNetworks.jl` for any research or publications, please ci
 
 ## Research Papers
 
-`RobustNeurlaNetworks.jl` is built on the REN and LBDN model parameterisations described in the following two papers (respectively):
+`RobustNeurlaNetworks.jl` is built on the REN and LBDN model classes described in the following two papers (respectively):
 
-> M. Revay, R. Wang, and I. R. Manchester, "Recurrent equilibrium networks: Flexible dynamic models with guaranteed stability and robustness," April 2021. doi: [https://doi.org/10.48550/arXiv.2104.05942](https://doi.org/10.48550/arXiv.2104.05942).
+> M. Revay, R. Wang, and I. R. Manchester, "Recurrent Equilibrium Networks: Flexible Dynamic Models with Guaranteed Stability and Robustness" *IEEE Trans Automat Contr* 1–16 (2023) [doi:10.1109/TAC.2023.3294101](https://ieeexplore.ieee.org/document/10179161).
 
-> R. Wang and I. R. Manchester, "Direct parameterization of Lipschitz-bounded deep networks," January 2023. doi: [https://doi.org/10.48550/arXiv.2301.11526](https://doi.org/10.48550/arXiv.2301.11526).
+> R. Wang and I. R. Manchester, "Direct parameterization of Lipschitz-bounded deep networks" in *Proceedings of the 40th International Conference on Machine Learning* (PMLR, 2023) [202:36093-36110](https://proceedings.mlr.press/v202/wang23v.html).
 
-The REN parameterisation was extended to continuous-time systems in:
+The REN parameterisation was extended to continuous-time systems in [yet to be implemented]:
 
 > D. Martinelli, C. L. Galimberti, I. R. Manchester, L. Furieri, and G. Ferrari-Trecate, "Unconstrained Parametrization of Dissipative and Contracting Neural Ordinary Differential Equations," April 2023. doi: [https://doi.org/10.48550/arXiv.2304.02976](https://doi.org/10.48550/arXiv.2304.02976).
 
