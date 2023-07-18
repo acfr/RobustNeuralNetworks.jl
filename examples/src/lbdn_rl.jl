@@ -35,8 +35,9 @@ x0 = zeros(nx, batches)
 qref = 2*rand(rng, nref, batches) .- 1
 uref = k*qref
 
-# Continuous  and discrete dynamics
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+# Continuous and discrete dynamics
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 
 # Simulate the system given initial condition and a controller
@@ -97,7 +98,7 @@ function train_box_ctrl!(model_ps, loss_func; lr=1e-3, epochs=250, verbose=false
     return costs
 end
 
-costs = train_box_ctrl!(model_ps, loss)
+costs = train_box_ctrl!(model_ps, loss; verbose=true)
 
 
 # -------------------------
@@ -126,8 +127,8 @@ function plot_box_learning(costs, z, qr)
     ga = f1[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
-    ax1 = Axis(ga[1,2], xlabel="Time (s))", ylabel="Position error (m)", )
-    ax2 = Axis(ga[2,1], xlabel="Time (s))", ylabel="Velocity (m/s)")
+    ax1 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position error (m)", )
+    ax2 = Axis(ga[2,1], xlabel="Time (s)", ylabel="Velocity (m/s)")
     ax3 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Control error (N)")
 
     lines!(ax0, costs, color=:black)
@@ -192,4 +193,3 @@ xlims!(ax, [sizes[1], sizes[end]])
 axislegend(ax, position=:lt)
 display(f1)
 save("../results/lbdn_rl_comptime.svg", f1)
-

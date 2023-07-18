@@ -6,6 +6,8 @@ using Test
 
 # include("../test_utils.jl")
 
+rng = MersenneTwister(42)
+
 """
 Test that the contracting REN actually does contract.
 
@@ -17,15 +19,15 @@ nu, nx, nv, ny = 4, 5, 10, 5
 
 ren_ps = ContractingRENParams{Float64}(
     nu, nx, nv, ny; 
-    init=:cholesky, αbar=ᾱ, polar_param=false, output_map=false
+    init=:cholesky, αbar=ᾱ, polar_param=false, output_map=false, rng
 )
 ren = REN(ren_ps)
 
 # Same inputs. different initial conditions
-u0 = randn(nu, batches)
+u0 = randn(rng, nu, batches)
 
-x0 = randn(nx, batches)
-x1 = randn(nx, batches)
+x0 = randn(rng, nx, batches)
+x1 = randn(rng, nx, batches)
 
 # Simulate
 x0n, y0 = ren(x0, u0)

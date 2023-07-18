@@ -132,7 +132,7 @@ function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
 end
 
 # Train and save the model for later
-train_mnist!(model, data)
+train_mnist!(model, train_data)
 bson("lbdn_mnist.bson", Dict("model" => model))
 ```
 

@@ -6,6 +6,8 @@ using Test
 
 # include("../test_utils.jl")
 
+rng = MersenneTwister(42)
+
 """
 Test that the model satisfies a specified Lipschitz bound
 """
@@ -13,15 +15,15 @@ batches = 42
 nu, nx, nv, ny = 4, 5, 10, 2
 γ = 10
 
-ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
+ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
 ren = REN(ren_ps)
 
 # Different inputs with different initial conditions
-u0 = 10*randn(nu, batches)
-u1 = rand(nu, batches)
+u0 = 10*randn(rng, nu, batches)
+u1 = rand(rng, nu, batches)
 
-x0 = randn(nx, batches)
-x1 = randn(nx, batches)
+x0 = randn(rng, nx, batches)
+x1 = randn(rng, nx, batches)
 
 # Simulate
 x0n, y0 = ren(x0, u0)
