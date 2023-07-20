@@ -31,17 +31,6 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 
-# # Save a subset for later, useful for the docs
-# bson("assets/lbdn-mnist/mnist_data.bson", Dict(
-#     "x_train" => x_train[:,:,1:1000],
-#     "y_train" => y_train[1:1000],
-#     "x_test" => x_test[:,:,1:100],
-#     "y_test" => y_test[1:100]
-# ))
-# data = BSON.load("assets/lbdn-mnist/mnist_data.bson")
-# x_train, y_train = data["x_train"], data["y_train"]
-# x_test, y_test = data["x_test"], data["y_test"] 
-
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
 x_test  = Flux.flatten(x_test)
@@ -68,12 +57,13 @@ end
 
 # Train the model with the ADAM optimiser
 function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
+    opt_state = Flux.setup(Adam(lrs[1]), model)
     for k in eachindex(lrs)    
-        opt_state = Flux.setup(Adam(lrs[k]), model)
         for i in 1:num_epochs
             Flux.train!(loss, model, data, opt_state)
             (i % 50 == 0) && progress(model, i)
         end
+        (k < length(lrs)) && Flux.adjust!(opt_state, lrs[k+1])
     end
 end
 
@@ -138,8 +128,8 @@ dense = Chain(
 )
 
 # Train it and save for later
-# train_mnist!(dense, train_data)
-# bson("assets/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
+train_mnist!(dense, train_data)
+bson("assets/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
 dense = BSON.load("assets/lbdn-mnist/dense_mnist.bson")["model"]
 
 # Print final results

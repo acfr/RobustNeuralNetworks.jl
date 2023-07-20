@@ -54,7 +54,7 @@ model = DiffLBDN(model_ps)
 Note that we first constructed the model parameters `model_ps`, and *then* created a callable `model`. In `RobustNeuralNetworks.jl`, model parameterisations are separated from "explicit" definitions of a model used for evaluation on data. See the [Direct & explicit parameterisations](@ref) for more information.
 
 !!! info "A layer-wise approach"
-    We have also provided single LBDN layers with [`SandwichFC`](@ref) to mimic the layer-wise construction of models like with [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense). This may be more convenient for users used to working with `Flux.jl`.
+    We have also provided single LBDN layers with [`SandwichFC`](@ref). Introduced in [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html), the [`SandwichFC`](@ref) layer is a fully-connected or dense layer with a guaranteed Lipschitz bound of 1.0. We have designed the user interface for [`SandwichFC`](@ref) to be as similar to that of [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) as possible. This may be more convenient for users used to working with `Flux.jl`.
 
     For example, we can construct an identical model to the LBDN `model` above with the following.
     ```julia
@@ -129,7 +129,8 @@ using Printf
 
 # Estimate Lipschitz lower-bound
 Empirical_Lipschitz = lip(model, xs, dx)
-@printf "Empirical lower Lipschitz bound: %.2f\n" Empirical_Lipschitz
+@printf "Imposed Lipschitz upper bound:   %.2f\n" get_lipschitz(model)
+@printf "Empirical Lipschitz lower bound: %.2f\n" Empirical_Lipschitz
 ```
 
 We can now plot the results to see what our model looks like.
