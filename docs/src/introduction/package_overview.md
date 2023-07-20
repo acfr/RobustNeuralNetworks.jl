@@ -1,6 +1,6 @@
 # Package Overview
 
-`RobustNeuralNetwork.jl` contains two classes of neural network models: Recurrent Equilibrium Networks (RENs) and Lipschitz-Bounded Deep Networks (LBDNs). This page will give a brief overview of the two model architectures and their parameterisations. 
+`RobustNeuralNetwork.jl` contains two classes of neural network models: Recurrent Equilibrium Networks (RENs) and Lipschitz-Bounded Deep Networks (LBDNs). This page gives a brief overview of the two model architectures and how they are parameterized to automatically satisfy robustness certificates. We also provide some background on the different types of robustness metrics used to construct the models.
 
 
 ## What are RENs and LBDNs?
@@ -41,7 +41,7 @@ where ``v_t, w_t \in \mathbb{R}^{n_v}`` are the inputs and outputs of neurons an
 @html_str """<p align="center"> <object type="image/png" data=$(joinpath(Main.buildpath, "../assets/ren.png")) width="35%"></object> </p>""" #hide
 ```
 
-A *Lipschitz-Bounded Deep Network* (LBDN) can be thought of as a specialisation of a REN with a state dimension of ``n_x = 0``. That is, LBDN models have no dynamics or memory associated with them. In reality, we use this simplification to construct LBDN models completely differently to RENs. We construct LBDNs as ``L``-layer feed-forward networks, much like [MLPs](https://en.wikipedia.org/wiki/Multilayer_perceptron) or [CNNs](https://en.wikipedia.org/wiki/Convolutional_neural_network), described by the following recursive equations.
+A *Lipschitz-Bounded Deep Network* (LBDN) is a (memoryless) deep neural network model with a built-in upper-bound on its Lipschitz constant. Although it is a specialisation of a REN with a state dimension of ``n_x = 0``, we use this simplification to construct LBDN models completely differently to RENs. We construct LBDNs as ``L``-layer feed-forward networks, much like [MLPs](https://en.wikipedia.org/wiki/Multilayer_perceptron) or [CNNs](https://en.wikipedia.org/wiki/Convolutional_neural_network), described by the following recursive equations.
 
 ```math
 \begin{aligned}
@@ -59,11 +59,11 @@ See [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179
 
 ## Direct & explicit parameterisations
 
-The key advantage of the models in `RobustNeuralNetworks.jl` is that they naturally satisfy a set of user-defined robustness constraints (outlined in [Robustness metrics and IQCs](@ref)). This means that we can guarantee the robustness of our neural networks *by construction*. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or LBDN. One can simply use unconstrained optimisation methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
+The key advantage of the models in `RobustNeuralNetworks.jl` is that they *naturally* satisfy a set of user-defined robustness constraints (outlined in [Robustness metrics and IQCs](@ref)). I.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
 We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
 
-In `RobustNeuralNetworks.jl`, RENs are defined by two fundamental types. Any subtype of [`AbstractRENParams`](@ref) holds all the information required to directly parameterise a REN satisfying some robustness properties. For example, to initialise the direct parameters of a *contracting* REN with 1 input, 10 states, 20 neurons, and 1 output, we would use the following.
+RENs are defined by two abstract types in `RobustNeuralNetworks.jl`. Subtypes of `AbstractRENParams` hold all the information required to directly parameterize a REN satisfying some robustness properties. For example, to initialise the direct parameters of a *contracting* REN with 1 input, 10 states, 20 neurons, 1 output, and a `relu` activation function, we use the following. The direct parameters ``\theta`` are stored in `model_ps.direct`. 
 
 ```@example build_ren
 using RobustNeuralNetworks
@@ -79,7 +79,8 @@ Subtypes of [`AbstractREN`](@ref) represent RENs in their explicit form so that 
 ```@example build_ren
 model = REN(model_params)
 
-typeof(model) <: AbstractREN
+println(typeof(model) <: AbstractREN)
+println(typeof(model_params.direct)) 		# Access direct params
 ```
 
 The same is true for [`AbstractLBDNParams`](@ref) and [`AbstractLBDN`](@ref) regarding LBDN models.
@@ -89,26 +90,26 @@ The same is true for [`AbstractLBDNParams`](@ref) and [`AbstractLBDN`](@ref) reg
 
 There are currently four REN parameterisations implemented in this package:
 
-- [`ContractingRENParams`](@ref) parameterise RENs with a user-defined upper bound on the contraction rate.
+- [`ContractingRENParams`](@ref) parameterises RENs with a user-defined upper bound on the contraction rate.
 
-- [`LipschitzRENParams`](@ref) parameterise RENs with a user-defined Lipschitz constant of $\gamma \in (0,\infty)$.
+- [`LipschitzRENParams`](@ref) parameterises RENs with a user-defined (or learnable) Lipschitz bound of $\gamma \in (0,\infty)$.
 
-- [`PassiveRENParams`](@ref) parameterise input/output passive RENs with user-tunable passivity parameter $\nu \ge 0$.
+- [`PassiveRENParams`](@ref) parameterises input/output passive RENs with user-tunable passivity parameter $\nu \ge 0$.
 
-- [`GeneralRENParams`](@ref) parameterise RENs satisfying some general behavioural constraints defined by an Integral Quadratic Constraint (IQC) with parameters (Q,S,R).
+- [`GeneralRENParams`](@ref) parameterises RENs satisfying some general behavioural constraints defined by an Integral Quadratic Constraint (IQC) with parameters (Q,S,R).
 
 Similarly, subtypes of [`AbstractLBDNParams`](@ref) define the direct parameterisation of LBDNs. There is currently only one version implemented in `RobustNeuralNetworks.jl`:
 
 - [`DenseLBDNParams`](@ref) parameterise dense (fully-connected) LBDNs. A dense LBDN is effectively a Lipschitz-bounded [`Flux.Dense`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Dense) network.
 
-See [Robustness metrics and IQCs](@ref) for an explanation of these robustness metrics.
+See [Robustness metrics and IQCs](@ref) for an explanation of these robustness metrics. We intend on adding `ConvolutionalLBDNParams` to parameterise convolutional LBDNs in future iterations of the package (see [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html)).
 
 
 ### Explicit model wrappers
 
 When training a REN or LBDN, we learn and update the direct parameters ``\theta`` and convert them to the explicit parameters ``\bar{\theta}`` only for model evaluation. The main constructors for explicit models are [`REN`](@ref) and [`LBDN`](@ref).
 
-Users familiar with [`Flux.jl`](https://fluxml.ai/) will be used to creating a model just once and then training/updating it on their data. The typical workflow is something like this.
+Users familiar with [`Flux.jl`](https://fluxml.ai/) will be used to creating a model once and then training it on their data. The typical workflow is as follows.
 
 ```@example train_dense
 using Flux
@@ -130,7 +131,7 @@ for _ in 1:50
 end
 ```
 
-When using a model constructed from [`REN`](@ref) or [`LBDN`](@ref), we need to differentiate through the mapping from direct (learnable) parameters to the explicit model. We therefore need a setup where the model construction is actually part of the loss function. Here's an example with an [`LBDN`](@ref).
+When training a model constructed from [`REN`](@ref) or [`LBDN`](@ref), we need to back-propagate through the mapping from direct (learnable) parameters to the explicit model. We must therefore include the model construction as part of the loss function. If we do not, then the auto-differentiation engine has no knowledge of how the model parameters affect the loss, and will return zero gradients. Here is an example with an [`LBDN`](@ref), where the `model` is defined by the direct parameterization stored in `model_params`.
 
 ```@example train_lbdn
 using Flux
@@ -159,29 +160,34 @@ end
 
 ### Separating parameters and models is efficient
 
-You might ask: why not write a wrapper which just computes the explicit parameters each time the model is called? That would save us having to re-create a new `model` in the loss function. 
+For the sake of convenience, we have included the model wrappers [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref) as alternatives to [`REN`](@ref), and [`LBDN`](@ref), respectively. These wrappers compute the explicit parameters each time the model is called rather than just once when they are constructed. Any model created with these wrappers can therefore be used exactly the same way as a regular `Flux.jl` model, and there is no need for model construction in the loss function. One can simply replace the definition of the `Flux.Chain` model in the demo cell above with
 
-In fact, we have. See [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref). Any model created with these wrappers can be used exactly the same way as a regular [`Flux.jl`](https://fluxml.ai/) model (no need for model construction in the loss function). This is illustrated in examples like [Fitting a Curve with LBDN](@ref) and [Image Classification with LBDN](@ref).
+```@example train_lbdn
+model_params = DenseLBDNParams{Float64}(1, [10], 1; nl=relu)
+model = DiffLBDN(model_params)
+```
 
-The reason we nominally keep the `model_params` and `model` separate with [`REN`](@ref) and [`LBDN`](@ref) is to offer flexibility. The computational bottleneck in our models is converting from the direct to explicit parameters (mapping ``\theta \mapsto \bar{\theta}``). Direct parameters are stored in `model_params`, while explicit parameters are computed when the `model` is created and are stored in it. We can see this from our earlier example with the contracting REN:
+and train the LBDN just like any other `Flux.jl` model. We use these wrappers in many of the examples (eg: [Image Classification with LBDN](@ref)).
+
+The reason we nominally keep the `model_params` and `model` separate with [`REN`](@ref) and [`LBDN`](@ref) is to offer flexibility. The computational bottleneck in training a REN or LBDN is converting from the direct to explicit parameters (mapping ``\theta \mapsto \bar{\theta}``). Direct parameters are stored in `model_params`, while explicit parameters are computed when the `model` is created and are stored within it. We can see this from our earlier example with the contracting REN:
 
 ```@example build_ren
 println(typeof(model_params.direct))
 println(typeof(model.explicit))
 ```
 
-In some applications (eg: reinforcement learning), a model is called many times with the same explicit parameters ``\bar{\theta}`` before its learnable parameters ``\theta`` are updated. It's therefore efficient to store the explicit parameters, use them many times, and then update them only when the learnable parameters change. We can't store the direct and explicit parameters in the same `model` object because [`Flux.jl` does not permit array mutation](https://fluxml.ai/Zygote.jl/stable/limitations/). Instead, we separate the two.
+In some applications (eg: reinforcement learning), a model is called many times with the same explicit parameters ``\bar{\theta}`` before its learnable parameters ``\theta`` are updated. It's therefore significantly efficient to store the explicit parameters, use them many times, and then update them only when the learnable parameters change. We can't store the direct and explicit parameters in the same `model` object since auto-differentiation in [`Flux.jl` does not permit array mutation](https://fluxml.ai/Zygote.jl/stable/limitations/). Instead, we separate the two.
 
 !!! info "Which wrapper should I use?"
-	Model wrappers like [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref) re-compute the explicit parameters every time the model is called. They are the most convenient choice for applications where the learnable parameters are updated after one model call (eg: image classification, curve fitting, etc.). 
+	The model wrappers [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref)  re-compute the explicit parameters every time the model is called. In applications where the learnable parameters are updated after one model call (eg: image classification), it is often more convenient and equally fast to use these wrappers.
 	
-	For applications where the model is called many times (eg: in a feedback loop) before updating it, use [`REN`](@ref) and [`LBDN`](@ref). They compute the explicit model when constructed and store it for later use, making them more efficient.
+	In applications where the model is called many times before updating it (eg: reinforcement learning), use \verb|REN| or \verb|LBDN|. They compute the explicit model when constructed and store it for later use, making them more efficient.
 
 See [Can't I just use `DiffLBDN`?](@ref) in [Reinforcement Learning with LBDN](@ref) for a demonstration of this trade-off.
 
 ## Robustness metrics and IQCs
 
-There are a number of different robustness criteria which our RENs can satisfy. Some relate to the internal dynamics of the model, others relate to the input/output map. LBDNs are less general, and are specifically constructed to satisfy Lipschitz bounds. See the section on [Lipschitz bounds (smoothness)](@ref) below.
+All neural network models in `RobustNeuralNetworks.jl` are designed to satisfy a set of user-defined robustness constraints. There are a number of different robustness criteria which our RENs can satisfy. Some relate to the internal dynamics of the model, others relate to the input-output map. LBDNs are less general, and are specifically constructed to satisfy Lipschitz bounds. See the section on [Lipschitz bounds (smoothness)](@ref) below.
 
 ### Contracting systems
 
