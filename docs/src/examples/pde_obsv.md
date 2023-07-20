@@ -100,7 +100,7 @@ data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batches, shuffle=tru
 
 ## 3. Define a contracting REN
 
-Now we can define a contracting REN to parameterize the observer mentioned above. We'll use a contracting REN with ``q=500`` neurons, and output mapping as ``[C_2,D_{21},D_{22}]=[I,0,0].`` [`DiffREN`](@ref) constructs a differentialble REN from its direct parametrization, i.e. [`ContractingRENParams`](@ref) (see the [Package Overview](@ref) for more detail) and updates the parameter every time the model is called.
+Now we can define a contracting REN to parameterise the observer mentioned above. We'll use a contracting REN with ``q=500`` neurons, and output mapping as ``[C_2,D_{21},D_{22}]=[I,0,0].`` [`DiffREN`](@ref) constructs a differentialble REN from its direct parametrization, i.e. [`ContractingRENParams`](@ref) (see the [Package Overview](@ref) for more detail) and updates the parameter every time the model is called.
 
 ```julia
 using RobustNeuralNetworks
@@ -133,7 +133,7 @@ function loss(model, xn, x, u)
     return mean(norm(xpred[:, i] - xn[:, i]).^2 for i in 1:size(x, 2))
 end
 ```
-We use SGD with the [`Adam`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam) optimizer to train te REN. We use [`Flux.withgradient`](https://fluxml.ai/Flux.jl/stable/training/zygote/#Zygote.withgradient-Tuple{Any,%20Vararg{Any}}) to calucate the gradient and the value of the loss function, then use [`Flux.update!`](https://fluxml.ai/Flux.jl/stable/training/reference/#Optimisers.update!) to update the trainable parameters of the REN. We start from a learning rate of ``10^{-3}`` and decrease it by powers of ``10`` once when the loss function does not decrease. The training loop will stop when it reaches the minimal learning rate ``10^{-7}`` or when we have reached ``50`` training epochs. Once the model has been trained, we can save it for later with the [`BSON`](https://github.com/JuliaIO/BSON.jl) package.
+We use SGD with the [`Adam`](https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam) optimiser to train te REN. We use [`Flux.withgradient`](https://fluxml.ai/Flux.jl/stable/training/zygote/#Zygote.withgradient-Tuple{Any,%20Vararg{Any}}) to calucate the gradient and the value of the loss function, then use [`Flux.update!`](https://fluxml.ai/Flux.jl/stable/training/reference/#Optimisers.update!) to update the trainable parameters of the REN. We start from a learning rate of ``10^{-3}`` and decrease it by powers of ``10`` once when the loss function does not decrease. The training loop will stop when it reaches the minimal learning rate ``10^{-7}`` or when we have reached ``50`` training epochs. Once the model has been trained, we can save it for later with the [`BSON`](https://github.com/JuliaIO/BSON.jl) package.
 
 ```julia
 # Train the model

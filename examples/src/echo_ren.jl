@@ -86,7 +86,7 @@ z, u, _= sim_echo_state_network(d, θ)
 J = norm(z, 1) + 1e-4*(sumsquares(u) + norm(θ, 2))
 constraints = [u < 5, u > -5]
 
-# Optimize the closed-loop response
+# Optimise the closed-loop response
 problem = minimize(J, constraints)
 Convex.solve!(problem, Mosek.Optimizer)
 

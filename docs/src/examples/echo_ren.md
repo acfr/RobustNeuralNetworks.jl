@@ -249,7 +249,7 @@ With the problem all nicely defined, all we have to do is solve it and investiga
 using BSON
 using Mosek, MosekTools
 
-# Optimize the closed-loop response
+# Optimise the closed-loop response
 problem = minimize(J, constraints)
 Convex.solve!(problem, Mosek.Optimizer)
 
