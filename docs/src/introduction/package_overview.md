@@ -1,6 +1,6 @@
 # Package Overview
 
-`RobustNeuralNetwork.jl` contains two classes of neural network models: Recurrent Equilibrium Networks (RENs) and Lipschitz-Bounded Deep Networks (LBDNs). This page gives a brief overview of the two model architectures and how they are parameterized to automatically satisfy robustness certificates. We also provide some background on the different types of robustness metrics used to construct the models.
+`RobustNeuralNetwork.jl` contains two classes of neural network models: Recurrent Equilibrium Networks (RENs) and Lipschitz-Bounded Deep Networks (LBDNs). This page gives a brief overview of the two model architectures and how they are parameterised to automatically satisfy robustness certificates. We also provide some background on the different types of robustness metrics used to construct the models.
 
 
 ## What are RENs and LBDNs?
@@ -63,7 +63,7 @@ The key advantage of the models in `RobustNeuralNetworks.jl` is that they *natur
 
 We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
 
-RENs are defined by two abstract types in `RobustNeuralNetworks.jl`. Subtypes of `AbstractRENParams` hold all the information required to directly parameterize a REN satisfying some robustness properties. For example, to initialise the direct parameters of a *contracting* REN with 1 input, 10 states, 20 neurons, 1 output, and a `relu` activation function, we use the following. The direct parameters ``\theta`` are stored in `model_ps.direct`. 
+RENs are defined by two abstract types in `RobustNeuralNetworks.jl`. Subtypes of `AbstractRENParams` hold all the information required to directly parameterise a REN satisfying some robustness properties. For example, to initialise the direct parameters of a *contracting* REN with 1 input, 10 states, 20 neurons, 1 output, and a `relu` activation function, we use the following. The direct parameters ``\theta`` are stored in `model_ps.direct`. 
 
 ```@example build_ren
 using RobustNeuralNetworks
