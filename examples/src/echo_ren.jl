@@ -6,7 +6,7 @@ Pkg.activate("../")
 
 using BSON
 using CairoMakie
-using ControlSystems
+using ControlSystemsBase
 using Convex
 using LinearAlgebra
 using Mosek, MosekTools
