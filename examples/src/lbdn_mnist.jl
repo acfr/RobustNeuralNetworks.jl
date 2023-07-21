@@ -31,17 +31,6 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 
-# # Save a subset for later, useful for the docs
-# bson("assets/lbdn-mnist/mnist_data.bson", Dict(
-#     "x_train" => x_train[:,:,1:1000],
-#     "y_train" => y_train[1:1000],
-#     "x_test" => x_test[:,:,1:100],
-#     "y_test" => y_test[1:100]
-# ))
-# data = BSON.load("assets/lbdn-mnist/mnist_data.bson")
-# x_train, y_train = data["x_train"], data["y_train"]
-# x_test, y_test = data["x_test"], data["y_test"] 
-
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
 x_test  = Flux.flatten(x_test)
@@ -68,19 +57,20 @@ end
 
 # Train the model with the ADAM optimiser
 function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
+    opt_state = Flux.setup(Adam(lrs[1]), model)
     for k in eachindex(lrs)    
-        opt_state = Flux.setup(Adam(lrs[k]), model)
         for i in 1:num_epochs
             Flux.train!(loss, model, data, opt_state)
             (i % 50 == 0) && progress(model, i)
         end
+        (k < length(lrs)) && Flux.adjust!(opt_state, lrs[k+1])
     end
 end
 
 # Train and save the model for later use
 train_mnist!(model, train_data)
-bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
-model = BSON.load("assets/lbdn-mnist/lbdn_mnist.bson")["model"]
+bson("../results/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
+model = BSON.load("../results/lbdn-mnist/lbdn_mnist.bson")["model"]
 
 # Print final results
 train_acc = accuracy(model, x_train, y_train)*100
@@ -91,7 +81,7 @@ println("Test accuracy:     $(round(test_acc,digits=2))%\n")
 
 # Make a couple of example plots
 indx = rand(rng, 1:100, 3)
-f1 = Figure(resolution = (800, 300), fontsize=21)
+fig = Figure(resolution = (800, 300), fontsize=21)
 for i in eachindex(indx)
 
     # Get data and do prediction
@@ -106,7 +96,7 @@ for i in eachindex(indx)
 
     # Plot results
     ax, _ = image(
-        f1[1,i], xmat, axis=(
+        fig[1,i], xmat, axis=(
             yreversed = true, 
             aspect = DataAspect(), 
             title = "Label: $(yval), Prediction: $(ŷval)",
@@ -120,8 +110,8 @@ for i in eachindex(indx)
     ax.yticklabelsvisible = false
 
 end
-display(f1)
-save("../results/lbdn_mnist.svg", f1)
+display(fig)
+save("../results/lbdn-mnist/lbdn_mnist.svg", fig)
 
 
 #######################################################################
@@ -138,9 +128,9 @@ dense = Chain(
 )
 
 # Train it and save for later
-# train_mnist!(dense, train_data)
-# bson("assets/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
-dense = BSON.load("assets/lbdn-mnist/dense_mnist.bson")["model"]
+train_mnist!(dense, train_data)
+bson("../results/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
+dense = BSON.load("../results/lbdn-mnist/dense_mnist.bson")["model"]
 
 # Print final results
 train_acc = accuracy(dense, x_train, y_train)*100
@@ -169,4 +159,4 @@ lines!(ax1, ϵs, dense_error, label="Dense")
 xlims!(ax1, 0, 0.8)
 axislegend(ax1, position=:lb)
 display(fig)
-save("../results/lbdn_mnist_robust.svg", fig)
+save("../results/lbdn-mnist/lbdn_mnist_robust.svg", fig)

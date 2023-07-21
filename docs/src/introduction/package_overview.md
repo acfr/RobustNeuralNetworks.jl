@@ -59,7 +59,7 @@ See [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179
 
 ## Direct & explicit parameterisations
 
-The key advantage of the models in `RobustNeuralNetworks.jl` is that they *naturally* satisfy a set of user-defined robustness constraints (outlined in [Robustness metrics and IQCs](@ref)). I.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
+The key advantage of the models in `RobustNeuralNetworks.jl` is that they *naturally* satisfy a set of user-defined robustness constraints (outlined in [Robustness metrics and IQCs](@ref)). I.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimisation methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
 We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy some specific linear matrix inequalities (see [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for details). The *learnable parameters* of a model are a set of free variables ``\theta \in \mathbb{R}^N`` which are completely unconstrained. When the set of learnable parameters is exactly ``\mathbb{R}^N`` like this, we call it a **direct parameterisation**. The equations above describe the **explicit parameterisation** of RENs and LBDNs: a callable model that we can evaluate on data. For a REN, the *explicit parameters* are ``\bar{\theta} = [W, b]``, and for an LBDN they are ``\bar{\theta} = [W_0, b_0, \ldots, W_L, b_L]``.
 
@@ -131,7 +131,7 @@ for _ in 1:50
 end
 ```
 
-When training a model constructed from [`REN`](@ref) or [`LBDN`](@ref), we need to back-propagate through the mapping from direct (learnable) parameters to the explicit model. We must therefore include the model construction as part of the loss function. If we do not, then the auto-differentiation engine has no knowledge of how the model parameters affect the loss, and will return zero gradients. Here is an example with an [`LBDN`](@ref), where the `model` is defined by the direct parameterization stored in `model_params`.
+When training a model constructed from [`REN`](@ref) or [`LBDN`](@ref), we need to back-propagate through the mapping from direct (learnable) parameters to the explicit model. We must therefore include the model construction as part of the loss function. If we do not, then the auto-differentiation engine has no knowledge of how the model parameters affect the loss, and will return zero gradients. Here is an example with an [`LBDN`](@ref), where the `model` is defined by the direct parameterisation stored in `model_params`.
 
 ```@example train_lbdn
 using Flux

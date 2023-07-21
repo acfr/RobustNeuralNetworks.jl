@@ -140,7 +140,7 @@ end
 
 # Train and save the model
 tloss, loss_std = train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
-bson("../results/pde_obsv.bson", 
+bson("../results/ren-obsv/pde_obsv.bson", 
     Dict(
         "model" => model, 
         "training_loss" => tloss, 
@@ -192,4 +192,4 @@ plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]), 3)
 Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
 
 display(f1)
-save("../results/ren_pde.png", f1) # Note: this takes a long time...
+save("../results/ren-obsv/ren_pde.png", f1) # Note: this takes a long time...

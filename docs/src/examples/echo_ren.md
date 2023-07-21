@@ -1,6 +1,6 @@
 # (Convex) Nonlinear Control with REN
 
-*This example was first presented in Section IX of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161).*
+*This example was first presented in Section IX of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161). Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/echo_ren.jl).*
 
 
 RENs and LBDNs can be used for a lot more than just learning-based problems. In this example, we'll see how RENs can be used to design nonlinear feedback controllers with stability guarantees for linear dynamical systems with constraints. Introducing constraints (eg: minimum/maximum control inputs) often means that nonlinear controllers perform better than linear policies. A common approach is to use *Model Predictive Control* ([MPC](https://en.wikipedia.org/wiki/Model_predictive_control)). In our case, we'll use convex optimisation to design a nonlinear controller. The controller will be an [*echo state network*](https://en.wikipedia.org/wiki/Echo_state_network) based on a contracting REN. We'll use this alongside the [*Youla-Kucera parameterisation*](https://www.sciencedirect.com/science/article/pii/S1367578820300249) to guarantee stability of the final controller.
@@ -249,7 +249,7 @@ With the problem all nicely defined, all we have to do is solve it and investiga
 using BSON
 using Mosek, MosekTools
 
-# Optimize the closed-loop response
+# Optimise the closed-loop response
 problem = minimize(J, constraints)
 Convex.solve!(problem, Mosek.Optimizer)
 
