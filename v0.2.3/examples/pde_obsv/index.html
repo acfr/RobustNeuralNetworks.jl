@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>PDE Observer Design with REN · RobustNeuralNetworks.jl</title><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="RobustNeuralNetworks.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">RobustNeuralNetworks.jl</a></span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Introduction</span><ul><li><a class="tocitem" href="../../introduction/getting_started/">Getting Started</a></li><li><a class="tocitem" href="../../introduction/package_overview/">Package Overview</a></li><li><a class="tocitem" href="../../introduction/developing/">Contributing to the Package</a></li></ul></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../lbdn_curvefit/">Fitting a Curve</a></li><li><a class="tocitem" href="../lbdn_mnist/">Image Classification</a></li><li><a class="tocitem" href="../rl/">Reinforcement Learning</a></li><li><a class="tocitem" href="../box_obsv/">Observer Design</a></li><li><a class="tocitem" href="../echo_ren/">(Convex) Nonlinear Control</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../../lib/models/">Model Wrappers</a></li><li><a class="tocitem" href="../../lib/model_params/">Model Parameterisations</a></li><li><a class="tocitem" href="../../lib/functions/">Functions</a></li></ul></li><li><a class="tocitem" href="../../api/">API</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>PDE Observer Design with REN</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>PDE Observer Design with REN</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/docs/src/examples/pde_obsv.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="PDE-Observer-Design-with-REN"><a class="docs-heading-anchor" href="#PDE-Observer-Design-with-REN">PDE Observer Design with REN</a><a id="PDE-Observer-Design-with-REN-1"></a><a class="docs-heading-anchor-permalink" href="#PDE-Observer-Design-with-REN" title="Permalink"></a></h1><p><em>This example was first presented in Section VIII of <a href="https://ieeexplore.ieee.org/document/10179161">Revay, Wang &amp; Manchester (2021)</a>. Full example code can be found <a href="https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/ren_obsv_pde.jl">here</a>.</em></p><p>This example considers learning a state observer for a reaction-diffusion PDE. See <a href="../box_obsv/#Observer-Design-with-REN">Observer Design with REN</a> for a brief explanation of the theory, and <a href="https://ieeexplore.ieee.org/document/10179161">Revay, Wang &amp; Manchester (2021)</a> for a detailed overview of the original problem.</p><h2 id=".-Problem-statement"><a class="docs-heading-anchor" href="#.-Problem-statement">1. Problem statement</a><a id=".-Problem-statement-1"></a><a class="docs-heading-anchor-permalink" href="#.-Problem-statement" title="Permalink"></a></h2><p>We consider designing an observer for the following semi-linear reaction-diffusion partial differential equation.</p><p class="math-container">\[\begin{aligned}
+\frac{\partial \xi(z,t)}{\partial t} &amp;= \frac{\partial^2 \xi(z,t)}{\partial z^2}+R(\xi,z,t)\\
+\xi (z,0)&amp;=1\\
+\xi(1,t)&amp;=\xi(0,t)=b(t)\\
+y&amp;=g(\xi,z,t)\\
+R(\xi, z, t)&amp;=\frac{1}{2}\xi(1-\xi)(\xi-\frac{1}{2})
+\end{aligned}\]</p><p>where the state <span>$\xi(z,t)$</span> is a function of both spatial coordinate <span>$z \in [0,1]$</span> and time. The boundary condition is considered to be a known input and we assume there is a single measurement taken from the center of the spatial domain: <span>$y(t)=\xi(0.5,t).$</span> We discretize <span>$z$</span> into <span>$N$</span> intervals with <span>$z^i=i\Delta z.$</span> Then the state of spatial coordinate is described by <span>$\xi^i_t=\xi(z^i,t).$</span> The dynamics over a time period <span>$\Delta t$</span> can be approximated using the finite difference <span>$\frac{\partial \xi(z,t)}{\partial t} \approx \frac{\xi^i_{t+\Delta t}-\xi ^i_t}{\Delta t}.$</span> Substituting these into the reaction-diffusion PDEs, we can develop the state-space form:</p><p class="math-container">\[\bar{\xi}_{t+\Delta t}=a_{RD}(\bar{\xi}_t,b_t), \quad y_t=c_{RD}(\bar{\xi}_t)\]</p><pre><code class="language-julia hljs">using LinearAlgebra
+using Statistics
+
+dtype = Float64
+# Problem setup
+nx = 51             # Number of states
+n_in = 1            # Number of inputs
+L = 10.0            # Size of spatial domain
+sigma = 0.1         # Used to construct time step
+
+# Discretise space and time
+dx = L / (nx - 1)
+dt = sigma * dx^2
+
+# State dynamics and output functions f, g
+function f(u0, d)
+    u, un = copy(u0), copy(u0)
+    for _ in 1:5
+        u = copy(un) 
+
+        # FD approximation of heat equation
+        f_local(v) = v[2:end - 1, :] .* (1 .- v[2:end - 1, :]) .* ( v[2:end - 1, :] .- 0.5)
+        laplacian(v) = (v[1:end - 2, :] + v[3:end, :] - 2v[2:end - 1, :]) / dx^2
+        
+        # Euler step for time
+        un[2:end - 1, :] = u[2:end - 1, :] + dt * (laplacian(u) + f_local(u) / 2 )
+
+        # Boundary condition
+        un[1:1, :] = d;
+        un[end:end, :] = d;
+    end
+    return u
+end
+
+g(u, d) = [d; u[end ÷ 2:end ÷ 2, :]]
+</code></pre><h2 id=".-Generate-training-data"><a class="docs-heading-anchor" href="#.-Generate-training-data">2. Generate training data</a><a id=".-Generate-training-data-1"></a><a class="docs-heading-anchor-permalink" href="#.-Generate-training-data" title="Permalink"></a></h2><p>We will generate training data for <span>$t=0,\cdots,10^5\Delta t$</span> by simulating the system with <span>$N=50$</span> intervals and <span>$10^5$</span> time steps with the stochastic input <span>$b_{t+1}=b_t+0.05w_t$</span> where <span>$w_t\sim \mathcal{N}[0,1]$</span></p><pre><code class="language-julia hljs">using Random
+
+# Generate simulated data
+function get_data(npoints=1000; init=zeros)
+
+    X = init(dtype, nx, npoints)
+    U = init(dtype, n_in, npoints)
+
+    for t in 1:npoints-1
+
+        # Next state
+        X[:, t+1] = f(X[:, t], U[:, t])
+        
+        # Next input bₜ
+        u_next = U[t] + 0.05f0*randn(dtype)
+        (u_next &gt; 1) &amp;&amp; (u_next = 1)
+        (u_next &lt; 0) &amp;&amp; (u_next = 0)
+        U[t + 1] = u_next
+    end
+    return X, U
+end
+
+X, U = get_data(100000; init=zeros)
+xt = X[:, 1:end - 1]
+xn = X[:, 2:end]
+y = g(X, U)
+
+# Store for the observer (inputs are inputs to observer)
+input_data = [U; y][:, 1:end - 1]
+batches = 200
+data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batches, shuffle=true)</code></pre><h2 id=".-Define-a-contracting-REN"><a class="docs-heading-anchor" href="#.-Define-a-contracting-REN">3. Define a contracting REN</a><a id=".-Define-a-contracting-REN-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-contracting-REN" title="Permalink"></a></h2><p>Now we can define a contracting REN to parameterise the observer mentioned above. We&#39;ll use a contracting REN with <span>$q=500$</span> neurons, and output mapping as <span>$[C_2,D_{21},D_{22}]=[I,0,0].$</span> <a href="../../lib/models/#RobustNeuralNetworks.DiffREN"><code>DiffREN</code></a> constructs a differentialble REN from its direct parametrization, i.e. <a href="../../lib/model_params/#RobustNeuralNetworks.ContractingRENParams"><code>ContractingRENParams</code></a> (see the <a href="../../introduction/package_overview/#Package-Overview">Package Overview</a> for more detail) and updates the parameter every time the model is called.</p><pre><code class="language-julia hljs">using RobustNeuralNetworks
+
+# Constuct a REN
+nv = 500
+nu = size(input_data, 1)
+ny = nx
+model_params = ContractingRENParams{dtype}(
+    nu, nx, nv, ny; 
+    nl = tanh, ϵ=0.01,
+    polar_param = false, 
+    output_map = false # Define the output mapping
+)
+model = DiffREN(model_params)</code></pre><h2 id=".-Train-the-model"><a class="docs-heading-anchor" href="#.-Train-the-model">4. Train the model</a><a id=".-Train-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Train-the-model" title="Permalink"></a></h2><p>Now we can train the observer to give the prediction of system states. First, we need to define the loss function <span>$\mathcal{L}(\tilde z) = \frac{1}{T} \sum^{T-1}_{t=0}|a_{RD}(\tilde{\xi}_t,\tilde{b}_t)-f_o(\tilde{\xi}_t,\tilde{b}_t,\tilde{y}_t)|^2,$</span> where <span>$\tilde{z} = (\tilde{\xi}_t,\tilde{y}_t,\tilde{b}_t)$</span> is defined as the the training data generated from previous section. This cost funtion calculates the one step ahead prediction error.</p><pre><code class="language-julia hljs">using BSON
+using Flux
+using Formatting
+
+# Define a loss function
+function loss(model, xn, x, u)
+    xpred = model(x, u)[1]
+    return mean(norm(xpred[:, i] - xn[:, i]).^2 for i in 1:size(x, 2))
+end</code></pre><p>We use SGD with the <a href="https://fluxml.ai/Flux.jl/stable/training/optimisers/#Flux.Optimise.Adam"><code>Adam</code></a> optimiser to train te REN. We use <a href="https://fluxml.ai/Flux.jl/stable/training/zygote/#Zygote.withgradient-Tuple{Any,%20Vararg{Any}}"><code>Flux.withgradient</code></a> to calucate the gradient and the value of the loss function, then use <a href="https://fluxml.ai/Flux.jl/stable/training/reference/#Optimisers.update!"><code>Flux.update!</code></a> to update the trainable parameters of the REN. We start from a learning rate of <span>$10^{-3}$</span> and decrease it by powers of <span>$10$</span> once when the loss function does not decrease. The training loop will stop when it reaches the minimal learning rate <span>$10^{-7}$</span> or when we have reached <span>$50$</span> training epochs. Once the model has been trained, we can save it for later with the <a href="https://github.com/JuliaIO/BSON.jl"><code>BSON</code></a> package.</p><pre><code class="language-julia hljs"># Train the model
+function train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
+
+    # Set up the optimiser
+    opt_state = Flux.setup(Adam(lr), model)
+
+    mean_loss, loss_std = [1e5], []
+    for epoch in 1:Epochs
+        batch_loss = []
+        for (xni, xi, ui) in data
+
+            # Get gradient and store loss
+            train_loss, ∇J = Flux.withgradient(loss, model, xni, xi, ui)
+            Flux.update!(opt_state, model, ∇J[1])
+        
+            # Store losses for later
+            push!(batch_loss, train_loss)
+            printfmt(&quot;Epoch: {1:2d}\tTraining loss: {2:1.4E} \t lr={3:1.1E}\n&quot;, epoch, train_loss, lr)
+        end
+
+        # Print stats through epoch
+        println(&quot;------------------------------------------------------------------------&quot;)
+        printfmt(&quot;Epoch: {1:2d} \t mean loss: {2:1.4E}\t std: {3:1.4E}\n&quot;, epoch, mean(batch_loss), std(batch_loss))
+        println(&quot;------------------------------------------------------------------------&quot;)
+        push!(mean_loss, mean(batch_loss))
+        push!(loss_std, std(batch_loss))
+
+        # Check for decrease in loss
+        if mean_loss[end] &gt;= mean_loss[end - 1]
+            println(&quot;Reducing Learning rate&quot;)
+            lr *= 0.1
+            Flux.adjust!(opt_state, lr)
+            (lr &lt;= min_lr) &amp;&amp; (return mean_loss, loss_std)
+        end
+    end
+    return mean_loss, loss_std
+end
+
+# Train and save the model
+tloss, loss_std = train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
+bson(&quot;../results/pde_obsv.bson&quot;, 
+    Dict(
+        &quot;model&quot; =&gt; model, 
+        &quot;training_loss&quot; =&gt; tloss, 
+        &quot;loss_std&quot; =&gt; loss_std
+    )
+)</code></pre><p>Running the training loop can take an hour or two, so we&#39;ve saved one in <code>/examples/results/pde_obsv.bson</code>. You can load it with the following code (you may need to change the file path depending on where you run this from).</p><pre><code class="language-julia hljs">using BSON
+model = BSON.load(&quot;./examples/results/pde_obsv.bson&quot;)[&quot;model&quot;]</code></pre><h2 id=".-Evaluate-the-model"><a class="docs-heading-anchor" href="#.-Evaluate-the-model">5. Evaluate the model</a><a id=".-Evaluate-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Evaluate-the-model" title="Permalink"></a></h2><p>Now we can evaluate the performance of the learned observer using REN. We&#39;ll first generate some test data by simulating the system for <span>$2000$</span> time steps, and calculate the prediction using the observer.</p><pre><code class="language-julia hljs"># Test observer
+T = 2000
+init = (args...) -&gt; 0.5*ones(args...)
+x, u = get_data(T, init=init)
+y = [g(x[:, t:t], u[t]) for t in 1:T]
+
+batches = 1
+observer_inputs = [repeat([ui; yi], outer=(1, batches)) for (ui, yi) in zip(u, y)]
+
+# Simulate the model through time
+function simulate(model::AbstractREN, x0, u)
+    recurrent = Flux.Recur(model, x0)
+    output = recurrent.(u)
+    return output
+end
+x0 = init_states(model, batches)
+xhat = simulate(model, x0, observer_inputs)
+Xhat = reduce(hcat, xhat)</code></pre><p>Now we can plot the result of the ground truth and the prediction, as well as the error between the generated data and observer.</p><pre><code class="language-julia hljs">using CairoMakie
+
+# Make a plot to show PDE and errors
+function plot_heatmap(f1, xdata, i)
+
+    # Make and label the plot
+    xlabel = i &lt; 3 ? &quot;&quot; : &quot;Time steps&quot;
+    ylabel = i == 1 ? &quot;True&quot; : (i == 2 ? &quot;Observer&quot; : &quot;Error&quot;)
+    ax, _ = heatmap(f1[i,1], xdata&#39;, colormap=:thermal, axis=(xlabel=xlabel, ylabel=ylabel))
+
+    # Format the axes
+    ax.yticksvisible = false
+    ax.yticklabelsvisible = false
+    if i &lt; 3
+        ax.xticksvisible = false
+        ax.xticklabelsvisible = false
+    end
+    xlims!(ax, 0, T)
+end
+
+f1 = Figure(resolution=(500,400))
+plot_heatmap(f1, x, 1)
+plot_heatmap(f1, Xhat[:, 1:batches:end], 2)
+plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]), 3)
+Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
+
+display(f1)</code></pre><p>In the plot, the x-axis is the time dimension and the y-axis is the spatial dimension. <img src="../../assets/ren-obsv/ren_pde.png" alt/></p></article><nav class="docs-footer"><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 21 July 2023 02:21">Friday 21 July 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
