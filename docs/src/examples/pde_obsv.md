@@ -1,5 +1,6 @@
 # PDE Observer Design with REN
-*This example was first presented in Section VIII of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161).*
+
+*This example was first presented in Section VIII of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161). Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/ren_obsv_pde.jl).*
 
 
 This example considers learning a state observer for a reaction-diffusion PDE. See [Observer Design with REN](@ref) for a brief explanation of the theory, and [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161) for a detailed overview of the original problem.

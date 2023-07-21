@@ -1,5 +1,7 @@
 # Fitting a Curve with LBDN
 
+*Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/lbdn_curvefit.jl).*
+
 For our first example, let's fit a Lipschitz-bounded Deep Network (LBDN) to a curve in one dimension. Consider the step function function below.
 ```math
 f(x) = 

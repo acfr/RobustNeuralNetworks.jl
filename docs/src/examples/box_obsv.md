@@ -1,8 +1,12 @@
 # Observer Design with REN
 
+*Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/ren_obsv_box.jl).*
+
 In [Reinforcement Learning with LBDN](@ref), we designed a controller for a simple nonlinear system consisting of a box sitting in a tub of fluid, suspended between two springs. We assumed the controller had *full state knowledge*: i.e, it had access to both the position and velocity of the box. In many practical situations, we might only be able to measure some of the system states. For example, our box may have a camera to estimate its position but not its velocity. In these cases, we need a [*state observer*](https://en.wikipedia.org/wiki/State_observer) to estimate the full state of the system for feedback control.
 
-In this example, we will show how a contracting REN can be used to learn stable observers for dynamical systems. A common approach to designing state estimators for nonlinear systems is the *Extended Kalman Filter* ([EKF](https://en.wikipedia.org/wiki/Extended_Kalman_filter)). In our case, we'll consider observer design as a supervised learning problem. For a detailed explanation of the theory behind this example, please refer to Section VIII of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161). See [PDE Observer Design with REN](@ref) for explanation of a more complex example from the paper.
+In this example, we will show how a contracting REN can be used to learn stable observers for dynamical systems. A common approach to designing state estimators for nonlinear systems is the *Extended Kalman Filter* ([EKF](https://en.wikipedia.org/wiki/Extended_Kalman_filter)). In our case, we'll consider observer design as a supervised learning problem. For a detailed explanation of the theory behind this example, please refer to Section VIII of [Revay, Wang & Manchester (2021)](https://ieeexplore.ieee.org/document/10179161). 
+
+See [PDE Observer Design with REN](@ref) for explanation of a more complex example from the paper.
 
 ## 1. Background theory
 

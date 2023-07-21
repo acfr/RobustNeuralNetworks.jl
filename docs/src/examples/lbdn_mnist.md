@@ -1,5 +1,7 @@
 # Image Classification with LBDN
 
+*Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/lbdn_mnist.jl).*
+
 Our next example features an LBDN trained to classify the [MNIST](https://en.wikipedia.org/wiki/MNIST_database) dataset. We showed in [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html) that training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. In this example, we will demonstrate how to train an LBDN model on the MNIST dataset with the following steps:
 1. Load the training and test data
 2. Define a Lipschitz-bounded model
