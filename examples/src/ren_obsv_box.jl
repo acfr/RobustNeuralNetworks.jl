@@ -168,4 +168,4 @@ function plot_results(x, x̂, ts)
     return fig
 end
 fig = plot_results(x_test, xhat, ts_test)
-save("../results/ren_box_obsv.svg", fig)
+save("../results/ren-obsv/ren_box_obsv.svg", fig)

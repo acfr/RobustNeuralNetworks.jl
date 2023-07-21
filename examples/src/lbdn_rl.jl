@@ -123,8 +123,8 @@ function plot_box_learning(costs, z, qr)
     Δq = q .- qr .* ones(length(z), length(qr_test))
     Δu = u .- k*qr .* ones(length(z), length(qr_test))
 
-    f1 = Figure(resolution = (600, 400))
-    ga = f1[1,1] = GridLayout()
+    fig = Figure(resolution = (600, 400))
+    ga = fig[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
     ax1 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position error (m)", )
@@ -143,12 +143,12 @@ function plot_box_learning(costs, z, qr)
     lines!(ax3, t, zeros(size(t)), color=:red, linestyle=:dash)
     
     xlims!.((ax1,ax2,ax3), (t[1],), (t[end],))
-    display(f1)
-    return f1
+    display(fig)
+    return fig
 end
 
 fig = plot_box_learning(costs, z_lbdn, qr_test)
-save("../results/lbdn_rl.svg", fig)
+save("../results/lbdn-rl/lbdn_rl.svg", fig)
 
 
 # ---------------------------------
@@ -179,9 +179,9 @@ lbdn_compute_times(2; epochs=1)
 comp_times = reduce(hcat, lbdn_compute_times.(sizes))
 
 # Plot the results
-f1 = Figure(resolution = (500, 300))
+fig = Figure(resolution = (500, 300))
 ax = Axis(
-    f1[1,1], 
+    fig[1,1], 
     xlabel="Hidden layer size", 
     ylabel="Training time (s) (100 epochs)", 
     xscale=Makie.log2, yscale=Makie.log10
@@ -191,5 +191,5 @@ lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
 
 xlims!(ax, [sizes[1], sizes[end]])
 axislegend(ax, position=:lt)
-display(f1)
-save("../results/lbdn_rl_comptime.svg", f1)
+display(fig)
+save("../results/lbdn-rl/lbdn_rl_comptime.svg", fig)

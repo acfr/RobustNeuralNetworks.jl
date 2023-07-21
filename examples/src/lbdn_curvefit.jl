@@ -65,8 +65,8 @@ Empirical_Lipschitz = lip(model, xs, dx)
 @printf "Empirical lower Lipschitz bound: %.2f\n" Empirical_Lipschitz
 
 # Create a figure
-f1 = Figure(resolution = (600, 400))
-ax = Axis(f1[1,1], xlabel="x", ylabel="y")
+fig = Figure(resolution = (600, 400))
+ax = Axis(fig[1,1], xlabel="x", ylabel="y")
 
 get_best(x) = x<-0.05 ? 0 : (x<0.05 ? 10x + 0.5 : 1)
 ybest = get_best.(xs)
@@ -76,5 +76,5 @@ lines!(xs, ys, label = "Data")
 lines!(xs, ybest, label = "Maximum slope = 10.0")
 lines!(xs, ŷ, label = "LBDN: slope = $(round(Empirical_Lipschitz; digits=2))")
 axislegend(ax, position=:lt)
-display(f1)
-save("../results/lbdn_curve_fit.svg", f1)
+display(fig)
+save("../results/lbdn-curvefit/lbdn_curve_fit.svg", fig)

@@ -45,12 +45,12 @@ end
 y1, y2 = simulate()
 
 # Plot trajectories
-f1 = Figure(resolution = (500, 300))
-ax = Axis(f1[1,1], xlabel="Time samples", ylabel="Internal state",
+fig = Figure(resolution = (500, 300))
+ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state",
           title="Contracting RENs forget initial conditions")
 
 lines!(ax, y1, label="Initial condition 1")
 lines!(ax, y2, label="Initial condition 2")
 axislegend(ax, position=:rb)
-display(f1)
-save("../../docs/src/assets/contracting_ren.svg", f1)
+display(fig)
+save("../../docs/src/assets/contracting_ren.svg", fig)

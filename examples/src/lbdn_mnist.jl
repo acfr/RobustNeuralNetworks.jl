@@ -69,8 +69,8 @@ end
 
 # Train and save the model for later use
 train_mnist!(model, train_data)
-bson("assets/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
-model = BSON.load("assets/lbdn-mnist/lbdn_mnist.bson")["model"]
+bson("../results/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
+model = BSON.load("../results/lbdn-mnist/lbdn_mnist.bson")["model"]
 
 # Print final results
 train_acc = accuracy(model, x_train, y_train)*100
@@ -81,7 +81,7 @@ println("Test accuracy:     $(round(test_acc,digits=2))%\n")
 
 # Make a couple of example plots
 indx = rand(rng, 1:100, 3)
-f1 = Figure(resolution = (800, 300), fontsize=21)
+fig = Figure(resolution = (800, 300), fontsize=21)
 for i in eachindex(indx)
 
     # Get data and do prediction
@@ -96,7 +96,7 @@ for i in eachindex(indx)
 
     # Plot results
     ax, _ = image(
-        f1[1,i], xmat, axis=(
+        fig[1,i], xmat, axis=(
             yreversed = true, 
             aspect = DataAspect(), 
             title = "Label: $(yval), Prediction: $(ŷval)",
@@ -110,8 +110,8 @@ for i in eachindex(indx)
     ax.yticklabelsvisible = false
 
 end
-display(f1)
-save("../results/lbdn_mnist.svg", f1)
+display(fig)
+save("../results/lbdn-mnist/lbdn_mnist.svg", fig)
 
 
 #######################################################################
@@ -129,8 +129,8 @@ dense = Chain(
 
 # Train it and save for later
 train_mnist!(dense, train_data)
-bson("assets/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
-dense = BSON.load("assets/lbdn-mnist/dense_mnist.bson")["model"]
+bson("../results/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
+dense = BSON.load("../results/lbdn-mnist/dense_mnist.bson")["model"]
 
 # Print final results
 train_acc = accuracy(dense, x_train, y_train)*100
@@ -159,4 +159,4 @@ lines!(ax1, ϵs, dense_error, label="Dense")
 xlims!(ax1, 0, 0.8)
 axislegend(ax1, position=:lb)
 display(fig)
-save("../results/lbdn_mnist_robust.svg", fig)
+save("../results/lbdn-mnist/lbdn_mnist_robust.svg", fig)

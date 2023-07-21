@@ -44,7 +44,7 @@ ax = Axis(f[1,1], xlabel="Time steps", ylabel="Output")
 lines!(ax, vec(d)[1:1000],  label="Disturbance")
 axislegend(ax, position=:rt)
 display(f)
-save("../results/echo_ren_inputs.svg", f)
+save("../results/echo-ren/echo_ren_inputs.svg", f)
 
 # Set up a contracting REN whose outputs are yt = [xt; wt; ut]
 nu = 1
@@ -103,7 +103,7 @@ z_test, u_test, z0_test = sim_echo_state_network(d_test, θ_solved)
 
 println("Maximum test controls: ", round(maximum(u_test), digits=2))
 println("Minimum test controls: ", round(minimum(u_test), digits=2))
-bson("../results/echo_ren_params.bson", Dict("params" => θ_solved))
+bson("../results/echo-ren/echo_ren_params.bson", Dict("params" => θ_solved))
 
 # Plot the results
 f = Figure(resolution = (1000, 400))
@@ -127,4 +127,4 @@ lines!(ax2, [1, length(u_test)], [5, 5], color=:black, linestyle=:dash)
 axislegend(ax2, position=:rt)
 
 display(f)
-save("../results/echo_ren_results.svg", f)
+save("../results/echo-ren/echo_ren_results.svg", f)
