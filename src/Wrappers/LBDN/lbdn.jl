@@ -90,16 +90,9 @@ function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{
     return sqrtγ * B[N] * h .+ b[N]
 end
 
-"""
-    set_output_zero!(m::AbstractLBDN)
-
-Set output map of an LBDN to zero.
-
-If the resulting model is called with `y = lbdn(u)` then `y = 0` for any `u`.
-"""
 function set_output_zero!(m::AbstractLBDN)
-    m.explicit.B[end] .*= 0
-    m.explicit.b[end] .*= 0
+    m.explicit.B[end] .= 0
+    m.explicit.b[end] .= 0
 
     return nothing
 end

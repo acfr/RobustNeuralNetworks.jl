@@ -35,8 +35,9 @@ x0 = zeros(nx, batches)
 qref = 2*rand(rng, nref, batches) .- 1
 uref = k*qref
 
-# Continuous  and discrete dynamics
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+# Continuous and discrete dynamics
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 
 # Simulate the system given initial condition and a controller
@@ -97,7 +98,7 @@ function train_box_ctrl!(model_ps, loss_func; lr=1e-3, epochs=250, verbose=false
     return costs
 end
 
-costs = train_box_ctrl!(model_ps, loss)
+costs = train_box_ctrl!(model_ps, loss; verbose=true)
 
 
 # -------------------------
@@ -122,12 +123,12 @@ function plot_box_learning(costs, z, qr)
     Δq = q .- qr .* ones(length(z), length(qr_test))
     Δu = u .- k*qr .* ones(length(z), length(qr_test))
 
-    f1 = Figure(resolution = (600, 400))
-    ga = f1[1,1] = GridLayout()
+    fig = Figure(resolution = (600, 400))
+    ga = fig[1,1] = GridLayout()
 
     ax0 = Axis(ga[1,1], xlabel="Training epochs", ylabel="Cost")
-    ax1 = Axis(ga[1,2], xlabel="Time (s))", ylabel="Position error (m)", )
-    ax2 = Axis(ga[2,1], xlabel="Time (s))", ylabel="Velocity (m/s)")
+    ax1 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position error (m)", )
+    ax2 = Axis(ga[2,1], xlabel="Time (s)", ylabel="Velocity (m/s)")
     ax3 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Control error (N)")
 
     lines!(ax0, costs, color=:black)
@@ -142,12 +143,12 @@ function plot_box_learning(costs, z, qr)
     lines!(ax3, t, zeros(size(t)), color=:red, linestyle=:dash)
     
     xlims!.((ax1,ax2,ax3), (t[1],), (t[end],))
-    display(f1)
-    return f1
+    display(fig)
+    return fig
 end
 
 fig = plot_box_learning(costs, z_lbdn, qr_test)
-save("../results/lbdn_rl.svg", fig)
+save("../results/lbdn-rl/lbdn_rl.svg", fig)
 
 
 # ---------------------------------
@@ -178,9 +179,9 @@ lbdn_compute_times(2; epochs=1)
 comp_times = reduce(hcat, lbdn_compute_times.(sizes))
 
 # Plot the results
-f1 = Figure(resolution = (500, 300))
+fig = Figure(resolution = (500, 300))
 ax = Axis(
-    f1[1,1], 
+    fig[1,1], 
     xlabel="Hidden layer size", 
     ylabel="Training time (s) (100 epochs)", 
     xscale=Makie.log2, yscale=Makie.log10
@@ -190,6 +191,5 @@ lines!(ax, sizes, comp_times[2,:], label="DiffLBDN")
 
 xlims!(ax, [sizes[1], sizes[end]])
 axislegend(ax, position=:lt)
-display(f1)
-save("../results/lbdn_rl_comptime.svg", f1)
-
+display(fig)
+save("../results/lbdn-rl/lbdn_rl_comptime.svg", fig)

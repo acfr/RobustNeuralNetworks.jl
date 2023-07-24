@@ -62,7 +62,7 @@ println(round.(y1;digits=2))
 
 # output
 
-[-1.1 0.32 0.27 0.14 -1.23 -0.4 -0.7 0.01 0.19 0.81]
+[1.38 0.56 0.89 2.11 2.14 0.89 1.63 0.44 1.24 1.26]
 ```
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
@@ -77,9 +77,14 @@ function (m::AbstractREN{T})(
     explicit::ExplicitRENParams{T}
 ) where T
 
-    b = explicit.C1 * xt + explicit.D12 * ut .+ explicit.bv
+    # Allocate bias vectors to avoid error when nv = 0 or nx = 0
+    # TODO: if statement (or equivalent) makes backpropagation slower. Can we avoid this?
+    bv = (m.nv == 0) ? 0 : explicit.bv
+    bx = (m.nx == 0) ? 0 : explicit.bx
+
+    b = explicit.C1 * xt + explicit.D12 * ut .+ bv
     wt = tril_eq_layer(m.nl, explicit.D11, b)
-    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ explicit.bx
+    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ bx
     yt = explicit.C2 * xt + explicit.D21 * wt + explicit.D22 * ut .+ explicit.by
 
     return xt1, yt
@@ -98,18 +103,11 @@ function init_states(m::AbstractREN{T}; rng=nothing) where T
     return zeros(T, m.nx)
 end
 
-"""
-    set_output_zero!(m::AbstractREN)
-
-Set output map of a REN to zero.
-
-If the resulting model is called with `x1,y = ren(x,u)` then `y = 0` for any `x` and `u`.
-"""
 function set_output_zero!(m::AbstractREN)
-    m.explicit.C2 .*= 0
-    m.explicit.D21 .*= 0
-    m.explicit.D22 .*= 0
-    m.explicit.by .*= 0
+    m.explicit.C2  .= 0
+    m.explicit.D21 .= 0
+    m.explicit.D22 .= 0
+    m.explicit.by  .= 0
 
     return nothing
 end

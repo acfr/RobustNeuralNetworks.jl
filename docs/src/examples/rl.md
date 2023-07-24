@@ -1,5 +1,7 @@
 # Reinforcement Learning with LBDN
 
+*Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/lbdn_rl.jl).*
+
 One of the original motivations for developing `RobustNeuralNetworks.jl` was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193)) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
 
 In this example, we'll demonstrate how to train an LBDN controller with *Reinforcement Learning* (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
@@ -8,7 +10,7 @@ In this example, we'll demonstrate how to train an LBDN controller with *Reinfor
 
 Let's consider the simple mechanical system shown below: a box of mass ``m`` sits in a tub of fluid, held between the walls of the tub by two springs, each with spring constant ``k/2.`` We can push the box with force ``u.`` Its dynamics are
 ```math
-m\ddot{q} = u - kq - \mu \dot{q}^2
+m\ddot{q} = u - kq - \mu \dot{q} |\dot{q}|
 ```
 where ``\mu`` is the viscous friction coefficient due to the box moving through the fluid.
 
@@ -19,7 +21,7 @@ where ``\mu`` is the viscous friction coefficient due to the box moving through 
 We can write this as a (nonlinear) state-space model with state ``x = (q,\dot{q})^\top,`` control input ``u,`` and dynamics
 ```math
 \dot{x} = f(x,u) = \begin{bmatrix}
-\dot{q} \\ (u - kq - \mu \dot{q}^2)/m
+\dot{q} \\ (u - kq - \mu \dot{q} |\dot{q}|)/m
 \end{bmatrix}.
 ```
 This is a continous-time model of the dynamics. For our purposes, we'll need a discrete-time model. We can discretise the dynamics using a [forward Euler approximation](https://en.wikipedia.org/wiki/Euler_method) such that
@@ -68,7 +70,8 @@ uref = k*qref
 
 It's good practice (and faster) to simulate all of these simulation batches at once, so we define our dynamics functions to operate on matrices of states and controls. Each row is a different state or control, and each column corresponds to a simulation for a particular goal position.
 ```julia
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+_visc(v::Matrix) = μ * v .* abs.(v)
+f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 ```
 

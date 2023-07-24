@@ -43,3 +43,7 @@ function (m::DiffLBDN)(u::AbstractVecOrMat)
 end
 
 Flux.@functor DiffLBDN (params, )
+
+function set_output_zero!(m::DiffLBDN)
+    set_output_zero!(m.params)
+end

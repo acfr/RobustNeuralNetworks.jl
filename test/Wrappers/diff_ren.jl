@@ -5,20 +5,20 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-# include("../test_utils.jl")
+rng = MersenneTwister(42)
 
 """
 Test that backpropagation runs and parameters change
 """
 batches = 10
-nu, nx, nv, ny = 4, 5, 10, 3
+nu, nx, nv, ny = 4, 5, 10, 2
 γ = 10
-ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ)
+ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
 model = DiffREN(ren_ps)
 
 # Dummy data
-us = randn(nu, batches)
-ys = randn(ny, batches)
+us = randn(rng, nu, batches)
+ys = randn(rng, ny, batches)
 data = [(us[:,k], ys[:,k]) for k in 1:batches]
 
 # Dummy loss function just for testing

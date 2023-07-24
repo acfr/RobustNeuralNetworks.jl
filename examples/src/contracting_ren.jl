@@ -45,8 +45,8 @@ end
 ts, y1, y2 = simulate()
 
 # Plot trajectories
-f1 = Figure(resolution = (500, 300))
-ax = Axis(f1[1,1], xlabel="Time samples", ylabel="Internal state",
+fig = Figure(resolution = (500, 300))
+ax = Axis(fig[1,1], xlabel="Time samples", ylabel="Internal state",
           title="Contracting RENs forget initial conditions")
 
 lines!(ax, y1, label="Initial condition 1")

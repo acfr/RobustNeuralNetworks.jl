@@ -30,7 +30,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 
 # Examples
 
-We can build a dense LBDN directly using `SandwichFC` layers. The model structure is described in Equation 8 of [Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2301.11526).
+We can build a dense LBDN directly using `SandwichFC` layers. The model structure is described in Equation 8 of [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html).
 
 ```julia
 using Flux
