@@ -49,7 +49,7 @@ nx = 2                  # Number of states
 
 # Continuous and discrete dynamics and measurements
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - 
-    k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+    k*x[1:1,:] - μ*x[2:2,:]*abs.(x[2:2,:]))/m]
 fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 \end{lstlisting}
@@ -57,14 +57,14 @@ gd(x::Matrix) = x[1:1,:]
 For this example, we assume that the box always starts at rest in a random initial position between $\pm0.5$m, after which it is released and allowed to oscillate freely with no added forces (so $u = 0$). Learning an observer typically requires a large amount of training data to fully capture the behaviour of the system, hence we consider 200 batches each simulating 10\,s of motion.
 \begin{lstlisting}[language = Julia]
 Tmax = 10               # Simulation horizon
-dt = 0.01               # Time-step (s)
+dt = 0.01               # Time step (s)
 ts = 1:Int(Tmax/dt)     # Time array indices
 
 # Generate batches of training data
-nbatch = 200
-u = fill(zeros(1, nbatch), length(ts)-1)
-X = fill(zeros(1, nbatch), length(ts))
-X[1] = 0.5*(2*rand(nx, nbatch) .- 1)
+batches = 200
+u = fill(zeros(1, batches), length(ts)-1)
+X = fill(zeros(1, batches), length(ts))
+X[1] = 0.5*(2*rand(nx, batches) .- 1)
 
 for t in ts[1:end-1]
     X[t+1] = fd(X[t],u[t])
@@ -93,8 +93,8 @@ We can construct the parameterization for a contracting REN model using \verb|Co
 \begin{lstlisting}[language = Julia]
 using RobustNeuralNetworks
 
-T  = Float64
-nv = 100
+T  = Float32
+nv = 200
 nu = size(obsv_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{T}(
@@ -124,7 +124,7 @@ using Flux
 
 function train_observer!(
     model, data; 
-    epochs=100, lr=1e-3, min_lr=1e-4
+    epochs=50, lr=1e-3, min_lr=1e-6
 )
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -157,11 +157,11 @@ tloss = train_observer!(model, data)
 
 We have trained the REN observer to minimise the one-step-ahead prediction error, but we are yet to test whether the the observer error actually does converge to zero. We set up the following 50 batches of test data as a demonstration.
 \begin{lstlisting}[language = Julia]
-nbatch    = 50
-ts_test   = 1:Int(10/dt)
-u_test    = fill(zeros(1, nbatch), length(ts_test))
-x_test    = fill(zeros(nx,nbatch), length(ts_test))
-x_test[1] = 0.2*(2*rand(nx, nbatch) .-1)
+batches   = 50
+ts_test   = 1:Int(20/dt)
+u_test    = fill(zeros(1, batches),length(ts_test))
+x_test    = fill(zeros(nx,batches),length(ts_test))
+x_test[1] = 0.2*(2*rand(nx, batches) .-1)
 
 for t in ts_test[1:end-1]
     x_test[t+1] = fd(x_test[t], u_test[t])
@@ -177,7 +177,7 @@ function simulate(model::AbstractREN, x0, u)
     output = recurrent.(u)
     return output
 end
-x0hat = zeros(model.nx, nbatch)
+x0hat = zeros(model.nx, batches)
 xhat = simulate(model, x0hat, obsv_in)
 \end{lstlisting}
 

@@ -15,7 +15,7 @@ x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 \end{lstlisting}
 
-The feature matrices \verb|x_train| and \verb|x_test| are three-dimensional arrays where each 28x28 layer contains pixel data for a single handwritten number from 0 to 9 (eg: see Fig. \ref{fig:mnist_numbers}). The labels \verb|y_train| and \verb|y_test| are vectors containing the classification of each image as a number from 0 to 9. We convert each of these to a format better suited to training with \verb|Flux.jl|.
+The feature matrices \verb|x_train| and \verb|x_test| are three-dimensional arrays where each $28 \times 28$ layer contains pixel data for a single handwritten number from 0 to 9 (eg: see Fig. \ref{fig:mnist_numbers}). The labels \verb|y_train| and \verb|y_test| are vectors containing the classification of each image as a number from 0 to 9. We convert each of these to a format better suited to training with \verb|Flux.jl|.
 
 \begin{lstlisting}[language = Julia]
 using Flux
@@ -86,18 +86,19 @@ epochs = 300
 lrs = [1e-3,1e-4]
 
 # Train with the Adam optimizer
+opt_state = Flux.setup(Adam(lrs[1]), model)
 for k in eachindex(lrs)
-    opt_state = Flux.setup(Adam(lrs[k]), model)
     for i in 1:epochs
         Flux.train!(loss, model, data, opt_state)
     end
+    Flux.adjust!(opt_state, lrs[2])
 end
 \end{lstlisting}
 
 % Evaluate the trained model
 \subsubsection{Evaluate the trained model} \label{sec:mnist-evaluate}
 
-Our final model achieves training and test accuracies of approximately 99\% and 98\%, respectively, as shown in Table \ref{tab:mnist-results}. We could improve this further by switching to a convolutional LBDN, as in \cite{Wang+Manchester2023}. Some examples of classifications given by the trained LBDN model are presented in Figure \ref{fig:mnist_numbers}.
+Our final model achieves training and test accuracies of approximately 98\% and 97\%, respectively, as shown in Table \ref{tab:mnist-results}. We could improve this further by switching to a convolutional LBDN, as in \cite{Wang+Manchester2023}. Some examples of classifications given by the trained LBDN model are presented in Figure \ref{fig:mnist_numbers}.
 
 \begin{figure}[!t]
     \centering
@@ -134,8 +135,8 @@ Training the \verb|dense| model with the same training loop used for the LBDN mo
 \tbl{Training and test accuracy for the LBDN and Dense models on the MNIST dataset without perturbations.}{
 \begin{tabular}{|l|c|c|}\hline
     \textbf{Model structure} & \textbf{Training accuracy (\%)} & \textbf{Test accuracy (\%)} \\ \hline
-    LBDN & 98.7 & 97.6 \\ \hline
-    Dense & 98.4 & 96.9 \\ \hline
+    LBDN & 98.2 & 97.2 \\ \hline
+    Dense & 97.6 & 96.6 \\ \hline
 \end{tabular}}
 \label{tab:mnist-results}
 \end{table}

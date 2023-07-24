@@ -9,7 +9,7 @@ In this example, we will demonstrate how to train an LBDN controller with \texti
 
 Consider the simple mechanical system shown in Figure \ref{fig:rl-box}: a box of mass $m$ sits in a tub of fluid, held between the walls by two springs each with spring constant $k/2.$ The box can be pushed with a force $u.$ Its dynamics are
 \begin{equation} \label{eqn:box-dynamics}
-m\ddot{q} = u - kq - \mu \dot{q}^2
+m\ddot{q} = u - kq - \mu \dot{q}|\dot{q}|
 \end{equation}
 where $\mu$ is the viscous damping coefficient due to the box moving through the fluid, and $\dot{q},\ddot{q}$ denote the velocity and acceleration of the box, respectively.
 
@@ -23,7 +23,7 @@ where $\mu$ is the viscous damping coefficient due to the box moving through the
 We can write this as a (nonlinear) state-space model with state $x = (q,\dot{q})^\top,$ control input $u,$ and dynamics
 \begin{equation}
 \dot{x} = f(x,u) := \begin{bmatrix}
-\dot{q} \\ (u - kq - \mu \dot{q}^2)/m
+\dot{q} \\ (u - kq - \mu \dot{q}|\dot{q}|)/m
 \end{bmatrix}.
 \end{equation}
 This is a continuous-time model of the dynamics. For our purposes, we need a discrete-time model. We can discretize the dynamics using a forward Euler approximation to get
@@ -70,9 +70,10 @@ uref = k*qref
 \end{lstlisting}
 
 It is good practice (and faster) to simulate all simulation batches at once, so we define our dynamics functions to operate on matrices of states and controls. Each row corresponds to a different state or control, and each column corresponds to a simulation for a particular goal position.
+
 \begin{lstlisting}[language = Julia]
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - 
-    k*x[1:1,:] - μ*x[2:2,:].^2)/m]
+    k*x[1:1,:] - μ*x[2:2,:]*abs.(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 \end{lstlisting}
 
