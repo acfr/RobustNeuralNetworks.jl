@@ -22,7 +22,7 @@ mutable struct DirectLBDNParams{T, N, M}
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
-    log_γ::Vector{T}                    # Store ln(γ) so that √exp(logγ) is positive
+    log_γ::AbstractVector{T}            # Store ln(γ) so that √exp(logγ) is positive
     learn_γ::Bool
 end
 
@@ -36,7 +36,7 @@ This is typically used by a higher-level constructor to define an LBDN model, wh
 # Arguments
 
 - `nu::Int`: Number of inputs.
-- `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `nh::AbstractVector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
 - `ny::Int`: Number of outputs.
 - `γ::Number=T(1)`: Lipschitz upper bound.
 
@@ -55,7 +55,7 @@ See [Wang et al. (2023)](https://proceedings.mlr.press/v202/wang23v.html) for pa
 See also [`DenseLBDNParams`](@ref).
 """
 function DirectLBDNParams{T}(
-    nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
+    nu::Int, nh::AbstractVector{Int}, ny::Int, γ::Number = T(1);
     initW::Function  = Flux.glorot_normal,
     initb::Function  = Flux.glorot_normal,
     learn_γ::Bool    = false,

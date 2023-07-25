@@ -8,7 +8,7 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    γ::Vector{T}
+    γ::AbstractVector{T}
     learn_γ::Bool
 end
 

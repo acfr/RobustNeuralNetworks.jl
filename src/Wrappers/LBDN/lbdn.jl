@@ -3,7 +3,7 @@
 mutable struct LBDN{T} <: AbstractLBDN{T}
     nl::Function
     nu::Int
-    nh::Vector{Int}
+    nh::AbstractVector{Int}
     ny::Int
     explicit::ExplicitLBDNParams{T}
 end

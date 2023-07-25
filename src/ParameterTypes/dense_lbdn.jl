@@ -3,7 +3,7 @@
 mutable struct DenseLBDNParams{T} <: AbstractLBDNParams{T}
     nl::Function                    # Sector-bounded nonlinearity
     nu::Int
-    nh::Vector{Int}
+    nh::AbstractVector{Int}
     ny::Int
     direct::DirectLBDNParams{T}
 end
@@ -17,7 +17,7 @@ This is the equivalent of a multi-layer perceptron (eg: `Flux.Dense`) with a gua
 
 # Arguments
 - `nu::Int`: Number of inputs.
-- `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `nh::AbstractVector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
 - `ny::Int`: Number of outputs.
 - `γ::Number=T(1)`: Lipschitz upper bound.
 
@@ -30,7 +30,7 @@ See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `
 
 """
 function DenseLBDNParams{T}(
-    nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
+    nu::Int, nh::AbstractVector{Int}, ny::Int, γ::Number = T(1);
     nl::Function     = Flux.relu, 
     initW::Function  = Flux.glorot_normal,
     initb::Function  = Flux.glorot_normal,
@@ -98,7 +98,7 @@ end
 function get_AB(
     XY::NTuple{N, AbstractMatrix{T}}, 
     α ::NTuple{N, AbstractVector{T}},
-    n ::Vector{Int}
+    n ::AbstractVector{Int}
 ) where {T, N}
 
     # Use Zygote buffer to avoid problems with array mutation
