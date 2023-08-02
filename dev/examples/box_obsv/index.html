@@ -27,11 +27,11 @@ for t in ts[1:end-1]
     X[t+1] = fd(X[t],u[t])
 end</code></pre><p>We&#39;ve stored the states of the system across each batch in <code>X</code>. To compute the one-step-ahead loss <span>$\mathcal{L},$</span> we&#39;ll need to separate this data into the states at the &quot;current&quot; time <code>Xt</code> and at the &quot;next&quot; time <code>Xn,</code> then compute the measurement outputs.</p><pre><code class="language-julia hljs">Xt = X[1:end-1]
 Xn = X[2:end]
-y = gd.(Xt)</code></pre><p>With that done, we store the data for training, shuffling it so there is the data is not in simulation order.</p><pre><code class="language-julia hljs">observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
+y = gd.(Xt)</code></pre><p>With that done, we store the data for training, shuffling it so there is no bias in the training towards earlier timesteps.</p><pre><code class="language-julia hljs">observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
 indx = shuffle(rng, 1:length(observer_data))
 data = zip(Xn[indx], Xt[indx], observer_data[indx])</code></pre><h2 id=".-Define-a-model"><a class="docs-heading-anchor" href="#.-Define-a-model">3. Define a model</a><a id=".-Define-a-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Define-a-model" title="Permalink"></a></h2><p>Since we need our model to be a contracting dynamical system, the obvious choice is to use <a href="../../lib/model_params/#RobustNeuralNetworks.ContractingRENParams"><code>ContractingRENParams</code></a>. The inputs to the model are <span>$[u_t;y_t]$</span>, and its outputs should be the state estimate <span>$\hat{x}_{t+1}$</span>. The flag <code>output_map=false</code> sets the output map of the REN to just return its own internal state. That way, the internal state of the REN is exactly the state estimate <span>$\hat{x}$</span>.</p><pre><code class="language-julia hljs">using RobustNeuralNetworks
 
-nv = 100
+nv = 200
 nu = size(observer_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng)
@@ -43,7 +43,7 @@ function loss(model, xn, xt, inputs)
 end</code></pre><p>We&#39;ve written a function to train the observer that decreases the learning rate by a factor of 10 if the mean gets stuck or starts to increase. The core of this function is just a simple <code>Flux.jl</code> training loop. We also report the mean loss at each epoch to inform the user how training is progressing.</p><pre><code class="language-julia hljs">using Flux
 using Printf
 
-function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -68,7 +68,7 @@ function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
     return mean_loss
 end
 tloss = train_observer!(model, data)</code></pre><h2 id=".-Evaluate-the-trained-model"><a class="docs-heading-anchor" href="#.-Evaluate-the-trained-model">5. Evaluate the trained model</a><a id=".-Evaluate-the-trained-model-1"></a><a class="docs-heading-anchor-permalink" href="#.-Evaluate-the-trained-model" title="Permalink"></a></h2><p>Now that we&#39;ve trained the REN observer to minimise the one-step-ahead prediction error, let&#39;s see if the observer error actually does converge to zero. First, we&#39;ll need some test data. </p><pre><code class="language-julia hljs">batches   = 50
-ts_test   = 1:Int(10/dt)
+ts_test   = 1:Int(20/dt)
 u_test    = fill(zeros(1, batches), length(ts_test))
 x_test    = fill(zeros(nx,batches), length(ts_test))
 x_test[1] = 0.2*(2*rand(rng, nx, batches) .-1)
@@ -101,7 +101,7 @@ function plot_results(x, x̂, ts)
     fig = Figure(resolution = (800, 400))
     ga = fig[1,1] = GridLayout()
 
-    ax1 = Axis(ga[1,1], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Position (m)&quot;, title=&quot;Actual&quot;)
+    ax1 = Axis(ga[1,1], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Position (m)&quot;, title=&quot;States&quot;)
     ax2 = Axis(ga[1,2], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Position (m)&quot;, title=&quot;Observer Error&quot;)
     ax3 = Axis(ga[2,1], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Velocity (m/s)&quot;)
     ax4 = Axis(ga[2,2], xlabel=&quot;Time (s)&quot;, ylabel=&quot;Velocity (m/s)&quot;)
@@ -126,4 +126,4 @@ function plot_results(x, x̂, ts)
     display(fig)
     return fig
 end
-fig = plot_results(x_test, xhat, ts_test)</code></pre><p><img src="../../assets/ren-obsv/ren_box_obsv.svg" alt/></p><p>In the left-hand panels, grey lines represent the true states of the system, while red lines are for the observer prediction. In the right-hand panels, we see the observer error nicely converging to zero as the observer identifies the correct velocity for all simulation runs. </p><p>It&#39;s worth noting that at no point did we directly train the REN to minimise the observer error. This is a natural result of using a model that is guaranteed to be contracting, and training it to minimise the one-step-ahead prediction error. Note that there is still some residual observer error in the velocity, since our observer is only trained to approximately satisfy the correctness condition.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rl/">« Reinforcement Learning</a><a class="docs-footer-nextpage" href="../echo_ren/">(Convex) Nonlinear Control »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Friday 21 July 2023 02:00">Friday 21 July 2023</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig = plot_results(x_test, xhat, ts_test)</code></pre><p><img src="../../assets/ren-obsv/ren_box_obsv.svg" alt/></p><p>In the left-hand panels, grey lines represent the true states of the system, while red lines are for the observer prediction. In the right-hand panels, we see the observer error nicely converging to zero as the observer identifies the correct velocity for all simulation runs. </p><p>It&#39;s worth noting that at no point did we directly train the REN to minimise the observer error. This is a natural result of using a model that is guaranteed to be contracting, and training it to minimise the one-step-ahead prediction error. Note that there is still some residual observer error in the velocity, since our observer is only trained to approximately satisfy the correctness condition.</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../rl/">« Reinforcement Learning</a><a class="docs-footer-nextpage" href="../echo_ren/">(Convex) Nonlinear Control »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.25 on <span class="colophon-date" title="Wednesday 2 August 2023 16:20">Wednesday 2 August 2023</span>. Using Julia version 1.9.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
