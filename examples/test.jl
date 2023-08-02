@@ -1,6 +1,10 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+cd(@__DIR__)
+using Pkg
+Pkg.activate(".")
 
 using BenchmarkTools
+using BSON
 using Flux
 using Random
 using RobustNeuralNetworks
@@ -9,10 +13,14 @@ rng = Xoshiro(42)
 
 
 ################################################################################
+# New stuff
 
 using LinearAlgebra
-using Zygote: @adjoint, pullback
+using ChainRulesCore: NoTangent, @non_differentiable, rrule
+import ChainRulesCore: rrule
 
+# Actually solve the layer
+# TODO: Speed up with array mutation
 function solve_tril_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
     z_eq = similar(b)
     for i in axes(b,1)
@@ -23,26 +31,57 @@ function solve_tril_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
     end
     return z_eq
 end
+@non_differentiable solve_tril_layer(ϕ, W, b)
 
-function tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq; tol=1E-9)
-    one_vec = typeof(b)(ones(size(b)))
-    v = W * zeq + b
-    j = pullback(z -> ϕ.(z), v)[2](one_vec)[1]
-
-    eval_grad(t) = (I - (j[:, t] .* W))' \ Δz[:, t]
-    gn = reduce(hcat, eval_grad(t) for t in 1:size(b, 2))
-
-    return nothing, nothing, nothing, gn
+# To define the custom backwards pass
+function tril_layer_back(σ::F, D11::Matrix, b::T, w_eq::T) where {F, T<:VecOrMat}
+    return w_eq
 end
-tril_layer_backward(ϕ, W, b, zeq) = zeq
 
-@adjoint solve_tril_layer(ϕ, W, b) = solve_tril_layer(ϕ, W, b), Δz -> (nothing, nothing, nothing)
-@adjoint tril_layer_backward(ϕ, W, b, zeq) = tril_layer_backward(ϕ, W, b, zeq), Δz -> tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq)
+# Main function to call
+function tril_eq_layer(σ::F, D11::Matrix, b::VecOrMat) where F
 
-function tril_eq_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
-    weq  = solve_tril_layer(ϕ, W, b)
-    weq1 = ϕ.(W * weq + b)  # Run forward and track grads
-    return tril_layer_backward(ϕ, W, b, weq1)
+    # Solve the equilibirum layer
+    w_eq = solve_tril_layer(σ, D11, b)
+
+    # Run the equation for auto-diff to get grads: ∂σ/∂(.) * ∂(D₁₁w + b)/∂(.)
+    # By definition, w_eq1 = w_eq so this doesn't change the forward pass.
+    w_eq1 = σ.(D11 * w_eq + b)
+    return tril_layer_back(σ, D11, b, w_eq1)
+end
+
+# The backwards pass
+function rrule(::typeof(tril_layer_back), 
+               σ::F, D11::Matrix, b::T, w_eq::T) where {F, T<:VecOrMat}
+
+    # Forwards pass
+    y = tril_layer_back(σ, D11, b, w_eq)
+
+    # Write pullback
+    function tril_layer_back_pullback(ȳ)
+
+        # Only w_eq actually gets used
+        f̄ = NoTangent()
+        σ̄ = NoTangent()
+        D̄11 = NoTangent()
+        b̄ = NoTangent()
+
+        # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
+        # TODO: Do typing better
+        # TODO: Pass in v, or do the w_eq1 pullback myself?
+        T1 = typeof(b[1])
+        v = D11 * w_eq + b
+        j = similar(b)
+        for i in eachindex(j)
+            j[i] = rrule(σ, v[i])[2](one(T1))[2]
+        end
+
+        # Compute gradient from implicit function theorem
+        eval_grad(t) = (I - (j[:, t] .* D11))' \ ȳ[:, t]
+        w̄_eq = reduce(hcat, eval_grad(t) for t in 1:size(b, 2))
+        return f̄, σ̄, D̄11, b̄, w̄_eq
+    end
+    return y, tril_layer_back_pullback
 end
 
 
@@ -100,6 +139,6 @@ println("Losses match? ", l1 == l2)
 println("Grads match?  ", g1 == g2)
 
 # Time the forwards and backwards passes
-# @btime loss(model_ps, us, ys)
-# @btime Flux.gradient(loss, model_ps, us, ys)
+@btime loss(model_ps, us, ys)
+@btime Flux.gradient(loss, model_ps, us, ys)
 println()
