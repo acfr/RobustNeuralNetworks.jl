@@ -40,7 +40,7 @@ using Random
 using RobustNeuralNetworks
 
 # Random seed for consistency
-rng = MersenneTwister(42)
+rng = Xoshiro(0)
 
 # Model specification
 nu = 1                  # Number of inputs
@@ -151,8 +151,8 @@ ŷ = map(x -> model([x])[1], xs)
 
 # Plot
 lines!(xs, ys, label = "Data")
-lines!(xs, ybest, label = "Maximum slope = 10.0")
-lines!(xs, ŷ, label = "LBDN: slope = $(round(Empirical_Lipschitz; digits=2))")
+lines!(xs, ybest, label = "Max. slope = 10.0")
+lines!(xs, ŷ, label = "LBDN slope = $(round(Empirical_Lipschitz; digits=2))")
 axislegend(ax, position=:lt)
 save("lbdn_curve_fit.svg", f1)
 ```
