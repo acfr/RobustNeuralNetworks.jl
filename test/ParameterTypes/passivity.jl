@@ -7,7 +7,7 @@ using Test
 
 # include("../test_utils.jl")
 
-rng = Xoshiro(42)
+rng = XoshiMersenneTwisterro(42)
 
 """
 Test passivity inequality

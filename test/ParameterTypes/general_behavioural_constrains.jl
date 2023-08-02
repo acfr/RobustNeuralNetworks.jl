@@ -7,7 +7,7 @@ using Test
 
 # include("../test_utils.jl")
 
-rng = Xoshiro(42)
+rng = MersenneTwister(42)
 
 """
 Test that the behavioural constraints are satisfied

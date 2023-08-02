@@ -5,7 +5,7 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-rng = Xoshiro(42)
+rng = MersenneTwister(42)
 
 """
 Test that backpropagation runs when nx = 0 and nv = 0
