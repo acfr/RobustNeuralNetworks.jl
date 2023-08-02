@@ -17,7 +17,7 @@ using Random
 using RobustNeuralNetworks
 
 # Setup
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 nu, nx, nv, ny = 4, 10, 20, 1
 γ = 1
@@ -38,7 +38,7 @@ println(round.(y1; digits=2))
 
 # output
 
-[0.98 1.24 0.86 1.93 1.08 1.19 1.23 1.4 0.95 0.65]
+[1.06 1.13 0.95 0.93 1.03 0.78 0.75 1.42 0.89 1.44]
 ```
 
 For detailed examples of training models from `RobustNeuralNetworks.jl`, we recommend starting with [Fitting a Curve with LBDN](@ref) and working through the subsequent examples.
@@ -56,7 +56,7 @@ using RobustNeuralNetworks
 Let's set a random seed and define our batch size and some hyperparameters. For this example, we'll build a Lipschitz-bounded REN with 4 inputs, 1 output, 10 states, 20 neurons, and a Lipschitz bound of `γ = 1`.
 
 ```@example walkthrough
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 
 γ = 1

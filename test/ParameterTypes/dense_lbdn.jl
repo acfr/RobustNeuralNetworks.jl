@@ -6,7 +6,7 @@ using Test
 
 # include("../test_utils.jl")
 
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 
 """
 Test that the model satisfies a specified Lipschitz bound

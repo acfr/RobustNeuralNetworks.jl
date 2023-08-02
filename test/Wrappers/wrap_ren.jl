@@ -5,7 +5,7 @@ using Random
 using RobustNeuralNetworks
 using Test
 
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 
 """
 Test REN wrapper with General REN params
