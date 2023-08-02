@@ -26,24 +26,26 @@ function tril_eq_layer(σ::F, D11::Matrix, b::VecOrMat) where F
 
     # Run the equation for auto-diff to get grads: ∂σ/∂(.) * ∂(D₁₁w + b)/∂(.)
     # By definition, w_eq1 = w_eq so this doesn't change the forward pass.
-    v = D11 * w_eq + b
+    v = D11 * w_eq .+ b
     w_eq = σ.(v)
     return tril_layer_back(σ, D11, v, w_eq)
 end
 
 # Actually solve the layer
-# TODO: Speed up with array mutation
-function solve_tril_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
-    z_eq = similar(b)
+function solve_tril_layer(σ::F, D11::Matrix, b::VecOrMat) where F
+    z_eq  = similar(b)
+    Di_zi = similar(z_eq, 1, size(b,2))
     for i in axes(b,1)
-        Wi = @view W[i:i, 1:i - 1]
+        Di = @view D11[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+
+        mul!(Di_zi, Di, zi)
+        z_eq[i:i,:] .= σ.(Di_zi .+ bi)  
     end
     return z_eq
 end
-@non_differentiable solve_tril_layer(ϕ, W, b)
+@non_differentiable solve_tril_layer(σ, D11, b)
 
 function tril_layer_back(σ::F, D11::Matrix, v::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
     return w_eq
@@ -55,7 +57,7 @@ function rrule(::typeof(tril_layer_back),
     # Forwards pass
     y = tril_layer_back(σ, D11, v, w_eq)
 
-    # Write pullback
+    # Reverse mode
     function tril_layer_back_pullback(ȳ)
 
         f̄ = NoTangent()
@@ -72,7 +74,7 @@ function rrule(::typeof(tril_layer_back),
 
         # Compute gradient from implicit function theorem
         w̄_eq = v
-        for i in axes(w̄_eq,2)
+        for i in axes(w̄_eq, 2)
             ji = @view j[:, i]
             ȳi = @view ȳ[:, i]
             w̄_eq[:,i] = (I - (ji .* D11))' \ ȳi
@@ -140,6 +142,6 @@ println("Losses match? ", l1 == l2)
 println("Grads match?  ", g1 == g2)
 
 # Time the forwards and backwards passes
-# @btime loss(model_ps, us, ys)
+@btime loss(model_ps, us, ys)
 @btime Flux.gradient(loss, model_ps, us, ys)
 println()
