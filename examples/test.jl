@@ -34,7 +34,7 @@ end
 @non_differentiable solve_tril_layer(ϕ, W, b)
 
 # To define the custom backwards pass
-function tril_layer_back(σ::F, D11::Matrix, b::T, w_eq::T) where {F, T<:VecOrMat}
+function tril_layer_back(σ::F, D11::Matrix, b::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
     return w_eq
 end
 
@@ -52,7 +52,7 @@ end
 
 # The backwards pass
 function rrule(::typeof(tril_layer_back), 
-               σ::F, D11::Matrix, b::T, w_eq::T) where {F, T<:VecOrMat}
+               σ::F, D11::Matrix, b::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
 
     # Forwards pass
     y = tril_layer_back(σ, D11, b, w_eq)
@@ -67,13 +67,11 @@ function rrule(::typeof(tril_layer_back),
         b̄ = NoTangent()
 
         # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
-        # TODO: Do typing better
         # TODO: Pass in v, or do the w_eq1 pullback myself?
-        T1 = typeof(b[1])
         v = D11 * w_eq + b
         j = similar(b)
         for i in eachindex(j)
-            j[i] = rrule(σ, v[i])[2](one(T1))[2]
+            j[i] = rrule(σ, v[i])[2](one(T))[2]
         end
 
         # Compute gradient from implicit function theorem
@@ -128,7 +126,7 @@ function loss(model_ps, u, y)
 end
 
 # Load the test data
-data = BSON.load("testdata.bson")
+data = BSON.load("testdata_relu.bson")
 l1, g1 = data["loss"], data["grads"]
 
 # Run it forwards
@@ -139,6 +137,6 @@ println("Losses match? ", l1 == l2)
 println("Grads match?  ", g1 == g2)
 
 # Time the forwards and backwards passes
-@btime loss(model_ps, us, ys)
+# @btime loss(model_ps, us, y?s)
 @btime Flux.gradient(loss, model_ps, us, ys)
 println()
