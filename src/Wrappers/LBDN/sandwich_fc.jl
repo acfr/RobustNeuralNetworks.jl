@@ -18,7 +18,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 # Arguments
 
 - `(in, out)::Pair{<:Integer, <:Integer}`: Input and output sizes of the layer.
-- `σ::NNlib.identity`: Activation function.
+- `σ::Flux.identity`: Activation function.
 
 # Keyword arguments
 
@@ -49,8 +49,8 @@ nh = fill(16,2)         # 2 hidden layers, each with 16 neurons
 # Set up dense LBDN model
 model = Flux.Chain(
     (x) -> (√γ * x),
-    SandwichFC(nu => nh[1], NNlib.relu; T=Float64, rng),
-    SandwichFC(nh[1] => nh[2], NNlib.relu; T=Float64, rng),
+    SandwichFC(nu => nh[1], relu; T=Float64, rng),
+    SandwichFC(nh[1] => nh[2], relu; T=Float64, rng),
     (x) -> (√γ * x),
     SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng),
 )

@@ -23,7 +23,7 @@ This is the equivalent of a multi-layer perceptron (eg: `Flux.Dense`) with a gua
 
 # Keyword arguments:
 
-- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 - `learn_γ::Bool=false:` Whether to make the Lipschitz bound γ a learnable parameter.
 
 See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `initb`, `rng`.

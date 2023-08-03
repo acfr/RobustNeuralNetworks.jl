@@ -31,7 +31,7 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
     
 # Keyword arguments
 
-- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 

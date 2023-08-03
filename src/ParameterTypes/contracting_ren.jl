@@ -25,7 +25,7 @@ The parameters can be used to construct an explicit [`REN`](@ref) model that has
 
 # Keyword arguments
 
-- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
