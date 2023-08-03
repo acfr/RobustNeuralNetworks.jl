@@ -58,6 +58,94 @@ function ContractingRENParams{T}(
 
 end
 
+@doc raw"""
+    ContractingRENParams(nv, A, B, C, D; ...)
+Alternative constructor for `ContractingRENParams` that initialises the
+REN from a **stable** discrete-time linear system with state-space model
+```math
+\begin{align*}
+x_{t+1} &= Ax_t + Bu_t \\
+y_t &= Cx_t + Du_t.
+\end{align*}
+```
+[TODO:] This method has not been used or tested in a while. If you find it useful, please reach out to us and we will add full support and testing! :)
+[TODO:] Make compatible with αbar ≠ 1.0.
+"""
+function ContractingRENParams(
+    nv::Int,
+    A::AbstractMatrix{T}, B::AbstractMatrix{T}, C::AbstractMatrix{T}, D::AbstractMatrix{T};
+    nl = Flux.relu, 
+    ϵ = T(1e-12), 
+    bx_scale = T(0), 
+    bv_scale = T(1), 
+    polar_param = true, 
+    df_wishart = nothing,
+    rng = Random.GLOBAL_RNG
+) where T
+
+    # Check linear system stability
+    if maximum(abs.(eigvals(A))) >= 1
+        error("System must be stable: spectral radius of A < 1")
+    end
+
+    # Get system sizes
+    nx = size(A,1)
+    nu = size(B,2)
+    ny = size(C,1)
+
+    # Use given matrices for explicit REN (\bb for explicit)
+    𝔸  = A; 𝔹2  = B
+    ℂ2 = C; 𝔻22 = D
+
+    # Set others to zero (so explicit = direct)
+    B1 = zeros(T, nx, nv)
+    C1 = zeros(T, nv, nx)
+    D11 = zeros(T, nv, nv)
+    D12 = zeros(T, nv, nu)
+    𝔻21 = zeros(T, ny, nv)
+
+    # Solve Lyapunov equation
+    P = lyapd(𝔸',I(nx))
+
+    # Implicit system params
+    E = P
+    Λ = I
+    ρ = zeros(T, 1)
+    Y1 = zeros(T, nx, nx)
+
+    F = E * 𝔸
+    B2 = E * 𝔹2
+    H22 = 2Λ - D11 - D11'
+    H = [(E + E' - P) -C1' F'; -C1 H22 B1'; F B1 P] + ϵ*I
+
+    # Sample nearby nonlinear systems and decompose
+    (df_wishart !== nothing) && (H = rand(Wishart(df_wishart,H))/df_wishart + ϵ*I)
+    X = Matrix{T}(cholesky(H).U)
+
+    # Add bias terms
+    bv = T(bv_scale) * glorot_normal(nv; T, rng)
+    bx = T(bx_scale) * glorot_normal(nx; T, rng)
+    by = glorot_normal(ny; T, rng)
+
+    # D22 parameterisation
+    D22_free = true
+    D22_zero = false
+    X3 = zeros(T, 0, 0)
+    Y3 = zeros(T, 0, 0)
+    Z3 = zeros(T, 0, 0)
+
+    # Build REN params
+    αbar = T(1)
+    direct_ps = DirectRENParams{T}(
+        ρ, X, Y1, X3, Y3, Z3, B2, 
+        ℂ2, D12, 𝔻21, 𝔻22, bx, bv, by, 
+        ϵ, polar_param, D22_free, D22_zero
+    )
+
+    return ContractingRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar)
+
+end
+
 @functor ContractingRENParams (direct, )
 
 function direct_to_explicit(ps::ContractingRENParams{T}, return_h::Bool=false) where T

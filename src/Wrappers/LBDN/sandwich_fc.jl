@@ -18,7 +18,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 # Arguments
 
 - `(in, out)::Pair{<:Integer, <:Integer}`: Input and output sizes of the layer.
-- `σ::Flux.identity`: Activation function.
+- `σ::F=identity`: Activation function.
 
 # Keyword arguments
 
