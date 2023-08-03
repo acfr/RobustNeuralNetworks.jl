@@ -101,25 +101,47 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     if ps.direct.D22_zero
         D22 = ps.direct.D22
     else
-        M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-        N = (ny >= nu) ? [(I - M) / (I + M); -2*Z3 / (I + M)] :
-                        [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        M = _M_lip(X3, Y3, Z3, ϵ)
+        N = _N_lip(nu, ny, M, Z3)
         D22 = γ*N
     end
 
     # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = -(D22')*C2 / γ
-    D21_imp = -(D22')*D21 / γ - D12_imp'
+    C2_imp  = _C2_lip(D22, C2, γ)
+    D21_imp = _D21_lip(D22, D21, γ, D12_imp)
 
-    𝑅 = -D22'*D22 / γ + (γ * I)
-
-    Γ1 = [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] * (-1/γ)
-    Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
+    𝑅  = _R_lip(D22, γ)
+    Γ1 = _Γ1_lip(nx, ny, C2, D21, γ, T) 
+    Γ2 = _Γ2_lip(C2_imp, D21_imp, B2_imp, 𝑅)
 
     H = x_to_h(X, ϵ, polar_param, ρ) + Γ2 - Γ1
 
     # Get explicit parameterisation
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
+end
 
+# Auto-diff faster through smaller functions
+_M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+
+function _N_lip(nu, ny, M, Z3) 
+    if ny >= nu
+        return [(I - M) / (I + M); -2*Z3 / (I + M)]
+    else
+        return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+    end
+end
+
+_C2_lip(D22, C2, γ) = -(D22')*C2 / γ
+
+_D21_lip(D22, D21, γ, D12_imp) = -(D22')*D21 / γ - D12_imp'
+
+_R_lip(D22, γ) = -D22'*D22 / γ + (γ * I)
+
+function _Γ1_lip(nx, ny, C2, D21, γ, T) 
+    [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] * (-1/γ)
+end
+
+function _Γ2_lip(C2_imp, D21_imp, B2_imp, 𝑅)
+    [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 end

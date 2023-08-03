@@ -119,23 +119,18 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
     R1 = Hermitian(R - S * (Q \ S'))
     LR = Matrix{T}(cholesky(R1).U) 
     
-    M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-    if ny >= nu
-        N = [(I - M) / (I + M); -2*Z3 / (I + M)]
-    else
-        N = [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
-    end
+    M = _M_gen(X3, Y3, Z3, ϵ)
+    N = _N_gen(nu, ny, M, Z3) 
 
-    D22 = -(Q \ S') + (LQ \ N) * LR
+    D22 = _D22_gen(Q, S, LQ, LR, N)
 
     # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = (D22'*Q + S)*C2
-    D21_imp = (D22'*Q + S)*D21 - D12_imp'
+    C2_imp = _C2_gen(D22, C2, Q, S)
+    D21_imp = _D21_gen(D22, D21, D12_imp, Q, S)
 
-    𝑅 = R + S*D22 + D22'*S' + D22'*Q*D22
-
-    Γ1 = [C2'; D21'; zeros(T, nx, ny)] * Q * [C2 D21 zeros(T, ny, nx)]
-    Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
+    𝑅  = _R_gen(R, S, Q, D22)
+    Γ1 = _Γ1_gen(nx, ny, C2, D21, Q, T) 
+    Γ2 = _Γ2_gen(C2_imp, D21_imp, B2_imp, 𝑅)
 
     H = x_to_h(X, ϵ, polar_param, ρ) + Γ2 - Γ1
 
@@ -143,4 +138,31 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
 
+end
+
+# Auto-diff faster through smaller functions
+_M_gen(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+
+function _N_gen(nu, ny, M, Z3)
+    if ny >= nu
+        return[(I - M) / (I + M); -2*Z3 / (I + M)]
+    else
+        return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+    end
+end
+
+_D22_gen(Q, S, LQ, LR, N) = -(Q \ S') + (LQ \ N) * LR
+
+_C2_gen(D22, C2, Q, S) = (D22'*Q + S)*C2
+
+_D21_gen(D22, D21, D12_imp, Q, S) = (D22'*Q + S)*D21 - D12_imp'
+
+_R_gen(R, S, Q, D22) = R + S*D22 + D22'*S' + D22'*Q*D22
+
+function _Γ1_gen(nx, ny, C2, D21, Q, T) 
+    [C2'; D21'; zeros(T, nx, ny)] * Q * [C2 D21 zeros(T, ny, nx)]
+end
+
+function _Γ2_gen(C2_imp, D21_imp, B2_imp, 𝑅)
+    [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 end
