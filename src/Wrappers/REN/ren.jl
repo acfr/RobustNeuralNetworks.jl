@@ -43,7 +43,7 @@ using Random
 using RobustNeuralNetworks
 
 # Setup
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 nu, nx, nv, ny = 4, 2, 20, 1
 
@@ -62,7 +62,7 @@ println(round.(y1;digits=2))
 
 # output
 
-[1.38 0.56 0.89 2.11 2.14 0.89 1.63 0.44 1.24 1.26]
+[-1.49 0.75 1.34 -0.23 -0.84 0.38 0.79 -0.1 0.72 0.54]
 ```
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).

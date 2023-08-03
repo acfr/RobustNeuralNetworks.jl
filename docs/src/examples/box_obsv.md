@@ -81,7 +81,7 @@ Xt = X[1:end-1]
 Xn = X[2:end]
 y = gd.(Xt)
 ```
-With that done, we store the data for training, shuffling it so there is the data is not in simulation order.
+With that done, we store the data for training, shuffling it so there is no bias in the training towards earlier timesteps.
 ```julia
 observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
 indx = shuffle(rng, 1:length(observer_data))
@@ -95,7 +95,7 @@ Since we need our model to be a contracting dynamical system, the obvious choice
 ```julia
 using RobustNeuralNetworks
 
-nv = 100
+nv = 200
 nu = size(observer_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{Float64}(nu, nx, nv, ny; output_map=false, rng)
@@ -119,7 +119,7 @@ We've written a function to train the observer that decreases the learning rate 
 using Flux
 using Printf
 
-function train_observer!(model, data; epochs=100, lr=1e-3, min_lr=1e-4)
+function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
 
     opt_state = Flux.setup(Adam(lr), model)
     mean_loss = [1e5]
@@ -151,7 +151,7 @@ tloss = train_observer!(model, data)
 Now that we've trained the REN observer to minimise the one-step-ahead prediction error, let's see if the observer error actually does converge to zero. First, we'll need some test data. 
 ```julia
 batches   = 50
-ts_test   = 1:Int(10/dt)
+ts_test   = 1:Int(20/dt)
 u_test    = fill(zeros(1, batches), length(ts_test))
 x_test    = fill(zeros(nx,batches), length(ts_test))
 x_test[1] = 0.2*(2*rand(rng, nx, batches) .-1)
@@ -194,7 +194,7 @@ function plot_results(x, x̂, ts)
     fig = Figure(resolution = (800, 400))
     ga = fig[1,1] = GridLayout()
 
-    ax1 = Axis(ga[1,1], xlabel="Time (s)", ylabel="Position (m)", title="Actual")
+    ax1 = Axis(ga[1,1], xlabel="Time (s)", ylabel="Position (m)", title="States")
     ax2 = Axis(ga[1,2], xlabel="Time (s)", ylabel="Position (m)", title="Observer Error")
     ax3 = Axis(ga[2,1], xlabel="Time (s)", ylabel="Velocity (m/s)")
     ax4 = Axis(ga[2,2], xlabel="Time (s)", ylabel="Velocity (m/s)")

@@ -29,7 +29,7 @@ using Random
 using RobustNeuralNetworks
 
 # Setup
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 nu, nx, nv, ny = 4, 10, 20, 2
 
@@ -56,7 +56,7 @@ println(round(ren.explicit.B2[10];digits=4))
 
 # output
 
-0.0051
+-0.0034
 ```
 
 See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
