@@ -4,14 +4,15 @@ module RobustNeuralNetworks
 
 ############ Package dependencies ############
 
+using ChainRulesCore: NoTangent, @non_differentiable
 using Flux
 using LinearAlgebra
 using MatrixEquations: lyapd
 using Random
-using Zygote: pullback, Buffer
-using Zygote: @adjoint
+using Zygote: Buffer
 
 import Base.:(==)
+import ChainRulesCore: rrule
 import Flux.gpu, Flux.cpu
 
 

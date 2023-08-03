@@ -4,6 +4,7 @@ authors = ["Nicholas H. Barbara", "Max Revay", "Ruigang Wang", "Jing Cheng", "Je
 version = "0.2.3"
 
 [deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MatrixEquations = "99c1a7ee-ab34-5fd5-8076-27c950a045f4"
