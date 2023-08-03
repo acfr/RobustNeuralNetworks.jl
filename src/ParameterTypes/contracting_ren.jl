@@ -25,7 +25,7 @@ The parameters can be used to construct an explicit [`REN`](@ref) model that has
 
 # Keyword arguments
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -35,7 +35,7 @@ See also [`GeneralRENParams`](@ref), [`LipschitzRENParams`](@ref), [`PassiveRENP
 """
 function ContractingRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
-    nl::Function        = Flux.relu, 
+    nl::Function        = relu, 
     αbar::T             = T(1),
     init                = :random,
     polar_param::Bool   = true,
@@ -58,7 +58,7 @@ function ContractingRENParams{T}(
 
 end
 
-Flux.@functor ContractingRENParams (direct, )
+@functor ContractingRENParams (direct, )
 
 function direct_to_explicit(ps::ContractingRENParams{T}, return_h::Bool=false) where T
 

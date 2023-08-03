@@ -27,7 +27,7 @@ Construct direct parameterisation of a passive REN.
 
 - `ν::T=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -38,7 +38,7 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`Lipschitz
 function PassiveRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int;
     ν::T              = T(0),
-    nl::Function      = Flux.relu, 
+    nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
     polar_param::Bool = true,
@@ -64,7 +64,7 @@ function PassiveRENParams{T}(
 
 end
 
-Flux.@functor PassiveRENParams (direct, )
+@functor PassiveRENParams (direct, )
 
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 

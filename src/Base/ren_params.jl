@@ -222,9 +222,9 @@ function DirectRENParams{T}(
     )
 end
 
-Flux.@functor DirectRENParams
+@functor DirectRENParams
 
-function Flux.trainable(m::DirectRENParams)
+function trainable(m::DirectRENParams)
 
     # Field names of trainable params, exclude ρ if needed
     if !m.output_map
@@ -245,7 +245,7 @@ function Flux.trainable(m::DirectRENParams)
     indx = length.(ps) .!= 0
     ps, fs = ps[indx], fs[indx]
 
-    # Flux.trainable() must return a NamedTuple
+    # Optimisers.trainable() must return a NamedTuple
     return NamedTuple{tuple(fs...)}(ps)
 end
 

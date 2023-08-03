@@ -26,7 +26,7 @@ Construct direct parameterisation of a REN with a Lipschitz bound of γ.
     
 # Keyword arguments
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -38,7 +38,7 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRE
 """
 function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
-    nl::Function      = Flux.relu, 
+    nl::Function      = relu, 
     αbar::T           = T(1),
     learn_γ::Bool     = false,
     init              = :random,
@@ -65,8 +65,8 @@ function LipschitzRENParams{T}(
 
 end
 
-Flux.@functor LipschitzRENParams
-function Flux.trainable(m::LipschitzRENParams)
+@functor LipschitzRENParams
+function trainable(m::LipschitzRENParams)
     m.learn_γ ? (direct = m.direct, γ = m.γ) : (direct = m.direct,)
 end
 

@@ -5,13 +5,17 @@ module RobustNeuralNetworks
 ############ Package dependencies ############
 
 using ChainRulesCore: NoTangent, @non_differentiable
-using Flux
 using LinearAlgebra
 using Random
 using Zygote: Buffer
 
+# Replacements for Flux.jl
+using Functors: @functor
+using NNlib: relu, identity
+
 import Base.:(==)
 import ChainRulesCore: rrule
+import Optimisers.trainable
 
 
 ############ Abstract types ############

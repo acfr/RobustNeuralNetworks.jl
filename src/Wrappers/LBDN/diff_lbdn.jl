@@ -42,7 +42,7 @@ function (m::DiffLBDN)(u::AbstractVecOrMat)
     return m(u, explicit)
 end
 
-Flux.@functor DiffLBDN (params, )
+@functor DiffLBDN (params, )
 
 function set_output_zero!(m::DiffLBDN)
     set_output_zero!(m.params)

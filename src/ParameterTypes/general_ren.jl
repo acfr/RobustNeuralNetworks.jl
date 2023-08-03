@@ -31,7 +31,7 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
     
 # Keyword arguments
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=NNlib.relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -42,7 +42,7 @@ See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`Passive
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
     Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
-    nl::Function      = Flux.relu, 
+    nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
     polar_param::Bool = true,
@@ -82,7 +82,7 @@ function GeneralRENParams{T}(
 
 end
 
-Flux.@functor GeneralRENParams (direct, )
+@functor GeneralRENParams (direct, )
 
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 

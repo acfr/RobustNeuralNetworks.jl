@@ -56,8 +56,8 @@ See also [`DenseLBDNParams`](@ref).
 """
 function DirectLBDNParams{T}(
     nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
-    initW::Function  = Flux.glorot_normal,
-    initb::Function  = Flux.glorot_normal,
+    initW::Function  = glorot_normal,
+    initb::Function  = glorot_normal,
     learn_γ::Bool    = false,
     rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
@@ -83,8 +83,8 @@ function DirectLBDNParams{T}(
     )
 end
 
-Flux.@functor DirectLBDNParams
-function Flux.trainable(m::DirectLBDNParams)
+@functor DirectLBDNParams
+function trainable(m::DirectLBDNParams)
     if m.learn_γ
         return (XY=m.XY, α=m.α, d=m.d, b=m.b, log_γ=m.log_γ)
     else 
