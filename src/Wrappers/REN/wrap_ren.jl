@@ -76,4 +76,4 @@ function update_explicit!(m::WrapREN)
     return nothing
 end
 
-Flux.@functor WrapREN (params, )
+@functor WrapREN (params, )

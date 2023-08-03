@@ -18,7 +18,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 # Arguments
 
 - `(in, out)::Pair{<:Integer, <:Integer}`: Input and output sizes of the layer.
-- `σ::F=Flux.identity`: Activation function.
+- `σ::F=identity`: Activation function.
 
 # Keyword arguments
 
@@ -49,8 +49,8 @@ nh = fill(16,2)         # 2 hidden layers, each with 16 neurons
 # Set up dense LBDN model
 model = Flux.Chain(
     (x) -> (√γ * x),
-    SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng),
-    SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng),
+    SandwichFC(nu => nh[1], relu; T=Float64, rng),
+    SandwichFC(nh[1] => nh[2], relu; T=Float64, rng),
     (x) -> (√γ * x),
     SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng),
 )
@@ -70,8 +70,8 @@ See also [`DenseLBDNParams`](@ref), [`DiffLBDN`](@ref).
 """
 function SandwichFC(
     (in, out)::Pair{<:Integer, <:Integer},
-    σ::F               = Flux.identity;
-    init::Function     = Flux.glorot_normal,
+    σ::F               = identity;
+    init::Function     = glorot_normal,
     bias::Bool         = true,
     output_layer::Bool = false, 
     T::DataType        = Float32,
@@ -89,7 +89,7 @@ function SandwichFC(
     return SandwichFC{F, T, typeof(d), typeof(b)}(σ, XY, α, d, b)
 end
 
-Flux.@functor SandwichFC
+@functor SandwichFC
 
 function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
 
