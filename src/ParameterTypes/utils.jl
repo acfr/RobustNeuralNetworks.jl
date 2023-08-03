@@ -54,7 +54,7 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     Y1 = ps.direct.Y1
     
     # Extract sections of H matrix 
-    # Using @view is faster but not supported by CUDA
+    # Using @view is slower in reverse mode
     H11 = H[1:nx, 1:nx]
     H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
     H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
