@@ -12,7 +12,6 @@ using Zygote: Buffer
 
 import Base.:(==)
 import ChainRulesCore: rrule
-import Flux.gpu, Flux.cpu
 
 
 ############ Abstract types ############
@@ -108,6 +107,6 @@ export set_output_zero!
 export update_explicit!
 
 # Extended functions
-# TODO: Need to export things like gpu, cpu, ==, etc.
+# TODO: Need to export things like ==
 
 end # end RobustNeuralNetworks

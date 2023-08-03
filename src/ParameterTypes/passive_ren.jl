@@ -66,22 +66,6 @@ end
 
 Flux.@functor PassiveRENParams (direct, )
 
-function Flux.gpu(m::PassiveRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
-    )
-end
-
-function Flux.cpu(m::PassiveRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
-    )
-end
-
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes

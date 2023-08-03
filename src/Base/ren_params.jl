@@ -249,29 +249,6 @@ function Flux.trainable(m::DirectRENParams)
     return NamedTuple{tuple(fs...)}(ps)
 end
 
-function Flux.gpu(M::DirectRENParams{T}) where T
-    # TODO: Test and complete this
-    if T != Float32
-        println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
-    end
-    return DirectRENParams{T}(
-        gpu(M.ρ), gpu(M.X), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
-        gpu(M.Z3), gpu(M.B2), gpu(M.C2), gpu(M.D12), gpu(M.D21),
-        gpu(M.D22), gpu(M.bx), gpu(M.bv), gpu(M.by),
-        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
-    )
-end
-
-function Flux.cpu(M::DirectRENParams{T}) where T
-    # TODO: Test and complete this
-    return DirectRENParams{T}(
-        cpu(M.ρ), cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
-        cpu(M.Z3), cpu(M.B2), cpu(M.C2), cpu(M.D12), cpu(M.D21),
-        cpu(M.D22), cpu(M.bx), cpu(M.bv), cpu(M.by),
-        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
-    )
-end
-
 """
     ==(ps1::DirectRENParams, ps2::DirectRENParams)
 

@@ -84,22 +84,6 @@ end
 
 Flux.@functor GeneralRENParams (direct, )
 
-function Flux.gpu(m::GeneralRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
-    )
-end
-
-function Flux.cpu(m::GeneralRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
-    )
-end
-
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     # System sizes

@@ -60,22 +60,6 @@ end
 
 Flux.@functor ContractingRENParams (direct, )
 
-function Flux.gpu(m::ContractingRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return ContractingRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
-    )
-end
-
-function Flux.cpu(m::ContractingRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return ContractingRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar
-    )
-end
-
 function direct_to_explicit(ps::ContractingRENParams{T}, return_h::Bool=false) where T
 
     ϵ = ps.direct.ϵ

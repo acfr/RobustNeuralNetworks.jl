@@ -70,22 +70,6 @@ function Flux.trainable(m::LipschitzRENParams)
     m.learn_γ ? (direct = m.direct, γ = m.γ) : (direct = m.direct,)
 end
 
-function Flux.gpu(m::LipschitzRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
-    )
-end
-
-function Flux.cpu(m::LipschitzRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
-    )
-end
-
 function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
 
     # System sizes

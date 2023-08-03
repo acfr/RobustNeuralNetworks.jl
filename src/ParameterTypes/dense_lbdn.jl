@@ -112,7 +112,3 @@ function get_AB(
     return copy(buf_A), copy(buf_B)
     
 end
-
-# TODO: Add GPU compatibility
-# Flux.cpu() ...
-# Flux.gpu() ...
