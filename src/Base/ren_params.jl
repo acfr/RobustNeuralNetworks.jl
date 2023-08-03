@@ -255,6 +255,8 @@ end
 Define equality for two objects of type `DirectRENParams`.
     
 Checks if all *relevant* parameters are equal. For example, if `D22` is fixed to `0` then the values of `X3, Y3, Z3` are not important and are ignored.
+
+This is currently not used. Might be useful in the future...
 """
 function ==(ps1::DirectRENParams, ps2::DirectRENParams)
 

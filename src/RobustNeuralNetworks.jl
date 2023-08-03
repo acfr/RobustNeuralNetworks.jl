@@ -5,17 +5,20 @@ module RobustNeuralNetworks
 ############ Package dependencies ############
 
 using ChainRulesCore: NoTangent, @non_differentiable
+using Flux: relu, identity, @functor
 using LinearAlgebra
 using Random
 using Zygote: Buffer
 
-# Replacements for Flux.jl
-using Functors: @functor
-using NNlib: relu, identity
-
 import Base.:(==)
 import ChainRulesCore: rrule
-import Optimisers.trainable
+import Flux: trainable, glorot_normal
+
+# Note: to remove explicit dependency on Flux.jl, use the following
+#   using Functors: @functor
+#   using NNlib: relu, identity
+#   import Optimisers.trainable
+# and re-write `glorot_normal` yourself.
 
 
 ############ Abstract types ############
@@ -109,8 +112,5 @@ export get_lipschitz
 export init_states
 export set_output_zero!
 export update_explicit!
-
-# Extended functions
-# TODO: Need to export things like ==
 
 end # end RobustNeuralNetworks
