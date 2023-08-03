@@ -7,7 +7,6 @@ module RobustNeuralNetworks
 using ChainRulesCore: NoTangent, @non_differentiable
 using Flux
 using LinearAlgebra
-using MatrixEquations: lyapd
 using Random
 using Zygote: Buffer
 
