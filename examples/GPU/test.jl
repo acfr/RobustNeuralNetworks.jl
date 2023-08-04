@@ -14,8 +14,11 @@ T = Float32
 nu, nx, nv, ny = 4, 5, 10, 2
 
 # Build model
-ren_ps = ContractingRENParams{T}(nu, nx, nv, ny; nl=relu)
-ren = DiffREN(ren_ps) |> device
+ren_ps = LipschitzRENParams{T}(nu, nx, nv, ny, 1; nl=relu)
+ren = REN(ren_ps) |> device
+# ren = DiffREN(ren_ps) #|> device
+
+# TODO: If we use DiffREN, construction of REN is slow and better suited to CPU. Think of a good way around this. It also means having model = REN(ren_ps) |> gpu in the loss function. Not ideal...
 
 # Data
 batches = 1000000

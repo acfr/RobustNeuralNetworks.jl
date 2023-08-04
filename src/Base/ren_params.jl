@@ -45,6 +45,10 @@ mutable struct ExplicitRENParams{T}
     by ::AbstractVector{T}
 end
 
+# No trainable params
+@functor ExplicitRENParams
+trainable(m::ExplicitRENParams) = (; )
+
 mutable struct DirectRENParams{T}
     X  ::AbstractMatrix{T}
     Y1 ::AbstractMatrix{T}

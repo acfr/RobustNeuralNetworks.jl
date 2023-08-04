@@ -17,6 +17,10 @@ mutable struct ExplicitLBDNParams{T, N, M}
     sqrtγ::T
 end
 
+# No trainable params
+@functor ExplicitLBDNParams
+trainable(m::ExplicitLBDNParams) = (; )
+
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation

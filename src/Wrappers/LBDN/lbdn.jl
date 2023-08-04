@@ -22,7 +22,9 @@ function LBDN(ps::AbstractLBDNParams{T}) where T
     return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
 end
 
-@functor LBDN ( ) # No trainable params
+# No trainable params
+@functor LBDN
+trainable(m::LBDN) = (; )
 
 """
     abstract type AbstractLBDN{T} end

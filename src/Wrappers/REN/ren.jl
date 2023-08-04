@@ -23,7 +23,9 @@ function REN(ps::AbstractRENParams{T}) where T
     return REN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit)
 end
 
-@functor REN ( ) # No trainable params
+# No trainable params
+@functor REN
+trainable(m::REN) = (; )
 
 """
     abstract type AbstractREN end
