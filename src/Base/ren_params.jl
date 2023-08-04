@@ -64,7 +64,7 @@ mutable struct DirectRENParams{T}
     polar_param::Bool                   # Whether or not to use polar parameterisation
     D22_free   ::Bool                   # Is D22 free or parameterised by (X3,Y3,Z3)?
     D22_zero   ::Bool                   # Option to remove feedthrough.
-    output_map ::Bool
+    output_map ::Bool                   # Whether to include output map of REN
 end
 
 """

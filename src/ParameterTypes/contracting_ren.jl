@@ -148,7 +148,7 @@ end
 
 @functor ContractingRENParams (direct, )
 
-function direct_to_explicit(ps::ContractingRENParams{T}, return_h::Bool=false) where T
+function direct_to_explicit(ps::ContractingRENParams, return_h::Bool=false)
 
     ϵ = ps.direct.ϵ
     ρ = ps.direct.ρ[1]
