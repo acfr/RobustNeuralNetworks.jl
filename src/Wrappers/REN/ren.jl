@@ -43,7 +43,7 @@ using Random
 using RobustNeuralNetworks
 
 # Setup
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 nu, nx, nv, ny = 4, 2, 20, 1
 
@@ -62,7 +62,7 @@ println(round.(y1;digits=2))
 
 # output
 
-[1.38 0.56 0.89 2.11 2.14 0.89 1.63 0.44 1.24 1.26]
+[-1.49 0.75 1.34 -0.23 -0.84 0.38 0.79 -0.1 0.72 0.54]
 ```
 
 See also [`REN`](@ref), [`WrapREN`](@ref), and [`DiffREN`](@ref).
@@ -78,17 +78,22 @@ function (m::AbstractREN{T})(
 ) where T
 
     # Allocate bias vectors to avoid error when nv = 0 or nx = 0
-    # TODO: if statement (or equivalent) makes backpropagation slower. Can we avoid this?
-    bv = (m.nv == 0) ? 0 : explicit.bv
-    bx = (m.nx == 0) ? 0 : explicit.bx
+    bv = _bias(m.nv, explicit.bv)
+    bx = _bias(m.nx, explicit.bx)
+    by = explicit.by
 
-    b = explicit.C1 * xt + explicit.D12 * ut .+ bv
+    b = _b(explicit.C1, explicit.D12, xt, ut, bv)
     wt = tril_eq_layer(m.nl, explicit.D11, b)
-    xt1 = explicit.A * xt + explicit.B1 * wt + explicit.B2 * ut .+ bx
-    yt = explicit.C2 * xt + explicit.D21 * wt + explicit.D22 * ut .+ explicit.by
+    xt1 = _xt1(explicit.A, explicit.B1, explicit.B2, xt, wt, ut, bx)
+    yt = _yt(explicit.C2, explicit.D21, explicit.D22, xt, wt, ut, by)
 
     return xt1, yt
 end
+
+_bias(n, b) = n == 0 ? 0 : b
+_b(C1, D12, xt, ut, bv)           = C1 * xt + D12 * ut .+ bv
+_xt1(A, B1, B2, xt, wt, ut, bx)   =  A * xt +  B1 * wt + B2 * ut .+ bx
+_yt(C2, D21, D22, xt, wt, ut, by) = C2 * xt + D21 * wt + D22 * ut .+ by
 
 """
     init_states(m::AbstractREN, nbatches; rng=nothing)

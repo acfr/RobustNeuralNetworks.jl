@@ -42,7 +42,7 @@ using Random
 using RobustNeuralNetworks
 
 # Setup
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 batches = 10
 γ = 20.0
 
@@ -61,7 +61,7 @@ println(round.(y; digits=2))
 
 # output
 
-[-0.69 -1.89 -9.68 3.47 -11.65 -4.48 -4.53 3.61 1.37 -0.68]
+[-1.11 -1.01 -0.07 -2.25 -4.22 -1.76 -3.82 -1.13 -11.85 -3.01]
 ```
 """
 function (m::AbstractLBDN)(u::AbstractVecOrMat)

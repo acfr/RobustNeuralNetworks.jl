@@ -23,7 +23,7 @@ This is the equivalent of a multi-layer perceptron (eg: `Flux.Dense`) with a gua
 
 # Keyword arguments:
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 - `learn_γ::Bool=false:` Whether to make the Lipschitz bound γ a learnable parameter.
 
 See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `initb`, `rng`.
@@ -31,9 +31,9 @@ See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `
 """
 function DenseLBDNParams{T}(
     nu::Int, nh::AbstractVector{Int}, ny::Int, γ::Number = T(1);
-    nl::Function     = Flux.relu, 
-    initW::Function  = Flux.glorot_normal,
-    initb::Function  = Flux.glorot_normal,
+    nl::Function     = relu, 
+    initW::Function  = glorot_normal,
+    initb::Function  = glorot_normal,
     learn_γ::Bool    = false,
     rng::AbstractRNG = Random.GLOBAL_RNG
 ) where T
@@ -41,7 +41,7 @@ function DenseLBDNParams{T}(
     return DenseLBDNParams{T}(nl, nu, nh, ny, direct)
 end
 
-Flux.@functor DenseLBDNParams (direct, )
+@functor DenseLBDNParams (direct, )
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
@@ -112,7 +112,3 @@ function get_AB(
     return copy(buf_A), copy(buf_B)
     
 end
-
-# TODO: Add GPU compatibility
-# Flux.cpu() ...
-# Flux.gpu() ...

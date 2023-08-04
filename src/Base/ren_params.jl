@@ -64,7 +64,7 @@ mutable struct DirectRENParams{T}
     polar_param::Bool                   # Whether or not to use polar parameterisation
     D22_free   ::Bool                   # Is D22 free or parameterised by (X3,Y3,Z3)?
     D22_zero   ::Bool                   # Option to remove feedthrough.
-    output_map ::Bool
+    output_map ::Bool                   # Whether to include output map of REN
 end
 
 """
@@ -222,9 +222,9 @@ function DirectRENParams{T}(
     )
 end
 
-Flux.@functor DirectRENParams
+@functor DirectRENParams
 
-function Flux.trainable(m::DirectRENParams)
+function trainable(m::DirectRENParams)
 
     # Field names of trainable params, exclude ρ if needed
     if !m.output_map
@@ -245,31 +245,8 @@ function Flux.trainable(m::DirectRENParams)
     indx = length.(ps) .!= 0
     ps, fs = ps[indx], fs[indx]
 
-    # Flux.trainable() must return a NamedTuple
+    # Optimisers.trainable() must return a NamedTuple
     return NamedTuple{tuple(fs...)}(ps)
-end
-
-function Flux.gpu(M::DirectRENParams{T}) where T
-    # TODO: Test and complete this
-    if T != Float32
-        println("Moving type: ", T, " to gpu may not be supported. Try Float32!")
-    end
-    return DirectRENParams{T}(
-        gpu(M.ρ), gpu(M.X), gpu(M.Y1), gpu(M.X3), gpu(M.Y3), 
-        gpu(M.Z3), gpu(M.B2), gpu(M.C2), gpu(M.D12), gpu(M.D21),
-        gpu(M.D22), gpu(M.bx), gpu(M.bv), gpu(M.by),
-        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
-    )
-end
-
-function Flux.cpu(M::DirectRENParams{T}) where T
-    # TODO: Test and complete this
-    return DirectRENParams{T}(
-        cpu(M.ρ), cpu(M.X), cpu(M.Y1), cpu(M.X3), cpu(M.Y3), 
-        cpu(M.Z3), cpu(M.B2), cpu(M.C2), cpu(M.D12), cpu(M.D21),
-        cpu(M.D22), cpu(M.bx), cpu(M.bv), cpu(M.by),
-        M.ϵ, M.polar_param, M.D22_free, M.D22_zero
-    )
 end
 
 """
@@ -278,6 +255,8 @@ end
 Define equality for two objects of type `DirectRENParams`.
     
 Checks if all *relevant* parameters are equal. For example, if `D22` is fixed to `0` then the values of `X3, Y3, Z3` are not important and are ignored.
+
+This is currently not used. Might be useful in the future...
 """
 function ==(ps1::DirectRENParams, ps2::DirectRENParams)
 

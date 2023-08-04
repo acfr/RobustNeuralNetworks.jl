@@ -38,7 +38,7 @@ function DiffREN(ps::AbstractRENParams{T}) where T
     return DiffREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, ps)
 end
 
-Flux.@functor DiffREN (params, )
+@functor DiffREN (params, )
 
 function (m::DiffREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     explicit = direct_to_explicit(m.params)
