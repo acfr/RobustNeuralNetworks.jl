@@ -13,6 +13,8 @@ end
 """
     WrapREN(ps::AbstractRENParams{T}) where T
 
+[NOTE:] THIS IS A LEGACY WRAPPER AND WILL BE REMOVED IN A FUTURE RELEASE.
+
 Construct REN wrapper from its direct parameterisation.
 
 `WrapREN` is an alternative to [`REN`](@ref) that stores the [`AbstractRENParams`](@ref) and [`ExplicitRENParams`](@ref) within the same object. This means that a new `REN` object does not have to be created each time the parameters are updated. Explicit REN parameters must be updated by the user if the direct parameters have changed.
@@ -62,6 +64,7 @@ println(round(ren.explicit.B2[10];digits=4))
 See also [`AbstractREN`](@ref), [`REN`](@ref), and [`DiffREN`](@ref).
 """
 function WrapREN(ps::AbstractRENParams{T}) where T
+    @warn "WrapREN is deprecated and will be removed in a future release."
     explicit = direct_to_explicit(ps)
     return WrapREN{T}(ps.nl, ps.nu, ps.nx, ps.nv, ps.ny, explicit, ps)
 end
