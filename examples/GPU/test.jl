@@ -6,19 +6,31 @@ using CUDA
 using Flux
 using RobustNeuralNetworks
 
-T = Float32
 device = gpu
+T = Float32
 
-# Standard with Flux
-m = Chain(Flux.Dense(10 => 5, Flux.relu), Flux.Dense(5 => 4, Flux.relu)) |> device
-u = rand(T, 10) |> device
-m(u)
-
-# Test with LBDN
+# Model sizes
 nu, nx, nv, ny = 4, 5, 10, 2
-ren_ps = ContractingRENParams{T}(nu, nx, nv, ny)
-model = DiffREN(ren_ps)
-x = init_states(model) |> device
-ren = model |> gpu
 
-# TESTED: removed all gpu stuff from repo, and this sent elements to the GPU. Errors calling the model though... will need to figure that one out later.
+# Build models
+dense = Chain(
+    Dense(nu => nv, relu), 
+    Dense(nv => ny, relu)
+) |> device
+
+ren_ps = ContractingRENParams{T}(nu, nx, nv, ny; nl=relu)
+ren = DiffREN(ren_ps) |> device
+
+# Data
+batches = 10
+u = rand(T, nu, batches)      |> device
+x = init_states(ren, batches) |> device
+
+# Call models
+println("Calling dense...")
+yd = dense(u)
+
+println("Calling REN...")
+x1, yr = ren(x, u)
+
+println("Done!")
