@@ -42,7 +42,8 @@ function (m::DiffLBDN)(u::AbstractVecOrMat)
     return m(u, explicit)
 end
 
-@functor DiffLBDN (params, )
+@functor DiffLBDN
+trainable(m::DiffLBDN) = (params = m.params, )
 
 function set_output_zero!(m::DiffLBDN)
     set_output_zero!(m.params)

@@ -64,7 +64,8 @@ function PassiveRENParams{T}(
 
 end
 
-@functor PassiveRENParams (direct, )
+@functor PassiveRENParams
+trainable(m::PassiveRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 

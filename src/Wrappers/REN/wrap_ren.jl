@@ -79,4 +79,5 @@ function update_explicit!(m::WrapREN)
     return nothing
 end
 
-@functor WrapREN (params, )
+@functor WrapREN
+trainable(m::WrapREN) = (params = m.params)

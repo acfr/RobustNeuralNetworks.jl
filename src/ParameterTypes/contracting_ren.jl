@@ -146,7 +146,8 @@ function ContractingRENParams(
 
 end
 
-@functor ContractingRENParams (direct, )
+@functor ContractingRENParams
+trainable(m::ContractingRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::ContractingRENParams, return_h::Bool=false)
 
