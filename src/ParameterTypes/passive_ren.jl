@@ -75,7 +75,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
         
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
