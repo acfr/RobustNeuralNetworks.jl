@@ -125,7 +125,9 @@ end
 _M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
 function _N_lip(nu, ny, M, Z3) 
-    if ny >= nu
+    if ny == nu
+        return [(I - M) / (I + M); Z3] # Done separately to fix numerical issues on GPU
+    elseif ny > nu
         return [(I - M) / (I + M); -2*Z3 / (I + M)]
     else
         return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
@@ -138,7 +140,7 @@ _D21_lip(D22, D21, γ, D12_imp) = -(D22')*D21 ./ γ - D12_imp'
 
 _R_lip(D22, γ) = γ .* (-D22'*D22 ./ (γ.^2) + I)
 
-function _Γ1_lip(nx, ny, C2, D21, γ, T) # TODO: Check brackets
+function _Γ1_lip(nx, ny, C2, D21, γ, T)
     [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] .* (-1 ./ γ)
 end
 
