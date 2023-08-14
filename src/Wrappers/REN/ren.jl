@@ -104,11 +104,11 @@ _yt(C2, D21, D22, xt, wt, ut, by) = C2 * xt + D21 * wt + D22 * ut .+ by
 
 Return matrix of (nbatches) state vectors of a REN initialised as zeros.
 """
-function init_states(m::AbstractREN{T}, nbatches; rng=nothing) where T
+function init_states(m::Union{AbstractREN{T},AbstractRENParams{T}}, nbatches; rng=nothing) where T
     return zeros(T, m.nx, nbatches)
 end
 
-function init_states(m::AbstractREN{T}; rng=nothing) where T
+function init_states(m::Union{AbstractREN{T},AbstractRENParams{T}}; rng=nothing) where T
     return zeros(T, m.nx)
 end
 

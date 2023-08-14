@@ -61,11 +61,9 @@ function rrule(::typeof(tril_layer_back), σ::F, D11, v, w_eq::AbstractVecOrMat{
         b̄ = NoTangent()
 
         # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
-        j = similar(v)
-        for i in eachindex(j)
-            _, back = rrule(σ, v[i])
-            _, j[i] = back(one(T))
-        end
+        _back(σ, v) = rrule(σ, v)[2]
+        backs = _back.(σ, v)
+        j = map(b -> b(one(T))[2], backs)
 
         # Compute gradient from implicit function theorem
         w̄_eq = v

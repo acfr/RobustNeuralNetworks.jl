@@ -4,18 +4,19 @@ using Pkg
 Pkg.activate("../")
 
 using BenchmarkTools
+using CUDA
 using Flux
 using Random
 using RobustNeuralNetworks
 
 rng = Xoshiro(42)
 
-function test_diffren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2, 
-                            nl=relu, batches=100, tmax=5, isdiff=true, T=Float32)
+function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2, 
+                        nl=relu, batches=100, tmax=5, is_diff=false, T=Float32)
 
     # Build the ren
     model = construct{T}(nu, nx, nv, ny, args...; nl, rng)
-    is_diff && (model = DiffREN(model))
+    is_diff && (model = DiffREN(model) |> device)
 
     # Create dummy data
     us = [randn(rng, T, nu, batches) for _ in 1:tmax] |> device
@@ -24,9 +25,10 @@ function test_diffren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2,
 
     # Dummy loss function
     function loss(model, x, us, ys)
+        m = is_diff ? model : (REN(model) |> device)
         J = 0
         for t in 1:tmax
-            x, y = model(x, us[t])
+            x, y = m(x, us[t])
             J += Flux.mse(y, ys[t])
         end
         return J
@@ -45,12 +47,10 @@ function test_diffren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2,
     return l, g
 end
 
-l, g = test_diffren_speed(
+l, g = test_ren_speed(
     cpu,
     ContractingRENParams;
     batches=100,
     tmax=5,
 )
 println()
-
-# TODO: Write function for non-diff REN too!
