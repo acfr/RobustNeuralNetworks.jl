@@ -11,6 +11,7 @@ using RobustNeuralNetworks
 
 rng = Xoshiro(42)
 
+# TODO: Probably better to send params to GPU then build off that.
 function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
                         nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
                         do_time=true)
