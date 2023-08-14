@@ -12,11 +12,11 @@ using RobustNeuralNetworks
 rng = Xoshiro(42)
 
 function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
-                        nl=tanh, batches=10, tmax=5, is_diff=false, T=Float32,
+                        nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
                         do_time=true)
 
     # Build the ren
-    model = construct{T}(nu, nx, nv, ny, args...; nl, rng, ϵ=T(1e-10))
+    model = construct{T}(nu, nx, nv, ny, args...; nl, rng)
     is_diff && (model = DiffREN(model) |> device)
 
     # Create dummy data
