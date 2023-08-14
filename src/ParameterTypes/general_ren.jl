@@ -82,7 +82,8 @@ function GeneralRENParams{T}(
 
 end
 
-@functor GeneralRENParams (direct, )
+@functor GeneralRENParams
+trainable(m::GeneralRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 

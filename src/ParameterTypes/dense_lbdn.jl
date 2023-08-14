@@ -41,7 +41,8 @@ function DenseLBDNParams{T}(
     return DenseLBDNParams{T}(nl, nu, nh, ny, direct)
 end
 
-@functor DenseLBDNParams (direct, )
+@functor DenseLBDNParams
+trainable(m::DenseLBDNParams) =  (direct = m.direct, )
 
 function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
