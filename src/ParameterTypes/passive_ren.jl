@@ -95,7 +95,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     D22 = ν*I + M
     D21_imp = D21 - D12_imp'
 
-    𝑅  = _R_pass(nu, D22, ν)
+    𝑅  = _R_pass(D22, ν)
     Γ2 = _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
 
     H = x_to_h(X, ϵ, polar_param, ρ) + Γ2
@@ -108,7 +108,7 @@ end
 
 _M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
 
-_R_pass(nu, D22, ν) = -2ν*I + D22 + D22'
+_R_pass(D22, ν) = -2ν*I + D22 + D22'
 
 function _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
     [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])

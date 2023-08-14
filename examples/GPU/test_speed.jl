@@ -11,11 +11,12 @@ using RobustNeuralNetworks
 
 rng = Xoshiro(42)
 
-function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2, 
-                        nl=relu, batches=100, tmax=5, is_diff=false, T=Float32)
+function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
+                        nl=tanh, batches=10, tmax=5, is_diff=false, T=Float32,
+                        do_time=true)
 
     # Build the ren
-    model = construct{T}(nu, nx, nv, ny, args...; nl, rng)
+    model = construct{T}(nu, nx, nv, ny, args...; nl, rng, ϵ=T(1e-10))
     is_diff && (model = DiffREN(model) |> device)
 
     # Create dummy data
@@ -34,23 +35,60 @@ function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=2,
         return J
     end
 
-    # Run it once to check it works
-    l = loss(model, x0, us, ys)
-    g = gradient(loss, model, x0, us, ys)
-
-    # Time it
+    # Run and time, running it once first to check it works
     print("Forwards: ")
-    @btime $loss($model, $x0, $us, $ys)
+    l = loss(model, x0, us, ys)
+    do_time && (@btime $loss($model, $x0, $us, $ys))
+
     print("Reverse:  ")
-    @btime $gradient($loss, $model, $x0, $us, $ys)
+    g = gradient(loss, model, x0, us, ys)
+    do_time && (@btime $gradient($loss, $model, $x0, $us, $ys))
 
     return l, g
 end
 
-l, g = test_ren_speed(
-    cpu,
-    ContractingRENParams;
-    batches=100,
-    tmax=5,
-)
-println()
+# Test all types and combinations
+γ = 10
+ν = 10
+
+nu, nx, nv, ny = 4, 5, 10, 4
+X = randn(rng, ny, ny)
+Y = randn(rng, nu, nu)
+S = randn(rng, nu, ny)
+
+Q = -X'*X
+R = S * (Q \ S') + Y'*Y
+
+function test_rens(device)
+
+    d = device === cpu ? "CPU" : "GPU"
+    println("\nTesting RENs on ", d, ":")
+    println("--------------------\n")
+
+    println("Contracting REN:\n")
+    test_ren_speed(device, ContractingRENParams)
+    println("\nContracting DiffREN:\n")
+    test_ren_speed(device, ContractingRENParams; is_diff=true)
+
+    println("\nPassive REN:\n")
+    test_ren_speed(device, PassiveRENParams, ν)
+    println("\nPassive DiffREN:\n")
+    test_ren_speed(device, PassiveRENParams, ν; is_diff=true)
+
+    println("\nLipschitz REN:\n")
+    test_ren_speed(device, LipschitzRENParams, γ)
+    println("\nLipschitz DiffREN:\n")
+    test_ren_speed(device, LipschitzRENParams, γ; is_diff=true)
+
+    println("\nGeneral REN:\n")
+    test_ren_speed(device, GeneralRENParams, Q, S, R)
+    println("\nGeneral DiffREN:\n")
+    test_ren_speed(device, GeneralRENParams, Q, S, R; is_diff=true)
+
+    return nothing
+end
+
+test_rens(cpu)
+test_rens(gpu)
+
+# TODO: Scalar indexing issue on GPU appearing in backwards pass of Lipschitz DiffREN and General DiffREN only. What's different about those?
