@@ -13,7 +13,7 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
 end
 
 """
-    PassiveRENParams{T}(nu, nx, nv, ny; <keyword arguments>) where T
+    PassiveRENParams{T}(nu, nx, nv, ny, ν; <keyword arguments>) where T
 
 Construct direct parameterisation of a passive REN.
 
@@ -22,10 +22,9 @@ Construct direct parameterisation of a passive REN.
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
+- `ν::Number=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
     
 # Keyword arguments
-
-- `ν::T=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
 
 - `nl::Function=relu`: Sector-bounded static nonlinearity.
 
@@ -36,8 +35,7 @@ See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref).
 """
 function PassiveRENParams{T}(
-    nu::Int, nx::Int, nv::Int, ny::Int;
-    ν::T              = T(0),
+    nu::Int, nx::Int, nv::Int, ny::Int, ν::Number=T(0);
     nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
