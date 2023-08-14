@@ -69,7 +69,6 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
     nu = ps.nu
-    ny = ps.ny
     ν = ps.ν
         
     # Implicit parameters
@@ -93,7 +92,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     # Currently converts to Hermitian to avoid numerical conditioning issues
     M = _M_pass(X3, Y3, ϵ)
 
-    D22 = ν*Matrix(I, ny,nu) + M
+    D22 = ν*I + M
     D21_imp = D21 - D12_imp'
 
     𝑅  = _R_pass(nu, D22, ν)
@@ -109,7 +108,7 @@ end
 
 _M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
 
-_R_pass(nu, D22, ν) = -2ν * Matrix(I, nu, nu) + D22 + D22'
+_R_pass(nu, D22, ν) = -2ν*I + D22 + D22'
 
 function _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
     [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
