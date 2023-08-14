@@ -126,9 +126,10 @@ _M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
 function _N_lip(nu, ny, M, Z3) 
     if ny == nu
-        return [(I - M) / (I + M); Z3] # Done separately to fix numerical issues on GPU
+        return [(I + M) \ (I - M); Z3] # Done separately to fix numerical issues on GPU
     elseif ny > nu
-        return [(I - M) / (I + M); -2*Z3 / (I + M)]
+        inv_IM = inv(I + M) # Issue back-propagating through A / B on GPU...
+        return [(I - M) * inv_IM; -2*Z3 * inv_IM]
     else
         return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
     end

@@ -90,5 +90,3 @@ end
 
 test_rens(cpu)
 test_rens(gpu)
-
-# TODO: Scalar indexing issue on GPU appearing in backwards pass of Lipschitz DiffREN and General DiffREN only. What's different about those?
