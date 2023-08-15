@@ -85,10 +85,10 @@ function norm_cayley(XY, α, n)
 
 end
 
-function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
+function get_Ψ(d::NTuple{N, T}) where {N, T}
 
     # Use Zygote buffer to avoid problems with array mutation
-    buf = Buffer([zeros(T,0)], N)
+    buf = Buffer([zero(d[1])], N)
     for k in 1:N
         buf[k] = exp.(d[k])
     end
@@ -97,14 +97,14 @@ function get_Ψ(d::NTuple{N, AbstractVector{T}}) where {T, N}
 end
 
 function get_AB(
-    XY::NTuple{N, AbstractMatrix{T}}, 
-    α ::NTuple{N, AbstractVector{T}},
+    XY::NTuple{N, T1}, 
+    α ::NTuple{N, T2},
     n ::AbstractVector{Int}
-) where {T, N}
+) where {N, T1, T2}
 
     # Use Zygote buffer to avoid problems with array mutation
-    buf_A = Buffer([zeros(T,0,0)], N)
-    buf_B = Buffer([zeros(T,0,0)], N)
+    buf_A = Buffer([zero(XY[1])], N)
+    buf_B = Buffer([zero(XY[1])], N)
     for k in 1:N
         AB_k = norm_cayley(XY[k], α[k], n[k])
         buf_A[k] = AB_k[1]
