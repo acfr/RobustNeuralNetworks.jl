@@ -11,7 +11,7 @@ using RobustNeuralNetworks
 
 rng = Xoshiro(42)
 
-function test_ren_gpu(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
+function test_ren_device(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
                       nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
                       do_time=true)
 
@@ -59,7 +59,7 @@ S = randn(rng, nu, ny)
 Q = -X'*X
 R = S * (Q \ S') + Y'*Y
 
-function test_rens(device)
+function test_ren_device(device)
 
     d = device === cpu ? "CPU" : "GPU"
     println("\nTesting RENs on ", d, ":")

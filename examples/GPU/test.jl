@@ -5,42 +5,40 @@ Pkg.activate("../")
 using BenchmarkTools
 using CUDA
 using Flux
+using Random
 using RobustNeuralNetworks
 
-device = gpu
 T = Float32
+rng = Xoshiro(42)
 
-# Note: construction of REN is probably best suited to the CPU rather than GPU?
-# This makes things tricky with DiffREN. Would suggest REN is always best!
-
-# Model sizes
-nu, nx, nv, ny = 4, 5, 10, 2
+# Model parameters
+nu, ny, γ = 2, 3, 1
+nh = [10,5]
 
 # Build model
-ren_ps = LipschitzRENParams{T}(nu, nx, nv, ny, 1; nl=relu)
-# ren = REN(ren_ps)
-ren = DiffREN(ren_ps)
+model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng) #, learn_γ=true)
+model = LBDN(model_ps)
+# model = DiffLBDN(model_ps)
 
 # Data
 batches = 10000
-u = rand(T, nu, batches)      |> device
-x = init_states(ren, batches) |> device
+us = randn(rng, T, nu, batches)
+ys = randn(rng, T, ny, batches)
 
-function to_dev(ren, x, u, device)
-    r = ren |> device
-    x1 = x |> device
+function to_dev(lbdn, u, device)
+    m = lbdn |> device
     u1 = u |> device
-    return r, x1, u1
+    return m, u1
 end
 
 # Time on the CPU
-println("Calling REN on CPU with $batches batches")
-ren, x, u = to_dev(ren, x, u, cpu)
-@btime x1, yr = ren(x, u);
+println("Calling LBDN on CPU with $batches batches")
+lbdn, u = to_dev(model, us, cpu)
+@btime y1 = lbdn(u);
 
 # Time on GPU
-println("Calling REN on GPU with $batches batches")
-ren, x, u = to_dev(ren, x, u, gpu)
-@btime x1, yr = ren(x, u);
+println("Calling LBDN on GPU with $batches batches")
+lbdn, u = to_dev(model, us, gpu)
+@btime y1 = lbdn(u);
 
 println()
