@@ -1,9 +1,9 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
-mutable struct DenseLBDNParams{T} <: AbstractLBDNParams{T}
+mutable struct DenseLBDNParams{T, L} <: AbstractLBDNParams{T, L}
     nl::Function                    # Sector-bounded nonlinearity
     nu::Int
-    nh::AbstractVector{Int}
+    nh::NTuple{L, Int}
     ny::Int
     direct::DirectLBDNParams{T}
 end
@@ -17,9 +17,9 @@ This is the equivalent of a multi-layer perceptron (eg: `Flux.Dense`) with a gua
 
 # Arguments
 - `nu::Int`: Number of inputs.
-- `nh::AbstractVector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `nh::Union{Vector{Int}, NTuple{N, Int}}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
 - `ny::Int`: Number of outputs.
-- `γ::Number=T(1)`: Lipschitz upper bound.
+- `γ::Real=T(1)`: Lipschitz upper bound, must be positive.
 
 # Keyword arguments:
 
@@ -30,26 +30,27 @@ See [`DirectLBDNParams`](@ref) for documentation of keyword arguments `initW`, `
 
 """
 function DenseLBDNParams{T}(
-    nu::Int, nh::AbstractVector{Int}, ny::Int, γ::Number = T(1);
+    nu::Int, nh::Union{Vector{Int}, NTuple{N, Int}}, 
+    ny::Int, γ::Real = T(1);
     nl::Function     = relu, 
     initW::Function  = glorot_normal,
     initb::Function  = glorot_normal,
     learn_γ::Bool    = false,
     rng::AbstractRNG = Random.GLOBAL_RNG
-) where T
+) where {T, N}
+    nh = Tuple(nh)
     direct = DirectLBDNParams{T}(nu, nh, ny, γ; initW, initb, learn_γ, rng)
-    return DenseLBDNParams{T}(nl, nu, nh, ny, direct)
+    return DenseLBDNParams{T, length(nh)}(nl, nu, nh, ny, direct)
 end
 
 @functor DenseLBDNParams
 trainable(m::DenseLBDNParams) =  (direct = m.direct, )
 
-function direct_to_explicit(ps::DenseLBDNParams{T}) where T
+function direct_to_explicit(ps::DenseLBDNParams{T, L}) where {T, L}
 
     # Direct parameterisation
     nh = ps.nh
     ny = ps.ny
-    L  = length(nh)
     L1 = L + 1
 
     XY = ps.direct.XY
@@ -60,7 +61,7 @@ function direct_to_explicit(ps::DenseLBDNParams{T}) where T
 
     # Build explicit model
     Ψd     = get_Ψ(d)
-    A_T, B = get_AB(XY, α, vcat(nh, ny))
+    A_T, B = get_AB(XY, α, vcat(nh..., ny))
     sqrtγ  = sqrt(exp(log_γ))
 
     # Faster to backpropagate with tuples than vectors
@@ -99,7 +100,7 @@ end
 function get_AB(
     XY::NTuple{N, T1}, 
     α ::NTuple{N, T2},
-    n ::AbstractVector{Int}
+    n ::Vector{Int}
 ) where {N, T1, T2}
 
     # Use Zygote buffer to avoid problems with array mutation

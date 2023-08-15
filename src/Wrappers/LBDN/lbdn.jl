@@ -1,15 +1,15 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
-mutable struct LBDN{T} <: AbstractLBDN{T}
+mutable struct LBDN{T, L} <: AbstractLBDN{T, L}
     nl::Function
     nu::Int
-    nh::AbstractVector{Int}
+    nh::NTuple{L, Int}
     ny::Int
     explicit::ExplicitLBDNParams{T}
 end
 
 """
-    LBDN(ps::AbstractLBDNParams{T}) where T
+    LBDN(ps::AbstractLBDNParams)
 
 Construct an LBDN from its direct parameterisation.
 
@@ -17,9 +17,9 @@ This constructor takes a direct parameterisation of LBDN (eg: a [`DenseLBDNParam
 
 See also [`AbstractLBDN`](@ref), [`DiffLBDN`](@ref).
 """
-function LBDN(ps::AbstractLBDNParams{T}) where T
+function LBDN(ps::AbstractLBDNParams{T, L}) where {T, L}
     explicit = direct_to_explicit(ps)
-    return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
+    return LBDN{T, L}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
 end
 
 # No trainable params
@@ -27,7 +27,7 @@ end
 trainable(m::LBDN) = (; )
 
 """
-    abstract type AbstractLBDN{T} end
+    abstract type AbstractLBDN{T, L} end
 
 Explicit parameterisation for Lipschitz-bounded deep networks.
 

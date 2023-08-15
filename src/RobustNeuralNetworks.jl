@@ -33,13 +33,13 @@ abstract type AbstractRENParams{T} end
 abstract type AbstractREN{T} end
 
 """
-    abstract type AbstractLBDNParams{T} end
+    abstract type AbstractLBDNParams{T, L} end
 
 Direct parameterisation for Lipschitz-bounded deep networks.
 """
-abstract type AbstractLBDNParams{T} end
+abstract type AbstractLBDNParams{T, L} end
 
-abstract type AbstractLBDN{T} end
+abstract type AbstractLBDN{T, L} end
 
 
 ############ Includes ############
