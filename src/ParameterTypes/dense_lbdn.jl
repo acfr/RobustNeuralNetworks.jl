@@ -77,10 +77,12 @@ function norm_cayley(XY, α, n)
     Y  = XY[(n+1):end, :]
 
     # Cayley transform
+    # Note: Backprop through A / B doesn't happen on the GPU
+    # but A * inv(B) does. Look into speeding this up later.
     Z = (X - X') + (Y'*Y)
-    IZ = (I + Z)
-    A_T = IZ \ (I - Z)
-    B_T = -2Y / IZ
+    IZ_inv = inv(I + Z)
+    A_T = IZ_inv * (I - Z)
+    B_T = -2Y * IZ_inv
 
     return A_T, B_T
 

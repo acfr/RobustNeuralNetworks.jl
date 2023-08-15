@@ -1,4 +1,5 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
+
 cd(@__DIR__)
 using Pkg
 Pkg.activate("../")
@@ -12,8 +13,8 @@ using RobustNeuralNetworks
 rng = Xoshiro(42)
 
 function test_ren_device(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
-                      nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
-                      do_time=true)
+                         nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
+                         do_time=true)
 
     # Build the ren
     model = construct{T}(nu, nx, nv, ny, args...; nl, rng) |> device
@@ -59,34 +60,34 @@ S = randn(rng, nu, ny)
 Q = -X'*X
 R = S * (Q \ S') + Y'*Y
 
-function test_ren_device(device)
+function test_rens(device)
 
     d = device === cpu ? "CPU" : "GPU"
     println("\nTesting RENs on ", d, ":")
     println("--------------------\n")
 
     println("Contracting REN:\n")
-    test_ren_speed(device, ContractingRENParams)
+    test_ren_device(device, ContractingRENParams)
     println("\nContracting DiffREN:\n")
-    test_ren_speed(device, ContractingRENParams; is_diff=true)
+    test_ren_device(device, ContractingRENParams; is_diff=true)
 
     println("\nPassive REN:\n")
-    test_ren_speed(device, PassiveRENParams, ν)
+    test_ren_device(device, PassiveRENParams, ν)
     println("\nPassive DiffREN:\n")
-    test_ren_speed(device, PassiveRENParams, ν; is_diff=true)
+    test_ren_device(device, PassiveRENParams, ν; is_diff=true)
 
     println("\nLipschitz REN:\n")
-    test_ren_speed(device, LipschitzRENParams, γ)
+    test_ren_device(device, LipschitzRENParams, γ)
     println("\nLipschitz DiffREN:\n")
-    test_ren_speed(device, LipschitzRENParams, γ; is_diff=true)
+    test_ren_device(device, LipschitzRENParams, γ; is_diff=true)
 
     println("\nGeneral REN:\n")
-    test_ren_speed(device, GeneralRENParams, Q, S, R)
+    test_ren_device(device, GeneralRENParams, Q, S, R)
     println("\nGeneral DiffREN:\n")
-    test_ren_speed(device, GeneralRENParams, Q, S, R; is_diff=true)
+    test_ren_device(device, GeneralRENParams, Q, S, R; is_diff=true)
 
     return nothing
 end
 
-# test_rens(cpu)
+test_rens(cpu)
 test_rens(gpu)
