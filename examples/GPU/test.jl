@@ -13,7 +13,7 @@ rng = Xoshiro(42)
 
 # Model parameters
 nu, ny, γ = 2, 3, 1
-nh = [10,5] # TODO: Switch this to a tuple, it really should be immutable
+nh = [10, 5]
 
 # Build model
 model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng) #, learn_γ=true)
@@ -21,7 +21,7 @@ model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng) #, learn_γ=true)
 model = DiffLBDN(model_ps)
 
 # Data
-batches = 1000
+batches = 1024
 us = randn(rng, T, nu, batches)
 ys = randn(rng, T, ny, batches)
 
@@ -40,7 +40,5 @@ lbdn, u = to_dev(model, us, cpu)
 println("Calling LBDN on GPU with $batches batches")
 lbdn, u = to_dev(model, us, gpu)
 @btime y1 = lbdn(u);
-
-# TODO: Remove scalar array indexing
 
 println()

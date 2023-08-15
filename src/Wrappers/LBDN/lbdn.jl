@@ -86,12 +86,12 @@ function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{
 
     # Evaluate LBDN (extracting Ψd[k] is faster for backprop)
     # Note: backpropagation is similarly fast with for loops as with Flux chains (tested)
-    h = sqrtγ * u
+    h = sqrtγ .* u
     for k in 1:M
         Ψdk = Ψd[k]
         h = sqrt2 * (A_T[k] .* Ψdk') * σ.(sqrt2 * (B[k] ./ Ψdk) * h .+ b[k])
     end
-    return sqrtγ * B[N] * h .+ b[N]
+    return sqrtγ .* B[N] * h .+ b[N]
 end
 
 function set_output_zero!(m::AbstractLBDN)

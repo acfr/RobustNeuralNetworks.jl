@@ -14,7 +14,7 @@ mutable struct ExplicitLBDNParams{T, N, M}
     B  ::NTuple{N, AbstractMatrix{T}}
     Ψd ::NTuple{M, AbstractVector{T}}   # Diagonal of matrix Ψ from the paper
     b  ::NTuple{N, AbstractVector{T}}
-    sqrtγ::T
+    sqrtγ::AbstractVector{T}
 end
 
 # No trainable params

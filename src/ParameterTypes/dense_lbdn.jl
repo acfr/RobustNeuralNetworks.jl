@@ -57,12 +57,12 @@ function direct_to_explicit(ps::DenseLBDNParams{T, L}) where {T, L}
     α  = ps.direct.α
     d  = ps.direct.d
     b  = ps.direct.b
-    log_γ = ps.direct.log_γ[1]
+    log_γ = ps.direct.log_γ
 
     # Build explicit model
     Ψd     = get_Ψ(d)
     A_T, B = get_AB(XY, α, vcat(nh..., ny))
-    sqrtγ  = sqrt(exp(log_γ))
+    sqrtγ  = sqrt.(exp.(log_γ))
 
     # Faster to backpropagate with tuples than vectors
     return ExplicitLBDNParams{T,L1,L}(tuple(A_T...), tuple(B...), tuple(Ψd...), b, sqrtγ)
@@ -72,7 +72,7 @@ end
 function norm_cayley(XY, α, n)
 
     # Normalise XY with polar param and extract
-    XY = (α[1] / norm(XY)) * XY
+    XY = (α ./ norm(XY)) .* XY
     X  = XY[1:n, :]
     Y  = XY[(n+1):end, :]
 
