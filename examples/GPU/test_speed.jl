@@ -11,14 +11,13 @@ using RobustNeuralNetworks
 
 rng = Xoshiro(42)
 
-# TODO: Probably better to send params to GPU then build off that.
-function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
-                        nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
-                        do_time=true)
+function test_ren_gpu(device, construct, args...; nu=4, nx=5, nv=10, ny=4, 
+                      nl=tanh, batches=4, tmax=3, is_diff=false, T=Float32,
+                      do_time=true)
 
     # Build the ren
-    model = construct{T}(nu, nx, nv, ny, args...; nl, rng)
-    is_diff && (model = DiffREN(model) |> device)
+    model = construct{T}(nu, nx, nv, ny, args...; nl, rng) |> device
+    is_diff && (model = DiffREN(model))
 
     # Create dummy data
     us = [randn(rng, T, nu, batches) for _ in 1:tmax] |> device
@@ -27,7 +26,7 @@ function test_ren_speed(device, construct, args...; nu=4, nx=5, nv=10, ny=4,
 
     # Dummy loss function
     function loss(model, x, us, ys)
-        m = is_diff ? model : (REN(model) |> device)
+        m = is_diff ? model : REN(model)
         J = 0
         for t in 1:tmax
             x, y = m(x, us[t])
@@ -89,5 +88,5 @@ function test_rens(device)
     return nothing
 end
 
-test_rens(cpu)
+# test_rens(cpu)
 test_rens(gpu)
