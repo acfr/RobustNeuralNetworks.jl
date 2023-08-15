@@ -9,7 +9,7 @@ mutable struct DiffLBDN{T, L} <: AbstractLBDN{T, L}
 end
 
 """
-    DiffLBDN(ps::AbstractLBDNParams{T}) where T
+    DiffLBDN(ps::AbstractLBDNParams)
 
 Construct a differentiable LBDN from its direct parameterisation.
 
