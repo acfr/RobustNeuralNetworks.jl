@@ -124,14 +124,14 @@ end
 # Auto-diff faster through smaller functions
 _M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
-function _N_lip(nu, ny, M, Z3) 
+function _N_lip(nu, ny, M, Z3)
+    Im = _get_I(M) # Prevents scalar indexing on backwards pass of A / (I + M) on GPU
     if ny == nu
-        return [(I + M) \ (I - M); Z3] # Done separately to fix numerical issues on GPU
-    elseif ny > nu
-        inv_IM = inv(I + M) # Issue back-propagating through A / B on GPU...
-        return [(I - M) * inv_IM; -2*Z3 * inv_IM]
+        return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
+    elseif ny >= nu
+        return [(Im - M) / (Im + M); -2*Z3 / (Im + M)]
     else
-        return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        return [((Im + M) \ (Im - M)) (-2*(Im + M) \ Z3')]
     end
 end
 

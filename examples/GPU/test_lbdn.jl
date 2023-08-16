@@ -48,14 +48,12 @@ function test_lbdns(device)
     println("--------------------\n")
 
     println("Dense LBDN:\n")
-    test_lbdn_device(device; do_time=false)
+    test_lbdn_device(device)
     println("\nDense DiffLBDN:\n")
-    test_lbdn_device(device; is_diff=true, do_time=false)
+    test_lbdn_device(device; is_diff=true)
 
     return nothing
 end
 
-# test_lbdns(cpu)
+test_lbdns(cpu)
 test_lbdns(gpu)
-
-# TODO: Error on backwards pass through GPU after using inv(I + Z) for Cayley transform

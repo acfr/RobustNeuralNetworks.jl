@@ -77,15 +77,13 @@ function norm_cayley(XY, α, n)
     Y  = XY[(n+1):end, :]
 
     # Cayley transform
-    # Note: Backprop through A / B doesn't happen on the GPU
-    # but A * inv(B) does. Look into speeding this up later.
     Z = (X - X') + (Y'*Y)
-    IZ_inv = inv(I + Z)
-    A_T = IZ_inv * (I - Z)
-    B_T = -2Y * IZ_inv
+    Iz = _get_I(Z) # Prevents scalar indexing on backwards pass of A / (I + Z) on GPU
+    A_T = (Iz + Z) \ (Iz - Z)
+    B_T = -2Y / (Iz + Z)
 
     return A_T, B_T
-
+    
 end
 
 function get_Ψ(d::NTuple{N, T}) where {N, T}
@@ -114,5 +112,5 @@ function get_AB(
         buf_B[k] = AB_k[2]'
     end
     return copy(buf_A), copy(buf_B)
-    
+
 end
