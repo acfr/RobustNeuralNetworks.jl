@@ -6,6 +6,7 @@ Pkg.activate("../")
 
 using BSON
 using CairoMakie
+using CUDA
 using Flux
 using Flux: OneHotMatrix
 using MLDatasets: MNIST
@@ -13,7 +14,7 @@ using Random
 using RobustNeuralNetworks
 using Statistics
 
-# Random seed for consistency
+dev = gpu
 rng = MersenneTwister(42)
 
 # Model specification
@@ -25,11 +26,11 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 # Set up model: define parameters, then create model
 T = Float32
 model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng)
-model = Chain(DiffLBDN(model_ps), Flux.softmax)
+model = Chain(DiffLBDN(model_ps), Flux.softmax) |> dev
 
 # Get MNIST training and test data
-x_train, y_train = MNIST(T, split=:train)[:]
-x_test,  y_test  = MNIST(T, split=:test)[:]
+x_train, y_train = MNIST(T, split=:train)[:] |> dev
+x_test,  y_test  = MNIST(T, split=:test)[:] |> dev
 
 # Reshape features for model input
 x_train = Flux.flatten(x_train)
@@ -67,10 +68,9 @@ function train_mnist!(model, data; num_epochs=300, lrs=[1e-3,1e-4])
     end
 end
 
-# Train and save the model for later use
+# Train and save the model for later
 train_mnist!(model, train_data)
-bson("../results/lbdn-mnist/lbdn_mnist.bson", Dict("model" => model))
-model = BSON.load("../results/lbdn-mnist/lbdn_mnist.bson")["model"]
+bson("../results/lbdn-mnist/lbdn_mnist.bson", Dict("model" => (model |> cpu)))
 
 # Print final results
 train_acc = accuracy(model, x_train, y_train)*100
@@ -88,6 +88,11 @@ for i in eachindex(indx)
     x = x_test[:,indx[i]]
     y = y_test[:,indx[i]]
     ŷ = model(x)
+
+    # Make sure data is on CPU for plotting
+    x = x |> cpu
+    y = y |> cpu
+    ŷ = ŷ |> cpu
 
     # Reshape data for plotting
     xmat = reshape(x, 28, 28)
@@ -125,12 +130,11 @@ dense = Chain(
     Dense(nh[1], nh[2], Flux.relu; init, bias=initb(nh[2])),
     Dense(nh[2], ny; init, bias=initb(ny)),
     Flux.softmax
-)
+) |> dev
 
 # Train it and save for later
 train_mnist!(dense, train_data)
-bson("../results/lbdn-mnist/dense_mnist.bson", Dict("model" => dense))
-dense = BSON.load("../results/lbdn-mnist/dense_mnist.bson")["model"]
+bson("../results/lbdn-mnist/dense_mnist.bson", Dict("model" => (dense |> cpu)))
 
 # Print final results
 train_acc = accuracy(dense, x_train, y_train)*100
@@ -140,9 +144,9 @@ println("Training accuracy: $(round(train_acc,digits=2))%")
 println("Test accuracy:     $(round(test_acc,digits=2))%")
 
 # Get test accuracy as we add noise
-uniform(x) = 2*rand(rng, T, size(x)...) .- 1
+uniform(x) = 2*rand(rng, T, size(x)...) .- 1 |> dev
 function noisy_test_error(model, ϵ=0)
-    noisy_xtest = x_test .+ ϵ*uniform(x_test)
+    noisy_xtest = x_test + ϵ*uniform(x_test)
     accuracy(model, noisy_xtest,  y_test)*100
 end
 
