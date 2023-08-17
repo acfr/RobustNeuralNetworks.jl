@@ -16,10 +16,6 @@ rng = MersenneTwister(0)
 dev = gpu
 T = Float32
 
-# TODO: Currently getting NaNs in gradient
-# The loss function does not give consistent values for a given input
-# In fact, the REN does not give consistent next states for a given input!
-# This is all fine on the CPU, but kills it on the GPU
 
 #####################################################################
 # Problem setup
@@ -37,7 +33,7 @@ fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 
 # Generate training data
-dt = T(0.01)               # Time-step (s)
+dt = T(0.01)            # Time-step (s)
 Tmax = 10               # Simulation horizon
 ts = 1:Int(Tmax/dt)     # Time array indices
 
@@ -68,8 +64,8 @@ nv = 20
 nu = size(observer_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{T}(nu, nx, nv, ny; output_map=false, rng)
-# model = REN(model_ps) |> dev
 model = DiffREN(model_ps) |> dev
+# model = REN(model_ps) |> dev
 
 # Loss function: one step ahead error (average over time)
 function loss(model, xn, xt, inputs)
@@ -77,27 +73,36 @@ function loss(model, xn, xt, inputs)
     return mean(sum((xn - xpred).^2; dims=1))
 end
 
-
 # TODO: Testing with GPU
 xn, xt, inputs = data.is[1][1], data.is[2][1], data.is[3][1]
 # train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
+∇J = Flux.gradient(loss, model, xn, xt, inputs)
 
-function test_me()
-    x0 = model(xt, inputs)[1]
-    all_good = true
-    for _ in 1:1000
-        xpred = model(xt, inputs)[1]
-        !(xpred ≈ x0) && (all_good = false)
-        x0 = xpred
-    end
-    return all_good
-end
+gs = ∇J[1][:params][:direct]
+# println(train_loss)
+# println(gs)
+println(gs[:X])
+println(gs[:ρ])
+println(gs[:ϵ])
 
-println("Evaluates correctly? ", test_me())
+# function test_me()
+#     x0 = model(xt, inputs)[1]
+#     all_good = true
+#     for _ in 1:10000
+#         xpred = model(xt, inputs)[1]
+#         if !(xpred ≈ x0)
+#             all_good = false
+#             println(xpred .- x0)
+#         end
+#         x0 = xpred
+#     end
+#     return all_good
+# end
 
+# println("Evaluates correctly? ", test_me())
 
-# # Train the model
-# function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
+# Train the model
+# function train_observer!(model, data; epochs=5, lr=1e-4, min_lr=1e-6)
 
 #     opt_state = Flux.setup(Adam(lr), model)
 #     mean_loss = [T(1e5)]
@@ -108,7 +113,10 @@ println("Evaluates correctly? ", test_me())
 #             train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
 #             Flux.update!(opt_state, model, ∇J[1])
 #             push!(batch_loss, train_loss)
-#             println(train_loss)
+#             if isnan(train_loss)
+#                 println("NaNs in training loss")
+#                 break
+#             end
 #         end
 #         @printf "Epoch: %d, Lr: %.1g, Loss: %.4g\n" epoch lr mean(batch_loss)
 
@@ -123,7 +131,7 @@ println("Evaluates correctly? ", test_me())
 # end
 # tloss = train_observer!(model, data)
 
-
+println()
 # #####################################################################
 # # Generate test data
 

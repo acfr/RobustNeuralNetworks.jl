@@ -44,7 +44,7 @@ end
 function test_lbdns(device)
 
     d = device === cpu ? "CPU" : "GPU"
-    println("\nTesting RENs on ", d, ":")
+    println("\nTesting LBDNs on ", d, ":")
     println("--------------------\n")
 
     println("Dense LBDN:\n")
