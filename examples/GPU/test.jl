@@ -9,7 +9,7 @@ using Flux
 using Random
 using RobustNeuralNetworks
 
-rng = Xoshiro(0)
+rng = MersenneTwister(0)
 dev = gpu
 T = Float32
 
@@ -68,21 +68,22 @@ model = DiffREN(model_ps) |> dev
 function test_me(func, args...)
     out = func(args...)
     all_good = true
-    for _ in 1:10000
+    for _ in 1:100000
         out1 = func(args...)
-        !(out1 ≈ out) && (all_good = false)
+        (out1 != out) && (all_good = false)
+        !all_good && (println(out .- out1); break)
         out = out1
-        !all_good && break
     end
     return all_good
 end
 
 
-# f_mod(xt, inputs) = model(xt, inputs)[1]
-# println("Evaluates correctly? ", test_me(f_mod, xt, inputs))
+explicit = direct_to_explicit(model.params) #|> dev
+b0 = cu(randn(rng, T, model.nv, size(xt,2)))
 
-f2_mod(model) = direct_to_explicit(model.params, true)
-println("Evaluates correctly? ", test_me(f2_mod, model))
+f4_mod(b, e) = RobustNeuralNetworks.tril_eq_layer(tanh, e.D11, b)
+println("Model call correct? ", test_me(f4_mod, b0, explicit))
+
 
 
 """
@@ -92,7 +93,7 @@ Some observations:
 - If I run it with DiffREN it does not
 - When I run it with DiffREN and then REN in the same Julia session, sometimes the second run with REN fails too.
 - This is the case even when running test_me() with 100000 iterations.
-- I think the bug will therefore be somewhere in the parameter mapping. Go through line-by-line...
+- The difference seems to be whether or not I send the explicit params directly to the GPU?
 """
 
 println()
