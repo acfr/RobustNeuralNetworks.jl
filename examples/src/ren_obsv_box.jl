@@ -34,8 +34,8 @@ gd(x::Matrix) = x[1:1,:]
 
 # Generate training data
 dt = T(0.01)            # Time-step (s)
-Tmax = 10               # Simulation horizon
-ts = 1:Int(Tmax/dt)     # Time array indices
+Tmax = 0.1               # Simulation horizon
+ts = 1:Int(round(Tmax/dt))     # Time array indices
 
 batches = 200
 u  = fill(zeros(T, 1, batches), length(ts)-1)
@@ -74,35 +74,27 @@ function loss(model, xn, xt, inputs)
 end
 
 # TODO: Testing with GPU
-xn, xt, inputs = data.is[1][1], data.is[2][1], data.is[3][1]
-# train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
-∇J = Flux.gradient(loss, model, xn, xt, inputs)
+xn = Xn[indx[1]] |> gpu
+xt = Xt[indx[1]] |> gpu
+inputs = observer_data[indx[1]] |> gpu
 
-gs = ∇J[1][:params][:direct]
-# println(train_loss)
-# println(gs)
-println(gs[:X])
-println(gs[:ρ])
-println(gs[:ϵ])
+f_mod(xt, inputs) = model(xt, inputs)[1]
 
-# function test_me()
-#     x0 = model(xt, inputs)[1]
-#     all_good = true
-#     for _ in 1:10000
-#         xpred = model(xt, inputs)[1]
-#         if !(xpred ≈ x0)
-#             all_good = false
-#             println(xpred .- x0)
-#         end
-#         x0 = xpred
-#     end
-#     return all_good
-# end
+function test_me(func, args...)
+    out = func(args...)
+    all_good = true
+    for _ in 1:10000
+        out1 = func(args...)
+        !(out1 ≈ out) && (all_good = false)
+        out = out1
+    end
+    return all_good
+end
 
-# println("Evaluates correctly? ", test_me())
+println("Evaluates correctly? ", test_me(f_mod, xt, inputs))
 
-# Train the model
-# function train_observer!(model, data; epochs=5, lr=1e-4, min_lr=1e-6)
+# # Train the model
+# function train_observer!(model, data; epochs=1, lr=1e-4, min_lr=1e-6)
 
 #     opt_state = Flux.setup(Adam(lr), model)
 #     mean_loss = [T(1e5)]
@@ -111,14 +103,18 @@ println(gs[:ϵ])
 #         batch_loss = []
 #         for (xn, xt, inputs) in data
 #             train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
+
+#             gs = ∇J[1][:params][:direct]
+#             println(train_loss)
+#             println(gs[:ρ])
+#             println(gs[:ϵ],"\n")
+
 #             Flux.update!(opt_state, model, ∇J[1])
 #             push!(batch_loss, train_loss)
-#             if isnan(train_loss)
-#                 println("NaNs in training loss")
-#                 break
-#             end
 #         end
 #         @printf "Epoch: %d, Lr: %.1g, Loss: %.4g\n" epoch lr mean(batch_loss)
+
+#         break
 
 #         # Drop learning rate if mean loss is stuck or growing
 #         push!(mean_loss, mean(batch_loss))

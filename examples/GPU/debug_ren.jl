@@ -41,16 +41,18 @@ for _ in 1:10
     train_loss, ∇J = Flux.withgradient(loss, model, xn, xt, inputs)
 
     gs = ∇J[1][:params][:direct]
-    println(train_loss)
+    # println(train_loss)
     # println(gs)
     # println(gs[:X])
-    # println(gs[:ρ])
-    # println(gs[:ϵ])
+    println(gs[:ρ])
+    println(gs[:ϵ])
 end
 
-# NOTE: This only produced the NaN result once.
+# NOTE: This only produced the NaN result once (now twice)
 # I wonder what happens if I have everything inside smaller functions...?
 # And does it help to push to |> dev on the original data...?
+
+# There is a direct correlation between the forward pass evaluating differently and the gradients appearing as NaN in that step. Investigate this more.
 
 
 # Only X, ρ, and ϵ have NaN gradients. For a contracting REN, these are all that's used prior to calling hmatrix_to_explicit(). In terms of back-propagation, perhaps the gradient of hmatrix_to_explicit is NaN and so then the multiplication is too?
