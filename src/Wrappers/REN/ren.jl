@@ -75,7 +75,11 @@ function (m::AbstractREN)(xt::AbstractVecOrMat, ut::AbstractVecOrMat)
     return m(xt, ut, m.explicit)
 end
 
-function (m::AbstractREN)(xt::T, ut::T, explicit::ExplicitRENParams) where T <: AbstractVecOrMat
+function (m::AbstractREN{T})(
+    xt::AbstractVecOrMat, 
+    ut::AbstractVecOrMat,
+    explicit::ExplicitRENParams{T}
+) where T
 
     # Allocate bias vectors to avoid error when nv = 0 or nx = 0
     bv = _bias(m.nv, explicit.bv)

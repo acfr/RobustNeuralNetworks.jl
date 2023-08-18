@@ -34,7 +34,7 @@ dt = T(0.01)            # Time-step (s)
 Tmax = 0.1               # Simulation horizon
 ts = 1:Int(round(Tmax/dt))     # Time array indices
 
-batches = 200
+batches = 20
 u  = fill(zeros(T, 1, batches), length(ts)-1)
 X  = fill(zeros(T, 1, batches), length(ts))
 X[1] = (2*rand(rng, T, nx, batches) .- 1) / 2
@@ -63,7 +63,6 @@ nu = size(observer_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{T}(nu, nx, nv, ny; output_map=false, rng)
 model = DiffREN(model_ps) |> dev
-# model = REN(model_ps) |> dev
 
 function test_me(func, args...)
     out = func(args...)
@@ -81,8 +80,12 @@ end
 explicit = direct_to_explicit(model.params) #|> dev
 b0 = cu(randn(rng, T, model.nv, size(xt,2)))
 
-f4_mod(b, e) = RobustNeuralNetworks.tril_eq_layer(tanh, e.D11, b)
-println("Model call correct? ", test_me(f4_mod, b0, explicit))
+function f_mod(b, e)
+    wt = RobustNeuralNetworks.tril_eq_layer(tanh, e.D11, b)
+    return wt
+end
+
+println("Model call correct? ", test_me(f_mod, b0, explicit))
 
 
 

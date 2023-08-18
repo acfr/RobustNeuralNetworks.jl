@@ -53,12 +53,12 @@ function rrule(::typeof(tril_layer_back), σ::F, D11, v, w_eq::AbstractVecOrMat{
     y = tril_layer_back(σ, D11, v, w_eq)
 
     # Reverse mode
-    function tril_layer_back_pullback(ȳ)
+    function tril_layer_back_pullback(Δy)
 
-        f̄ = NoTangent()
-        σ̄ = NoTangent()
-        D̄11 = NoTangent()
-        b̄ = NoTangent()
+        Δf = NoTangent()
+        Δσ = NoTangent()
+        ΔD11 = NoTangent()
+        Δb = NoTangent()
 
         # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
         _back(σ, v) = rrule(σ, v)[2]
@@ -66,14 +66,14 @@ function rrule(::typeof(tril_layer_back), σ::F, D11, v, w_eq::AbstractVecOrMat{
         j = map(b -> b(one(T))[2], backs)
 
         # Compute gradient from implicit function theorem
-        w̄_eq = v
-        for i in axes(w̄_eq, 2)
+        Δw_eq = v
+        for i in axes(Δw_eq, 2)
             ji = @view j[:, i]
-            ȳi = @view ȳ[:, i]
-            w̄_eq[:,i] = (I - (ji .* D11))' \ ȳi
+            Δyi = @view Δy[:, i]
+            Δw_eq[:,i] = (I - (ji .* D11))' \ Δyi
         end
-        return f̄, σ̄, D̄11, b̄, w̄_eq
+        return Δf, Δσ, ΔD11, Δb, Δw_eq
     end
-    
+
     return y, tril_layer_back_pullback
 end
