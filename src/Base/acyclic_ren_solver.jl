@@ -25,7 +25,8 @@ Solves w = σ.(D₁₁*w .+ b) for lower-triangular D₁₁, where
 """
 function solve_tril_layer(σ::F, D11, b) where F
     z_eq  = similar(b)
-    Di_zi = similar(z_eq, 1, size(b,2))
+    Di_zi = typeof(b)(zeros(Float32, 1, size(b,2))) 
+    # similar(b, 1, size(b,2)) can induce NaN on GPU!!!
     for i in axes(b,1)
         Di = @view D11[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]

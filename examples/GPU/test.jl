@@ -67,7 +67,7 @@ model = DiffREN(model_ps) |> dev
 function test_me(func, args...)
     out = func(args...)
     all_good = true
-    for _ in 1:100000
+    for _ in 1:10000
         out1 = func(args...)
         (out1 != out) && (all_good = false)
         !all_good && (println(out .- out1); break)
@@ -79,13 +79,47 @@ end
 
 explicit = direct_to_explicit(model.params) #|> dev
 b0 = cu(randn(rng, T, model.nv, size(xt,2)))
+b1 = b0 |> cpu
 
-function f_mod(b, e)
-    wt = RobustNeuralNetworks.tril_eq_layer(tanh, e.D11, b)
+function f_mod(b, D11)
+    # wt = RobustNeuralNetworks.tril_eq_layer(tanh, D11, b)
+    wt = RobustNeuralNetworks.solve_tril_layer(tanh, D11, b)
     return wt
 end
 
-println("Model call correct? ", test_me(f_mod, b0, explicit))
+using LinearAlgebra
+
+function f1_mod(b, D11)
+    z_eq  = similar(b)
+    Di_zi = typeof(b)(zeros(Float32, 1, size(b,2))) # Using similar(b, 1, size(b,2)) induces NaN on GPU
+    for i in axes(b,1)
+        Di = @view D11[i:i, 1:i - 1]
+        zi = @view z_eq[1:i-1,:]
+        bi = @view b[i:i, :]
+
+        mul!(Di_zi, Di, zi)
+        z_eq[i:i,:] .= σ.(Di_zi .+ bi)  
+    end
+    return z_eq
+end
+
+println("Model call correct? ", test_me(f1_mod, b0, explicit.D11))
+
+f(b) = typeof(b)(zeros(size(b)...))
+
+# function solve_tril_layer(σ::F, D11, b) where F
+#     z_eq  = similar(b)
+#     Di_zi = similar(z_eq, 1, size(b,2))
+#     for i in axes(b,1)
+#         Di = @view D11[i:i, 1:i - 1]
+#         zi = @view z_eq[1:i-1,:]
+#         bi = @view b[i:i, :]
+
+#         mul!(Di_zi, Di, zi)
+#         z_eq[i:i,:] .= σ.(Di_zi .+ bi)  
+#     end
+#     return z_eq
+# end
 
 
 
