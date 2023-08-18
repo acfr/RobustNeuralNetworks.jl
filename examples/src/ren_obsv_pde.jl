@@ -15,7 +15,7 @@ using Statistics
 
 
 # TODO: Do this with Float32, will be faster
-# TODO: Would be even better to get it working on the GPU. For later...
+# TODO: Would be even better to get it working on the GPU. Do this later
 dtype = Float64
 
 # Problem setup
