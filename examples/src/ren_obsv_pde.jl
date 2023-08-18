@@ -6,7 +6,6 @@ Pkg.activate("..")
 
 using BSON
 using CairoMakie
-using CUDA
 using Flux
 using Formatting
 using LinearAlgebra
@@ -16,15 +15,14 @@ using Statistics
 
 
 # TODO: Do this with Float32, will be faster
-# TODO: Would be even better to get it working on the GPU. For later...
-T = Float32
-dev = gpu
+# TODO: Would be even better to get it working on the GPU. Do this later
+dtype = Float64
 
 # Problem setup
 nx = 51             # Number of states
 n_in = 1            # Number of inputs
-L = T(10.0)         # Size of spatial domain
-sigma = T(0.1)      # Used to construct time step
+L = 10.0            # Size of spatial domain
+sigma = 0.1         # Used to construct time step
 
 # Discretise space and time
 dx = L / (nx - 1)
@@ -55,8 +53,8 @@ g(u, d) = [d; u[end ÷ 2:end ÷ 2, :]]
 # Generate simulated data
 function get_data(npoints=1000; init=zeros)
 
-    X = init(T, nx, npoints)
-    U = init(T, n_in, npoints)
+    X = init(dtype, nx, npoints)
+    U = init(dtype, n_in, npoints)
 
     for t in 1:npoints-1
 
@@ -64,7 +62,7 @@ function get_data(npoints=1000; init=zeros)
         X[:, t+1] = f(X[:, t], U[:, t])
         
         # Next input bₜ
-        u_next = U[t] + 0.05f0*randn(T)
+        u_next = U[t] + 0.05f0*randn(dtype)
         (u_next > 1) && (u_next = 1)
         (u_next < 0) && (u_next = 0)
         U[t + 1] = u_next
@@ -73,10 +71,9 @@ function get_data(npoints=1000; init=zeros)
 end
 
 X, U = get_data(100000; init=zeros)
-xt = X[:, 1:end - 1] |> dev
-xn = X[:, 2:end] |> dev
-y = g(X, U) |> dev
-U = U |> dev
+xt = X[:, 1:end - 1]
+xn = X[:, 2:end]
+y = g(X, U)
 
 # Store for the observer (inputs are inputs to observer)
 input_data = [U; y][:, 1:end - 1]
@@ -84,17 +81,18 @@ batches = 200
 data = Flux.Data.DataLoader((xn, xt, input_data), batchsize=batches, shuffle=true)
 
 # Constuct a REN
+# TODO: Test if we actually need all of this
 # TODO: Does it matter what ϵ, polar_param, or nl are?
 nv = 500
 nu = size(input_data, 1)
 ny = nx
-model_params = ContractingRENParams{T}(
+model_params = ContractingRENParams{dtype}(
     nu, nx, nv, ny; 
-    nl = tanh, ϵ=T(0.01),
+    nl = tanh, ϵ=0.01,
     polar_param = false, 
     output_map = false
 )
-model = DiffREN(model_params) |> dev
+model = DiffREN(model_params) # (see the documentation)
 
 # Define a loss function
 function loss(model, xn, x, u)
@@ -144,17 +142,17 @@ end
 tloss, loss_std = train_observer!(model, data; Epochs=50, lr=1e-3, min_lr=1e-7)
 bson("../results/ren-obsv/pde_obsv.bson", 
     Dict(
-        "model" => model |> cpu, 
+        "model" => model, 
         "training_loss" => tloss, 
         "loss_std" => loss_std
     )
 )
 
 # Test observer
-Tmax = 2000
+T = 2000
 init = (args...) -> 0.5*ones(args...)
-x, u = get_data(Tmax, init=init) |> dev
-y = [g(x[:, t:t], u[t]) for t in 1:Tmax]
+x, u = get_data(T, init=init)
+y = [g(x[:, t:t], u[t]) for t in 1:T]
 
 batches = 1
 observer_inputs = [repeat([ui; yi], outer=(1, batches)) for (ui, yi) in zip(u, y)]
@@ -165,7 +163,7 @@ function simulate(model::AbstractREN, x0, u)
     output = recurrent.(u)
     return output
 end
-x0 = init_states(model, batches) |> dev
+x0 = init_states(model, batches)
 xhat = simulate(model, x0, observer_inputs)
 Xhat = reduce(hcat, xhat)
 
@@ -188,9 +186,9 @@ function plot_heatmap(f1, xdata, i)
 end
 
 f1 = Figure(resolution=(500,400))
-plot_heatmap(f1, x |> cpu, 1)
-plot_heatmap(f1, Xhat[:, 1:batches:end] |> cpu, 2)
-plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]) |> cpu, 3)
+plot_heatmap(f1, x, 1)
+plot_heatmap(f1, Xhat[:, 1:batches:end], 2)
+plot_heatmap(f1, abs.(x - Xhat[:, 1:batches:end]), 3)
 Colorbar(f1[:,2], colorrange=(0,1),colormap=:thermal)
 
 display(f1)
