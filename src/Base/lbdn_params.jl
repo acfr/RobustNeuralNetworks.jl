@@ -14,15 +14,19 @@ mutable struct ExplicitLBDNParams{T, N, M}
     B  ::NTuple{N, AbstractMatrix{T}}
     Ψd ::NTuple{M, AbstractVector{T}}   # Diagonal of matrix Ψ from the paper
     b  ::NTuple{N, AbstractVector{T}}
-    sqrtγ::T
+    sqrtγ::AbstractVector{T}
 end
+
+# No trainable params
+@functor ExplicitLBDNParams
+trainable(m::ExplicitLBDNParams) = (; )
 
 mutable struct DirectLBDNParams{T, N, M}
     XY::NTuple{N, AbstractMatrix{T}}    # [X; Y] in the paper
     α ::NTuple{N, AbstractVector{T}}    # Polar parameterisation
     d ::NTuple{M, AbstractVector{T}}
     b ::NTuple{N, AbstractVector{T}}
-    log_γ::Vector{T}                    # Store ln(γ) so that √exp(logγ) is positive
+    log_γ::AbstractVector{T}            # Store ln(γ) so that √exp(logγ) is positive
     learn_γ::Bool
 end
 
@@ -36,9 +40,9 @@ This is typically used by a higher-level constructor to define an LBDN model, wh
 # Arguments
 
 - `nu::Int`: Number of inputs.
-- `nh::Vector{Int}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
+- `nh::Union{Vector{Int}, NTuple{N, Int}}`: Number of hidden units for each layer. Eg: `nh = [5,10]` for 2 hidden layers with 5 and 10 nodes (respectively).
 - `ny::Int`: Number of outputs.
-- `γ::Number=T(1)`: Lipschitz upper bound.
+- `γ::Real=T(1)`: Lipschitz upper bound, must be positive.
 
 # Keyword arguments
 
@@ -55,12 +59,13 @@ See [Wang et al. (2023)](https://proceedings.mlr.press/v202/wang23v.html) for pa
 See also [`DenseLBDNParams`](@ref).
 """
 function DirectLBDNParams{T}(
-    nu::Int, nh::Vector{Int}, ny::Int, γ::Number = T(1);
+    nu::Int, nh::Union{Vector{Int}, NTuple{N, Int}}, 
+    ny::Int, γ::Real = T(1);
     initW::Function  = glorot_normal,
     initb::Function  = glorot_normal,
     learn_γ::Bool    = false,
     rng::AbstractRNG = Random.GLOBAL_RNG
-) where T
+) where {T, N}
 
     n = [nu, nh..., ny]
     L = length(nh)

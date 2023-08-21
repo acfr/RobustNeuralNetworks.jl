@@ -13,7 +13,7 @@ Test that backpropagation runs and parameters change
 batches = 10
 nu, nx, nv, ny = 4, 5, 10, 2
 γ = 10
-ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng)
+ren_ps = LipschitzRENParams{Float64}(nu, nx, nv, ny, γ; rng, learn_γ=true)
 model = DiffREN(ren_ps)
 
 # Dummy data

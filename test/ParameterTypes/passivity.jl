@@ -14,10 +14,11 @@ Test passivity inequality
 """
 batches = 100
 nu, nx, nv, ny = 6, 5, 10, 6
+ν= 1.0
 T = 100
 
 # Test constructors
-ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny; init=:random, ν= 1.0, rng)
+ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, ν; init=:random, rng)
 ren = REN(ren_ps)
 
 # Different inputs with different initial conditions

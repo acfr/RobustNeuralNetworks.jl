@@ -8,9 +8,11 @@ mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    Q::Matrix{T}
-    S::Matrix{T}
-    R::Matrix{T}
+    Q::AbstractMatrix{T}
+    S::AbstractMatrix{T}
+    R::AbstractMatrix{T}
+    LQ::AbstractMatrix{T}
+    LR::AbstractMatrix{T}
 end
 
 """
@@ -25,9 +27,9 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
-- `Q::Matrix{T}`: IQC weight matrix on model outputs
-- `S::Matrix{T}`: IQC coupling matrix on model outputs/inputs
-- `R::Matrix{T}`: IQC weight matrix on model outputs
+- `Q::AbstractMatrix`: IQC weight matrix on model outputs
+- `S::AbstractMatrix`: IQC coupling matrix on model outputs/inputs
+- `R::AbstractMatrix`: IQC weight matrix on model outputs
     
 # Keyword arguments
 
@@ -41,7 +43,7 @@ See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`Passive
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
-    Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
+    Q::AbstractMatrix, S::AbstractMatrix, R::AbstractMatrix;
     nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
@@ -78,11 +80,19 @@ function GeneralRENParams{T}(
         D22_free=false, rng,
     )
 
-    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, Q, S, R)
+    # For constructing D22. See Eqns 31-33 of TAC paper
+    # Currently converts to Hermitian to avoid numerical conditioning issues
+    Q, S, R = T.(Q), T.(S), T.(R)
+    LQ = Matrix{T}(cholesky(-Q).U)
+    R1 = Hermitian(R - S * (Q \ S'))
+    LR = Matrix{T}(cholesky(R1).U) 
+
+    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, Q, S, R, LQ, LR)
 
 end
 
-@functor GeneralRENParams (direct, )
+@functor GeneralRENParams
+trainable(m::GeneralRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
@@ -98,13 +108,15 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
     X3 = ps.direct.X3
     Y3 = ps.direct.Y3
     Z3 = ps.direct.Z3
+    LQ = ps.LQ
+    LR = ps.LR
 
     # Implicit system and output matrices
     B2_imp = ps.direct.B2
@@ -112,12 +124,6 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     C2 = ps.direct.C2
     D21 = ps.direct.D21
-
-    # Constructing D22. See Eqns 31-33 of TAC paper
-    # Currently converts to Hermitian to avoid numerical conditioning issues
-    LQ = Matrix{T}(cholesky(-Q).U)
-    R1 = Hermitian(R - S * (Q \ S'))
-    LR = Matrix{T}(cholesky(R1).U) 
     
     M = _M_gen(X3, Y3, Z3, ϵ)
     N = _N_gen(nu, ny, M, Z3) 
@@ -144,10 +150,13 @@ end
 _M_gen(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
 function _N_gen(nu, ny, M, Z3)
-    if ny >= nu
-        return[(I - M) / (I + M); -2*Z3 / (I + M)]
+    Im = _get_I(M) # Prevents scalar indexing on backwards pass of A / (I + M) on GPU
+    if ny == nu
+        return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
+    elseif ny > nu
+        return [(Im - M) / (Im + M); -2*Z3 / (Im + M)]
     else
-        return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        return [((Im + M) \ (Im - M)) (-2*(Im + M) \ Z3')]
     end
 end
 

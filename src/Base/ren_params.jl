@@ -45,6 +45,10 @@ mutable struct ExplicitRENParams{T}
     by ::AbstractVector{T}
 end
 
+# No trainable params
+@functor ExplicitRENParams
+trainable(m::ExplicitRENParams) = (; )
+
 mutable struct DirectRENParams{T}
     X  ::AbstractMatrix{T}
     Y1 ::AbstractMatrix{T}
@@ -295,4 +299,19 @@ function ==(ps1::DirectRENParams, ps2::DirectRENParams)
     c[15] = ps1.by == ps2.by
 
     return all(c)
+end
+
+function ==(e1::ExplicitRENParams, e2::ExplicitRENParams)
+    return e1.A == e2.A &&
+           e1.B1 == e2.B1 &&
+           e1.B2 == e2.B2 &&
+           e1.C1 == e2.C1 &&
+           e1.C2 == e2.C2 &&
+           e1.D11 == e2.D11 &&
+           e1.D12 == e2.D12 &&
+           e1.D21 == e2.D21 &&
+           e1.D22 == e2.D22 &&
+           e1.bx == e2.bx &&
+           e1.bv == e2.bv &&
+           e1.by == e2.by
 end

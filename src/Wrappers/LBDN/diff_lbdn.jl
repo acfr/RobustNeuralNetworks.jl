@@ -1,15 +1,15 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
-mutable struct DiffLBDN{T} <: AbstractLBDN{T}
+mutable struct DiffLBDN{T, L} <: AbstractLBDN{T, L}
     nl::Function
     nu::Int
-    nh::Vector{Int}
+    nh::NTuple{L, Int}
     ny::Int
     params::AbstractLBDNParams{T}
 end
 
 """
-    DiffLBDN(ps::AbstractLBDNParams{T}) where T
+    DiffLBDN(ps::AbstractLBDNParams)
 
 Construct a differentiable LBDN from its direct parameterisation.
 
@@ -33,8 +33,8 @@ model = DiffLBDN(lbdn_params)
 
 See also [`AbstractLBDN`](@ref), [`LBDN`](@ref), [`SandwichFC`](@ref).
 """
-function DiffLBDN(ps::AbstractLBDNParams{T}) where T
-    return DiffLBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, ps)
+function DiffLBDN(ps::AbstractLBDNParams{T,L}) where {T,L}
+    return DiffLBDN{T,L}(ps.nl, ps.nu, ps.nh, ps.ny, ps)
 end
 
 function (m::DiffLBDN)(u::AbstractVecOrMat)
@@ -42,7 +42,8 @@ function (m::DiffLBDN)(u::AbstractVecOrMat)
     return m(u, explicit)
 end
 
-@functor DiffLBDN (params, )
+@functor DiffLBDN
+trainable(m::DiffLBDN) = (params = m.params, )
 
 function set_output_zero!(m::DiffLBDN)
     set_output_zero!(m.params)

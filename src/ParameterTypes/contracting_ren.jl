@@ -146,12 +146,13 @@ function ContractingRENParams(
 
 end
 
-@functor ContractingRENParams (direct, )
+@functor ContractingRENParams
+trainable(m::ContractingRENParams) = (direct = m.direct, )
 
-function direct_to_explicit(ps::ContractingRENParams, return_h::Bool=false)
+function direct_to_explicit(ps::ContractingRENParams, return_h=false)
 
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
     H = x_to_h(X, ϵ, polar_param, ρ)

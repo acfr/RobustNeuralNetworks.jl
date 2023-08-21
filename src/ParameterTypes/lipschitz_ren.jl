@@ -8,7 +8,7 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    γ::Vector{T}
+    γ::AbstractVector{T}
     learn_γ::Bool
 end
 
@@ -77,12 +77,12 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     nx = ps.nx
     ny = ps.ny
 
-    # Dissipation parameters
-    γ = ps.γ[1]
+    # Lipschitz bound
+    γ = ps.γ
 
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
@@ -103,7 +103,7 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     else
         M = _M_lip(X3, Y3, Z3, ϵ)
         N = _N_lip(nu, ny, M, Z3)
-        D22 = γ*N
+        D22 = γ .* N
     end
 
     # Constructing H. See Eqn 28 of TAC paper
@@ -124,22 +124,25 @@ end
 # Auto-diff faster through smaller functions
 _M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
-function _N_lip(nu, ny, M, Z3) 
-    if ny >= nu
-        return [(I - M) / (I + M); -2*Z3 / (I + M)]
+function _N_lip(nu, ny, M, Z3)
+    Im = _get_I(M) # Prevents scalar indexing on backwards pass of A / (I + M) on GPU
+    if ny == nu
+        return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
+    elseif ny >= nu
+        return [(Im - M) / (Im + M); -2*Z3 / (Im + M)]
     else
-        return [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
+        return [((Im + M) \ (Im - M)) (-2*(Im + M) \ Z3')]
     end
 end
 
-_C2_lip(D22, C2, γ) = -(D22')*C2 / γ
+_C2_lip(D22, C2, γ) = -(D22')*C2 ./ γ
 
-_D21_lip(D22, D21, γ, D12_imp) = -(D22')*D21 / γ - D12_imp'
+_D21_lip(D22, D21, γ, D12_imp) = -(D22')*D21 ./ γ - D12_imp'
 
-_R_lip(D22, γ) = -D22'*D22 / γ + (γ * I)
+_R_lip(D22, γ) = γ .* (-D22'*D22 ./ (γ.^2) + I)
 
-function _Γ1_lip(nx, ny, C2, D21, γ, T) 
-    [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] * (-1/γ)
+function _Γ1_lip(nx, ny, C2, D21, γ, T)
+    [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] .* (-1 ./ γ)
 end
 
 function _Γ2_lip(C2_imp, D21_imp, B2_imp, 𝑅)

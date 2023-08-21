@@ -5,7 +5,7 @@
 
 Evaluate and solve lower-triangular equilibirum layer.
 """
-function tril_eq_layer(σ::F, D11::Matrix, b::VecOrMat) where F
+function tril_eq_layer(σ::F, D11, b) where F
 
     # Solve the equilibirum layer
     w_eq = solve_tril_layer(σ, D11, b)
@@ -23,9 +23,10 @@ end
 Solves w = σ.(D₁₁*w .+ b) for lower-triangular D₁₁, where
 σ is an activation function with monotone slope restriction (eg: relu, tanh).
 """
-function solve_tril_layer(σ::F, D11::Matrix, b::VecOrMat) where F
+function solve_tril_layer(σ::F, D11, b) where F
     z_eq  = similar(b)
-    Di_zi = similar(z_eq, 1, size(b,2))
+    Di_zi = typeof(b)(zeros(Float32, 1, size(b,2))) 
+    # similar(b, 1, size(b,2)) can induce NaN on GPU!!!
     for i in axes(b,1)
         Di = @view D11[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
@@ -43,40 +44,37 @@ end
 
 Dummy function to force auto-diff engines to use the custom backwards pass.
 """
-function tril_layer_back(σ::F, D11::Matrix, v::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
+function tril_layer_back(σ::F, D11, v, w_eq::AbstractVecOrMat{T}) where {F,T}
     return w_eq
 end
 
-function rrule(::typeof(tril_layer_back), 
-               σ::F, D11::Matrix, v::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
+function rrule(::typeof(tril_layer_back), σ::F, D11, v, w_eq::AbstractVecOrMat{T}) where {F,T}
 
     # Forwards pass
     y = tril_layer_back(σ, D11, v, w_eq)
 
     # Reverse mode
-    function tril_layer_back_pullback(ȳ)
+    function tril_layer_back_pullback(Δy)
 
-        f̄ = NoTangent()
-        σ̄ = NoTangent()
-        D̄11 = NoTangent()
-        b̄ = NoTangent()
+        Δf = NoTangent()
+        Δσ = NoTangent()
+        ΔD11 = NoTangent()
+        Δb = NoTangent()
 
         # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
-        j = similar(v)
-        for i in eachindex(j)
-            _, back = rrule(σ, v[i])
-            _, j[i] = back(one(T))
-        end
+        _back(σ, v) = rrule(σ, v)[2]
+        backs = _back.(σ, v)
+        j = map(b -> b(one(T))[2], backs)
 
         # Compute gradient from implicit function theorem
-        w̄_eq = v
-        for i in axes(w̄_eq, 2)
+        Δw_eq = v
+        for i in axes(Δw_eq, 2)
             ji = @view j[:, i]
-            ȳi = @view ȳ[:, i]
-            w̄_eq[:,i] = (I - (ji .* D11))' \ ȳi
+            Δyi = @view Δy[:, i]
+            Δw_eq[:,i] = (I - (ji .* D11))' \ Δyi
         end
-        return f̄, σ̄, D̄11, b̄, w̄_eq
+        return Δf, Δσ, ΔD11, Δb, Δw_eq
     end
-    
+
     return y, tril_layer_back_pullback
 end

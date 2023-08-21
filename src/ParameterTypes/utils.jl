@@ -1,5 +1,10 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
+# Backprop through I + Z was performing scalar indexing on GPU
+# Ensuring I is the same type as Z avoids this
+_get_I(Z::T) where T = T(I(size(Z,1)))
+@non_differentiable _get_I(Z)
+
 """
     direct_to_explicit(ps::AbstractRENParams{T}, return_h=false) where T
 
@@ -54,7 +59,6 @@ function hmatrix_to_explicit(ps::AbstractRENParams, H::AbstractMatrix{T}, D22::A
     Y1 = ps.direct.Y1
     
     # Extract sections of H matrix 
-    # Using @view is slower in reverse mode?
     H11 = H[1:nx, 1:nx]
     H22 = H[nx + 1:nx + nv, nx + 1:nx + nv]
     H33 = H[nx + nv + 1:2nx + nv, nx + nv + 1:2nx + nv]
@@ -105,7 +109,7 @@ _C1(nv, nx, Λ_inv, C1_imp, T)   = (nv == 0) ? zeros(T,0,nx) : broadcast(*, Λ_i
 _D11(nv, Λ_inv, D11_imp, T)     = (nv == 0) ? zeros(T,0,0)  : broadcast(*, Λ_inv, D11_imp)
 _D12(nv, nu, Λ_inv, D12_imp, T) = (nv == 0) ? zeros(T,0,nu) : broadcast(*, Λ_inv, D12_imp)
 
-x_to_h(X, ϵ, polar_param, ρ) = polar_param ? (ρ^2)*(X'*X) / norm(X)^2 + ϵ*I : X'*X + ϵ*I
+x_to_h(X, ϵ, polar_param, ρ) = polar_param ? (ρ.^2).*(X'*X) / norm(X)^2 + ϵ*I : X'*X + ϵ*I
 
 """
     set_output_zero!(m::AbstractRENParams)

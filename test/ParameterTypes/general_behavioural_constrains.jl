@@ -16,9 +16,9 @@ batches = 42
 nu, nx, nv, ny = 10, 5, 10, 20
 
 # Generate random matrices
-X = randn(rng, ny,ny)
-Y = randn(rng, nu,nu)
-S = rand(rng, nu,ny)
+X = randn(rng, ny, ny)
+Y = randn(rng, nu, nu)
+S = randn(rng, nu, ny)
 
 Q = -X'*X
 R = S * (Q \ S') + Y'*Y

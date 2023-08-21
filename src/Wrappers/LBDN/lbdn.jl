@@ -1,15 +1,15 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
-mutable struct LBDN{T} <: AbstractLBDN{T}
+mutable struct LBDN{T, L} <: AbstractLBDN{T, L}
     nl::Function
     nu::Int
-    nh::Vector{Int}
+    nh::NTuple{L, Int}
     ny::Int
     explicit::ExplicitLBDNParams{T}
 end
 
 """
-    LBDN(ps::AbstractLBDNParams{T}) where T
+    LBDN(ps::AbstractLBDNParams)
 
 Construct an LBDN from its direct parameterisation.
 
@@ -17,13 +17,17 @@ This constructor takes a direct parameterisation of LBDN (eg: a [`DenseLBDNParam
 
 See also [`AbstractLBDN`](@ref), [`DiffLBDN`](@ref).
 """
-function LBDN(ps::AbstractLBDNParams{T}) where T
+function LBDN(ps::AbstractLBDNParams{T, L}) where {T, L}
     explicit = direct_to_explicit(ps)
-    return LBDN{T}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
+    return LBDN{T, L}(ps.nl, ps.nu, ps.nh, ps.ny, explicit)
 end
 
+# No trainable params
+@functor LBDN
+trainable(m::LBDN) = (; )
+
 """
-    abstract type AbstractLBDN{T} end
+    abstract type AbstractLBDN{T, L} end
 
 Explicit parameterisation for Lipschitz-bounded deep networks.
 
@@ -82,12 +86,12 @@ function (m::AbstractLBDN{T})(u::AbstractVecOrMat, explicit::ExplicitLBDNParams{
 
     # Evaluate LBDN (extracting Ψd[k] is faster for backprop)
     # Note: backpropagation is similarly fast with for loops as with Flux chains (tested)
-    h = sqrtγ * u
+    h = sqrtγ .* u
     for k in 1:M
         Ψdk = Ψd[k]
         h = sqrt2 * (A_T[k] .* Ψdk') * σ.(sqrt2 * (B[k] ./ Ψdk) * h .+ b[k])
     end
-    return sqrtγ * B[N] * h .+ b[N]
+    return sqrtγ .* B[N] * h .+ b[N]
 end
 
 function set_output_zero!(m::AbstractLBDN)
