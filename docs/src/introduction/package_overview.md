@@ -181,9 +181,27 @@ In some applications (eg: reinforcement learning), a model is called many times 
 !!! info "Which wrapper should I use?"
 	The model wrappers [`DiffREN`](@ref), [`DiffLBDN`](@ref), and [`SandwichFC`](@ref)  re-compute the explicit parameters every time the model is called. In applications where the learnable parameters are updated after one model call (eg: image classification), it is often more convenient and equally fast to use these wrappers.
 	
-	In applications where the model is called many times before updating it (eg: reinforcement learning), use \verb|REN| or \verb|LBDN|. They compute the explicit model when constructed and store it for later use, making them more efficient.
+	In applications where the model is called many times before updating it (eg: reinforcement learning), use [`REN`](@ref) or [`LBDN`](@ref). They compute the explicit model when constructed and store it for later use, making them more efficient.
 
 See [Can't I just use `DiffLBDN`?](@ref) in [Reinforcement Learning with LBDN](@ref) for a demonstration of this trade-off.
+
+## Onto the GPU
+
+If you have a GPU on your machine, then you're in luck. All models in `RobustNeuralNetworks.jl` can be loaded onto the GPU for training and evaluation in exactly the same way as any other `Flux.jl` model. To adapt our example from [Explicit model wrappers](@ref) to run on the GPU, we would do the following.
+
+```julia
+using CUDA
+
+model_params = model_params |> gpu
+data = data |> gpu
+
+opt_state = Flux.setup(Adam(0.01), model_params)
+for _ in 1:50
+    Flux.train!(loss, model_params, data, opt_state)
+end
+```
+
+An example of training a [`DiffLBDN`](@ref) on the GPU is provided in [Image Classification with LBDN](@ref). See [`Flux.jl`'s GPU support page](https://fluxml.ai/Flux.jl/stable/gpu/) for more information on training models with different GPU backends.
 
 ## Robustness metrics and IQCs
 

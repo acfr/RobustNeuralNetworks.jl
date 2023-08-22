@@ -16,13 +16,23 @@ For details on how Lipschitz bounds increase classification robustness and relia
 
 Let's start by loading the training and test data. [`MLDatasets.jl`](https://juliaml.github.io/MLDatasets.jl/stable/) contains a number of common machine-learning datasets, including the [MNIST dataset](https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST). The following code loads the full dataset of 60,000 training images and 10,000 test images.
 
+!!! info "Working on the GPU"
+    Since we're dealing with images, we will load are data and models onto the GPU to speed up training. We'll be using [`CUDA.jl`](https://github.com/JuliaGPU/CUDA.jl). 
+    
+    If you don't have a GPU on your machine, just switch to `dev = cpu`. If you have a GPU but not an NVIDIA GPU, switch out `CUDA.jl` with whichever GPU backend supports your device. For more information on training models on a GPU, see [here](https://fluxml.ai/Flux.jl/stable/gpu/).
+
 ```julia
+using CUDA
 using MLDatasets: MNIST
+
+# Choose device
+dev = gpu
+# dev = cpu
 
 # Get MNIST training and test data
 T = Float32
-x_train, y_train = MNIST(T, split=:train)[:]
-x_test,  y_test  = MNIST(T, split=:test)[:]
+x_train, y_train = MNIST(T, split=:train)[:] |> dev
+x_test,  y_test  = MNIST(T, split=:test)[:] |> dev
 ```
 
 The feature matrices `x_train` and `x_test` are three-dimensional arrays where each 28x28 layer contains pixel data for a single handwritten number from 0 to 9 (see below for an example). The labels `y_train` and `y_test` are vectors containing the classification of each image as a number from 0 to 9. We can convert each of these to an input/output format better suited to training with [`Flux.jl`](https://fluxml.ai/).
@@ -63,10 +73,10 @@ nh = fill(64,2)         # 2 hidden layers, each with 64 neurons
 
 # Set up model: define parameters, then create model
 model_ps = DenseLBDNParams{T}(nu, nh, ny, γ; rng)
-model = Chain(DiffLBDN(model_ps), Flux.softmax)
+model = Chain(DiffLBDN(model_ps), Flux.softmax) |> dev
 ```
 
-The `model` consisnts of two parts. The first is a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is then converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain). We could also have used [`SandwichFC`](@ref) layers to build the network, as outlined in [Fitting a Curve with LBDN](@ref).
+The `model` consisnts of two parts. The first is a callable [`DiffLBDN`](@ref) model constructed from its direct parameterisation, which is defined by an instance of [`DenseLBDNParams`](@ref) (see the [Package Overview](@ref) for more detail). The output is then converted to a probability distribution using a [`softmax`](https://fluxml.ai/Flux.jl/stable/models/nnlib/#NNlib.softmax) layer. Note that all [`AbstractLBDN`](@ref) models can be combined with traditional neural network layers using [`Flux.Chain`](https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain). We could also have used [`SandwichFC`](@ref) layers to build the network, as outlined in [Fitting a Curve with LBDN](@ref). The final model is loaded onto whichever device `dev` you chose in [1. Load the data](@ref).
 
 
 ## 3. Define a loss function
@@ -118,9 +128,10 @@ end
 
 # Train and save the model for later
 train_mnist!(model, train_data)
-bson("lbdn_mnist.bson", Dict("model" => model))
+bson("lbdn_mnist.bson", Dict("model" => model |> cpu))
 ```
 
+Note that we move the model back to the `cpu` before saving it!
 
 ## 5. Evaluate the trained model
 
@@ -151,6 +162,11 @@ for i in eachindex(indx)
     x = x_test[:,indx[i]]
     y = y_test[:,indx[i]]
     ŷ = model(x)
+
+    # Make sure data is on CPU for plotting
+    x = x |> cpu
+    y = y |> cpu
+    ŷ = ŷ |> cpu
 
     # Reshape data for plotting
     xmat = reshape(x, 28, 28)
@@ -188,11 +204,11 @@ dense = Chain(
     Dense(nh[1], nh[2], Flux.relu; init, bias=initb(nh[2])),
     Dense(nh[2], ny; init, bias=initb(ny)),
     Flux.softmax
-)
+) |> dev
 
 # Train it and save for later
 train_mnist!(dense, train_data)
-bson("dense_mnist.bson", Dict("model" => dense))
+bson("dense_mnist.bson", Dict("model" => dense |> cpu))
 ```
 
 The trained model performs similarly to the LBDN on the original test dataset.
@@ -204,14 +220,14 @@ println("Training accuracy: $(round(train_acc,digits=2))%")
 println("Test accuracy:     $(round(test_acc,digits=2))%")
 ```
 ```@example mnist
-println("Training accuracy:"," 97.64%") #hide
-println("Test accuracy:","     96.60%") #hide
+println("Training accuracy:"," 97.65%") #hide
+println("Test accuracy:","     96.61%") #hide
 ```
 
 As a simple test of robustness, we'll add uniformly-sampled random noise in the range ``[-\epsilon, \epsilon]`` to the pixel data in the test dataset for a range of noise magnitudes ``\epsilon \in [0, 200/255].`` We can record the test accuracy for each perturbation size and store it for plotting.
 ```julia
 # Get test accuracy as we add noise
-uniform(x) = 2*rand(rng, T, size(x)...) .- 1
+uniform(x) = 2*rand(rng, T, size(x)...) .- 1 |> dev
 function noisy_test_error(model, ϵ=0)
     noisy_xtest = x_test .+ ϵ*uniform(x_test)
     accuracy(model, noisy_xtest,  y_test)*100
