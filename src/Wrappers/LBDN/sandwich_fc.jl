@@ -97,7 +97,7 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     XY = m.XY
     α = m.α
     d = m.d
-    b = m.d
+    b = m.b
     σ = m.σ
     n = size(XY,2)
 
