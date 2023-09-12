@@ -105,7 +105,7 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     output = (d === nothing)
 
     # Get explicit model parameters
-    A_T, B_T = cayley_norm(XY, α, n)
+    A_T, B_T = normalised_cayley(XY, α, n)
     B = B_T'
     
     # Just output layer?

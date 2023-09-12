@@ -69,7 +69,7 @@ function direct_to_explicit(ps::DenseLBDNParams{T, L}) where {T, L}
 
 end
 
-function cayley_norm(XY, α, n)
+function normalised_cayley(XY, α, n)
 
     # Normalise XY with polar param and extract
     XY = (α ./ norm(XY)) .* XY
@@ -107,7 +107,7 @@ function get_AB(
     buf_A = Buffer([zero(XY[1])], N)
     buf_B = Buffer([zero(XY[1])], N)
     for k in 1:N
-        AB_k = cayley_norm(XY[k], α[k], n[k])
+        AB_k = normalised_cayley(XY[k], α[k], n[k])
         buf_A[k] = AB_k[1]
         buf_B[k] = AB_k[2]'
     end
