@@ -97,7 +97,7 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     XY = m.XY
     α = m.α
     d = m.d
-    b = m.d
+    b = m.b
     σ = m.σ
     n = size(XY,2)
 
@@ -105,11 +105,13 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     output = (d === nothing)
 
     # Get explicit model parameters
-    A_T, B_T = norm_cayley(XY, α, n)
+    A_T, B_T = normalised_cayley(XY, α, n)
     B = B_T'
     
-    # Just output layer?
-    output && (return bias ? B*x .+ b : B*x)
+    # If just the output layer, return Bx + b (or just Bx if no bias)
+    if output
+        return bias ? B*x .+ b : B*x
+    end
 
     # Regular sandwich layer
     Ψd = exp.(d)

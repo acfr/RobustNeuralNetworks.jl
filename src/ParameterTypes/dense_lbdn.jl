@@ -69,7 +69,7 @@ function direct_to_explicit(ps::DenseLBDNParams{T, L}) where {T, L}
 
 end
 
-function norm_cayley(XY, α, n)
+function normalised_cayley(XY, α, n)
 
     # Normalise XY with polar param and extract
     XY = (α ./ norm(XY)) .* XY
@@ -78,7 +78,7 @@ function norm_cayley(XY, α, n)
 
     # Cayley transform
     Z = (X - X') + (Y'*Y)
-    Iz = _get_I(Z) # Prevents scalar indexing on backwards pass of A / (I + Z) on GPU
+    Iz = _I(Z) # Prevents scalar indexing on backwards pass of () / (I + Z) on GPU
     A_T = (Iz + Z) \ (Iz - Z)
     B_T = -2Y / (Iz + Z)
 
@@ -107,7 +107,7 @@ function get_AB(
     buf_A = Buffer([zero(XY[1])], N)
     buf_B = Buffer([zero(XY[1])], N)
     for k in 1:N
-        AB_k = norm_cayley(XY[k], α[k], n[k])
+        AB_k = normalised_cayley(XY[k], α[k], n[k])
         buf_A[k] = AB_k[1]
         buf_B[k] = AB_k[2]'
     end

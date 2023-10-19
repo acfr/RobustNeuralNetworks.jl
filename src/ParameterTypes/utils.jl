@@ -1,9 +1,11 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
-# Backprop through I + Z was performing scalar indexing on GPU
-# Ensuring I is the same type as Z avoids this
-_get_I(Z::T) where T = T(I(size(Z,1)))
-@non_differentiable _get_I(Z)
+# Backprop through (I + Z) was performing scalar indexing on the GPU
+# Ensuring I is the same type as Z avoids this and speeds it up.
+function _I(Z::T) where T
+    return T(I(size(Z,1)))
+end
+@non_differentiable _I(Z)
 
 """
     direct_to_explicit(ps::AbstractRENParams{T}, return_h=false) where T

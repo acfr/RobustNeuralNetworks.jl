@@ -125,7 +125,7 @@ end
 _M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
 
 function _N_lip(nu, ny, M, Z3)
-    Im = _get_I(M) # Prevents scalar indexing on backwards pass of A / (I + M) on GPU
+    Im = _I(M) # Prevents scalar indexing on backwards pass of () / (I + M) on GPU
     if ny == nu
         return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
     elseif ny >= nu
