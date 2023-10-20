@@ -9,6 +9,7 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     direct::DirectRENParams{T}
     αbar::T
     ν::T
+    ρ::T
     # TODO: Add a field for incrementally strictly output passive model (ρ)
 end
 
@@ -22,8 +23,9 @@ Construct direct parameterisation of a passive REN.
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
-- `ν::Number=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
-    
+- `ν::Number=0`: Passivity index. Use ν>0 for incrementally strictly input passive model. 
+- `ρ::Number=0`: Passivity index. Use ρ>0 for incrementally strictly output passive model. Setting both ν == 0 and ρ == 0 for incrementally passive model. 
+
 # Keyword arguments
 
 - `nl::Function=relu`: Sector-bounded static nonlinearity.
@@ -35,7 +37,7 @@ See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref).
 """
 function PassiveRENParams{T}(
-    nu::Int, nx::Int, nv::Int, ny::Int, ν::Number=T(0);
+    nu::Int, nx::Int, nv::Int, ny::Int, ν::Number=T(0), ρ::Number=T(0);
     nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
@@ -51,6 +53,11 @@ function PassiveRENParams{T}(
         error("Input and output must have the same dimension for passiveREN")
     end
 
+    # Check ρ and ν
+    if ρ*ν>0
+        error("ρ and ν cannot be all positive for passiveREN parameterisation")
+    end
+
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
@@ -58,7 +65,7 @@ function PassiveRENParams{T}(
         D22_free=false, rng,
     )
 
-    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν)
+    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν, ρ)
 
 end
 
@@ -68,12 +75,18 @@ trainable(m::PassiveRENParams) = (direct = m.direct, )
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
-    nu = ps.nu
+    # nu = ps.nu
     ν = ps.ν
-        
+    ρ = ps.ρ
+
+    # IQC matrices 
+    # Q = -2ρ*I
+    # S = -2ν*I
+    # R = I
+
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ
+    ρ_polar = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
@@ -92,14 +105,29 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     # Currently converts to Hermitian to avoid numerical conditioning issues
     M = _M_pass(X3, Y3, ϵ)
 
-    D22 = ν*I + M
-    D21_imp = D21 - D12_imp'
+    if ρ == 0
+        # For ρ==0 case, I(SI)P model
+        D22 = ν*I + M
+        D21_imp = D21 - D12_imp'
 
-    𝑅  = _R_pass(D22, ν)
-    Γ2 = _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
+        𝑅  = _R_pass(D22, ν, ρ) 
+        Γ2 = _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
 
-    H = x_to_h(X, ϵ, polar_param, ρ) + Γ2
+        H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
+    else    
+        ## For ρ!=0 case, ISOP model
+        D22 = 1/ρ *(I+M)\I
+        C2_imp = (D22'*(-2ρI) + I)*C2
+        D21_imp = (D22'*(-2ρI) + I)*D21 - D12_imp'
 
+        𝑅  = _R_pass(D22, ν, ρ)
+
+        Γ1 = _Γ1_pass(ps.nx, ps.ny, C2, D21, ρ, T) 
+        Γ2 = _Γ2_pass(C2_imp, D21_imp, B2_imp, 𝑅)
+
+        H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2 - Γ1
+    end
+    
     # Get explicit parameterisation
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
@@ -108,7 +136,11 @@ end
 
 _M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
 
-_R_pass(D22, ν) = -2ν*I + D22 + D22'
+_R_pass(D22, ν, ρ) = -2ν*I + D22 + D22' + D22'*(-2ρ*I)*D22
+
+function _Γ1_pass(nx, ny, C2, D21, ρ, T) 
+    [C2'; D21'; zeros(T, nx, ny)] * (-2ρ*I) * [C2 D21 zeros(T, ny, nx)]
+end
 
 function _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
     [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
