@@ -117,8 +117,8 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     else    
         ## For ρ!=0 case, ISOP model
         D22 = 1/ρ *(I+M)\I
-        C2_imp = (D22'*(-2ρI) + I)*C2
-        D21_imp = (D22'*(-2ρI) + I)*D21 - D12_imp'
+        C2_imp = (D22'*(-2ρ*I) + I)*C2
+        D21_imp = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
 
         𝑅  = _R_pass(D22, ν, ρ)
 

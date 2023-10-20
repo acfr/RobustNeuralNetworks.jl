@@ -14,12 +14,16 @@ Test passivity inequality
 """
 batches = 100
 nu, nx, nv, ny = 6, 5, 10, 6
-ν= 1.0
+ν = 2.0
+ρ = 1.0
 T = 100
 
 # Test constructors
-ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, ν; init=:random, rng)
-ren = REN(ren_ps)
+ISIPren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, ν, 0; init=:random, rng)
+ISIPren = REN(ISIPren_ps)
+
+ISOPren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, 0, ρ; init=:random, rng)
+ISOPren = REN(ISOPren_ps)
 
 # Different inputs with different initial conditions
 u0 = 10*randn(rng, nu, batches)
@@ -29,20 +33,34 @@ x0 = randn(rng, nx, batches)
 x1 = randn(rng, nx, batches)
 
 # Simulate
-x0n, y0 = ren(x0, u0)
-x1n, y1 = ren(x1, u1)
+x0n_ISIP, y0_ISIP = ISIPren(x0, u0)
+x1n_ISIP, y1_ISIP = ISIPren(x1, u1)
+
+x0n_ISOP, y0_ISOP = ISOPren(x0, u0)
+x1n_ISOP, y1_ISOP = ISOPren(x1, u1)
 
 # Dissipation condition
-ν = ren_ps.ν
-Q = zeros(ny, ny)
+ν = ISIPren_ps.ν
+ρ = ISOPren_ps.ρ
+Q_ISIP = zeros(ny, ny)
+R_ISIP = -2ν * Matrix(I, nu, nu)
+Q_ISOP = -2ρ * Matrix(I, ny, ny)
+R_ISOP = zeros(nu, nu)
 S = Matrix(I, nu, ny)
-R = -2ν * Matrix(I, nu, nu)
 
 # Test passivity
-M = [Q S'; S R]
-rhs = mat_norm2(M, vcat(y1 .- y0, u1 .- u0))
+M_ISIP = [Q_ISIP S'; S R_ISIP]
+M_ISOP = [Q_ISOP S'; S R_ISOP]
 
-P = compute_p(ren_ps)
-lhs = mat_norm2(P, x0n .- x1n) - mat_norm2(P, x0 .- x1)
+# ISIP case
+rhs_ISIP = mat_norm2(M_ISIP, vcat(y1_ISIP .- y0_ISIP, u1 .- u0))
+P_ISIP = compute_p(ISIPren_ps)
+lhs_ISIP = mat_norm2(P_ISIP, x0n_ISIP .- x1n_ISIP) - mat_norm2(P_ISIP, x0 .- x1)
 
-@test all(lhs .<= rhs)
+# ISOP case
+rhs_ISOP = mat_norm2(M_ISOP, vcat(y1_ISOP .- y0_ISOP, u1 .- u0))
+P_ISOP = compute_p(ISOPren_ps)
+lhs_ISOP = mat_norm2(P_ISOP, x0n_ISOP .- x1n_ISOP) - mat_norm2(P_ISOP, x0 .- x1)
+
+@test all(lhs_ISIP .<= rhs_ISIP)
+@test all(lhs_ISOP .<= rhs_ISOP)
