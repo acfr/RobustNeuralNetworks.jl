@@ -10,11 +10,10 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     αbar::T
     ν::T
     ρ::T
-    # TODO: Add a field for incrementally strictly output passive model (ρ)
 end
 
 """
-    PassiveRENParams{T}(nu, nx, nv, ny, ν; <keyword arguments>) where T
+    PassiveRENParams{T}(nu, nx, nv, ny, ν, ρ; <keyword arguments>) where T
 
 Construct direct parameterisation of a passive REN.
 
@@ -79,11 +78,6 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     ν = ps.ν
     ρ = ps.ρ
 
-    # IQC matrices 
-    # Q = -2ρ*I
-    # S = -2ν*I
-    # R = I
-
     # Implicit parameters
     ϵ = ps.direct.ϵ
     ρ_polar = ps.direct.ρ
@@ -115,7 +109,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
         H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
     else    
-        ## For ρ!=0 case, ISOP model
+        # For ρ!=0 case, ISOP model
         D22 = 1/ρ *(I+M)\I
         C2_imp = (D22'*(-2ρ*I) + I)*C2
         D21_imp = (D22'*(-2ρ*I) + I)*D21 - D12_imp'

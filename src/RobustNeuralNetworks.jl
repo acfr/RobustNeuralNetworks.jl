@@ -97,7 +97,7 @@ export LipschitzRENParams
 export PassiveRENParams
 
 export DenseLBDNParams
-export HybridPassiveRENParams
+# export HybridPassiveRENParams
 
 # Wrappers
 export REN
