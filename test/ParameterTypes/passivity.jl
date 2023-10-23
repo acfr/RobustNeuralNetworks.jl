@@ -10,7 +10,7 @@ using Test
 rng = MersenneTwister(42)
 
 """
-Test passivity inequality
+Test incrementally strictly input passivity (isip)
 """
 batches = 100
 nu, nx, nv, ny = 6, 5, 10, 6
@@ -18,12 +18,9 @@ nu, nx, nv, ny = 6, 5, 10, 6
 ρ = 1.0
 T = 100
 
-# Test constructors
-ISIPren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, ν, 0; init=:random, rng)
-ISIPren = REN(ISIPren_ps)
-
-ISOPren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, 0, ρ; init=:random, rng)
-ISOPren = REN(ISOPren_ps)
+# Test constructor
+isip_ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, ν, 0; init=:random, rng)
+isip_ren = REN(isip_ren_ps)
 
 # Different inputs with different initial conditions
 u0 = 10*randn(rng, nu, batches)
@@ -33,34 +30,43 @@ x0 = randn(rng, nx, batches)
 x1 = randn(rng, nx, batches)
 
 # Simulate
-x0n_ISIP, y0_ISIP = ISIPren(x0, u0)
-x1n_ISIP, y1_ISIP = ISIPren(x1, u1)
-
-x0n_ISOP, y0_ISOP = ISOPren(x0, u0)
-x1n_ISOP, y1_ISOP = ISOPren(x1, u1)
+x0n_isip, y0_isip = isip_ren(x0, u0)
+x1n_isip, y1_isip = isip_ren(x1, u1)
 
 # Dissipation condition
-ν = ISIPren_ps.ν
-ρ = ISOPren_ps.ρ
-Q_ISIP = zeros(ny, ny)
-R_ISIP = -2ν * Matrix(I, nu, nu)
-Q_ISOP = -2ρ * Matrix(I, ny, ny)
-R_ISOP = zeros(nu, nu)
+ν = isip_ren_ps.ν
+Q_isip = zeros(ny, ny)
+R_isip = -2ν * Matrix(I, nu, nu)
 S = Matrix(I, nu, ny)
 
 # Test passivity
-M_ISIP = [Q_ISIP S'; S R_ISIP]
-M_ISOP = [Q_ISOP S'; S R_ISOP]
+M_isip = [Q_isip S'; S R_isip]
+P_isip = compute_p(isip_ren_ps)
+rhs_isip = mat_norm2(M_isip, vcat(y1_isip .- y0_isip, u1 .- u0))
+lhs_isip = mat_norm2(P_isip, x0n_isip .- x1n_isip) - mat_norm2(P_isip, x0 .- x1)
 
-# ISIP case
-rhs_ISIP = mat_norm2(M_ISIP, vcat(y1_ISIP .- y0_ISIP, u1 .- u0))
-P_ISIP = compute_p(ISIPren_ps)
-lhs_ISIP = mat_norm2(P_ISIP, x0n_ISIP .- x1n_ISIP) - mat_norm2(P_ISIP, x0 .- x1)
+@test all(lhs_isip .<= rhs_isip)
 
-# ISOP case
-rhs_ISOP = mat_norm2(M_ISOP, vcat(y1_ISOP .- y0_ISOP, u1 .- u0))
-P_ISOP = compute_p(ISOPren_ps)
-lhs_ISOP = mat_norm2(P_ISOP, x0n_ISOP .- x1n_ISOP) - mat_norm2(P_ISOP, x0 .- x1)
+"""
+Test incrementally strictly output passivity (isop)
+"""
+isop_ren_ps = PassiveRENParams{Float64}(nu, nx, nv, ny, 0, ρ; init=:random, rng)
+isop_ren = REN(isop_ren_ps)
 
-@test all(lhs_ISIP .<= rhs_ISIP)
-@test all(lhs_ISOP .<= rhs_ISOP)
+# Simulate
+x0n_isop, y0_isop = isop_ren(x0, u0)
+x1n_isop, y1_isop = isop_ren(x1, u1)
+
+# Dissipation condition
+ρ = isop_ren_ps.ρ
+Q_isop = -2ρ * Matrix(I, ny, ny)
+R_isop = zeros(nu, nu)
+S = Matrix(I, nu, ny)
+
+# Test passivity
+M_isop = [Q_isop S'; S R_isop]
+P_isop = compute_p(isop_ren_ps)
+rhs_isop = mat_norm2(M_isop, vcat(y1_isop .- y0_isop, u1 .- u0))
+lhs_isop = mat_norm2(P_isop, x0n_isop .- x1n_isop) - mat_norm2(P_isop, x0 .- x1)
+
+@test all(lhs_isop .<= rhs_isop)
