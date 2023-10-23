@@ -54,7 +54,7 @@ function PassiveRENParams{T}(
 
     # Check ρ and ν
     if ρ*ν>0
-        error("ρ and ν cannot be all positive for passiveREN parameterisation")
+        error("If ρ and ν are both positive, passiveREN could produce incorrect results. Please set at least one of them as zero. ")        
     end
 
     # Direct (implicit) params
@@ -74,7 +74,6 @@ trainable(m::PassiveRENParams) = (direct = m.direct, )
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
-    # nu = ps.nu
     ν = ps.ν
     ρ = ps.ρ
 
@@ -94,9 +93,8 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     C2 = ps.direct.C2
     D21 = ps.direct.D21
 
-    # Constructing D22 for incrementally passive and incrementally strictly input passive. 
+    # Constructing D22 for incrementally (strictly input) passive and incrementally strictly output passive. 
     # See Eqns 31-33 of TAC paper 
-    # Currently converts to Hermitian to avoid numerical conditioning issues
     M = _M_pass(X3, Y3, ϵ)
 
     if ρ == 0
@@ -110,9 +108,9 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
         H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
     else    
         # For ρ!=0 case, ISOP model
-        D22 = 1/ρ *(I+M)\I
-        C2_imp = (D22'*(-2ρ*I) + I)*C2
-        D21_imp = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
+        D22 = _D22_pass(M, ρ) 
+        C2_imp = _C2_pass(D22, C2, ρ)
+        D21_imp = _D21_pass(D22, D21, D12_imp, ρ)
 
         𝑅  = _R_pass(D22, ν, ρ)
 
@@ -127,6 +125,12 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     return H
 
 end
+
+_D22_pass(M, ρ) = 1/ρ *(I+M)\I
+
+_C2_pass(D22, C2, ρ) = (D22'*(-2ρ*I) + I)*C2
+
+_D21_pass(D22, D21, D12_imp, ρ) = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
 
 _M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
 

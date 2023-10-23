@@ -60,7 +60,6 @@ include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
 
 include("ParameterTypes/dense_lbdn.jl")
-# include("ParameterTypes/hybrid_passive_ren.jl")
 
 # Wrappers
 include("Wrappers/REN/ren.jl")
@@ -97,7 +96,6 @@ export LipschitzRENParams
 export PassiveRENParams
 
 export DenseLBDNParams
-# export HybridPassiveRENParams
 
 # Wrappers
 export REN
