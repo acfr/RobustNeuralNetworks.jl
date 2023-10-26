@@ -15,7 +15,7 @@ Test incrementally strictly input passivity (isip)
 batches = 100
 nu, nx, nv, ny = 6, 5, 10, 6
 ν = 2.0
-ρ = 1.0
+ρ = 10.0
 T = 100
 
 # Test constructor
