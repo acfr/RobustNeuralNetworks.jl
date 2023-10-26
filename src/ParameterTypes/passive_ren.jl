@@ -22,8 +22,10 @@ Construct direct parameterisation of a passive REN.
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
-- `ν::Number=0`: Passivity index. Use ν>0 for incrementally strictly input passive model. Setting both ν == 0 and ρ == 0 for incrementally passive model.
-- `ρ::Number=0`: Passivity index. Use ρ>0 for incrementally strictly output passive model. Note: setting both ν and ρ>0 is not currently supported.
+- `ν::Number=0`: Passivity index. Use `ν > 0` for an incrementally strictly input passive model. Set both `ν = 0` and `ρ = 0` for incrementally passive model.
+- `ρ::Number=0`: Passivity index. Use `ρ > 0` for an incrementally strictly output passive model. 
+
+Note that setting both `ν,ρ > 0` or both `ν,ρ < 0` is not currently supported and will throw an error.
 
 # Keyword arguments
 
@@ -53,13 +55,13 @@ function PassiveRENParams{T}(
     end
 
     # Check ρ and ν
-    if ρ < 0 || ν < 0
-        @warn("Warning: negative passivity index detected, passivity is NOT guaranteed")
-    end 
-
     if ρ*ν > 0
         error("If ρ and ν are both positive, passiveREN could produce incorrect results. Please set at least one of them as zero. ")               
     end
+
+    if ρ < 0 || ν < 0
+        @warn("Warning: negative passivity index detected, passivity is NOT guaranteed")
+    end 
 
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
@@ -130,7 +132,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
 end
 
-_D22_pass(M, ρ) = (I+M)\I/ρ   
+_D22_pass(M, ρ) = ((I+M) \ I) / ρ   
 
 _C2_pass(D22, C2, ρ) = (D22'*(-2ρ*I) + I)*C2
 
