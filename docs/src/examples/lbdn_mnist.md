@@ -17,7 +17,7 @@ For details on how Lipschitz bounds increase classification robustness and relia
 Let's start by loading the training and test data. [`MLDatasets.jl`](https://juliaml.github.io/MLDatasets.jl/stable/) contains a number of common machine-learning datasets, including the [MNIST dataset](https://juliaml.github.io/MLDatasets.jl/stable/datasets/vision/#MLDatasets.MNIST). The following code loads the full dataset of 60,000 training images and 10,000 test images.
 
 !!! info "Working on the GPU"
-    Since we're dealing with images, we will load are data and models onto the GPU to speed up training. We'll be using [`CUDA.jl`](https://github.com/JuliaGPU/CUDA.jl). 
+    Since we're dealing with images, we will load our data and models onto the GPU to speed up training. We'll be using [`CUDA.jl`](https://github.com/JuliaGPU/CUDA.jl). 
     
     If you don't have a GPU on your machine, just switch to `dev = cpu`. If you have a GPU but not an NVIDIA GPU, switch out `CUDA.jl` with whichever GPU backend supports your device. For more information on training models on a GPU, see [here](https://fluxml.ai/Flux.jl/stable/gpu/).
 

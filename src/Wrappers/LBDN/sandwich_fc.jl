@@ -63,7 +63,7 @@ println(round.(y;digits=2))
 
 # output
 
-[3.62 4.74 3.58 8.75 3.64 3.0 0.73 1.16 1.0 1.73]
+[4.13 4.37 3.22 8.38 4.15 3.71 0.7 2.04 1.78 2.64]
 ```
 
 See also [`DenseLBDNParams`](@ref), [`DiffLBDN`](@ref).
