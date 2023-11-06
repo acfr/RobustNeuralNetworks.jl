@@ -59,6 +59,7 @@ include("ParameterTypes/general_ren.jl")
 include("ParameterTypes/lipschitz_ren.jl")
 include("ParameterTypes/passive_ren.jl")
 
+include("ParameterTypes/hybrid_passive_ren.jl")
 include("ParameterTypes/dense_lbdn.jl")
 
 # Wrappers
