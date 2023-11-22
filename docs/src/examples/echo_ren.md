@@ -5,7 +5,7 @@
 
 RENs and LBDNs can be used for a lot more than just learning-based problems. In this example, we'll see how RENs can be used to design nonlinear feedback controllers with stability guarantees for linear dynamical systems with constraints. Introducing constraints (eg: minimum/maximum control inputs) often means that nonlinear controllers perform better than linear policies. A common approach is to use *Model Predictive Control* ([MPC](https://en.wikipedia.org/wiki/Model_predictive_control)). In our case, we'll use convex optimisation to design a nonlinear controller. The controller will be an [*echo state network*](https://en.wikipedia.org/wiki/Echo_state_network) based on a contracting REN. We'll use this alongside the [*Youla-Kucera parameterisation*](https://www.sciencedirect.com/science/article/pii/S1367578820300249) to guarantee stability of the final controller.
 
-For a detailed explanation of the theory behind this example, please read Section IX of the original [paper](https://ieeexplore.ieee.org/document/10179161). For more on using RENs with the Youla parameterisation, see [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193).
+For a detailed explanation of the theory behind this example, please read Section IX of the original [paper](https://ieeexplore.ieee.org/document/10179161). For more on using RENs with the Youla parameterisation, see [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://arxiv.org/abs/2304.06193v2).
 
 
 ## 1. Background theory
@@ -59,7 +59,7 @@ It turns out that if we augment the original controller with ``\tilde{u} = \math
 z = \mathcal{T}_0 d + \mathcal{T}_1 \mathcal{Q}(\mathcal{T}_2 d)
 ```
 
-This is an old idea in linear control theory called the Youla-Kucera parameterisation. We extended it to nonlinear models (like RENs) and nonlinear dynamical systems in [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193), respectively.
+This is an old idea in linear control theory called the Youla-Kucera parameterisation. We extended it to nonlinear models (like RENs) and nonlinear dynamical systems in [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://arxiv.org/abs/2304.06193v2), respectively.
 
 
 ### Echo state networks with REN
