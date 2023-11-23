@@ -114,7 +114,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
         H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
     else    
         # For ρ!=0 case, ISOP model
-        D22 = _D22_pass(M, ρ) 
+        D22 = ((I+M) \ I) / ρ 
         C2_imp = _C2_pass(D22, C2, ρ)
         D21_imp = _D21_pass(D22, D21, D12_imp, ρ)
 
@@ -132,7 +132,7 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
 end
 
-_D22_pass(M, ρ) = ((I+M) \ I) / ρ   
+# _D22_pass(M, ρ) = ((I+M) \ I) / ρ   
 
 _C2_pass(D22, C2, ρ) = (D22'*(-2ρ*I) + I)*C2
 
