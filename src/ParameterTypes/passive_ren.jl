@@ -55,8 +55,8 @@ function PassiveRENParams{T}(
     end
 
     # Check ρ and ν
-    if ρ*ν > 0
-        error("If ρ and ν are both positive, passiveREN could produce incorrect results. Please set at least one of them as zero. ")               
+    if ρ*ν >= 1/4
+        error("ρ and ν can not be arbitrarily large for passiveREN models. Please make sure ρν < 1/4. ")               
     end
 
     if ρ < 0 || ν < 0
