@@ -25,7 +25,7 @@ Construct direct parameterisation of a passive REN.
 - `ν::Number=0`: Passivity index. Use `ν > 0` for an incrementally strictly input passive model. Set both `ν = 0` and `ρ = 0` for incrementally passive model.
 - `ρ::Number=0`: Passivity index. Use `ρ > 0` for an incrementally strictly output passive model. 
 
-Note that setting both `ν,ρ > 0` or both `ν,ρ < 0` is not currently supported and will throw an error.
+Note that the product of passivity indices ρν has to be less than 1/4 for passive REN.
 
 # Keyword arguments
 
