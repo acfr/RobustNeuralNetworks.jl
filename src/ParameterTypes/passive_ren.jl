@@ -114,7 +114,8 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
         H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
     else    
         # For ρ!=0 case, ISOP model
-        D22 = ((I+M) \ I) / ρ 
+        D22 = _D22_pass(M, ρ)
+
         C2_imp = _C2_pass(D22, C2, ρ)
         D21_imp = _D21_pass(D22, D21, D12_imp, ρ)
 
@@ -132,8 +133,6 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
 end
 
-# _D22_pass(M, ρ) = ((I+M) \ I) / ρ   
-
 _C2_pass(D22, C2, ρ) = (D22'*(-2ρ*I) + I)*C2
 
 _D21_pass(D22, D21, D12_imp, ρ) = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
@@ -141,6 +140,11 @@ _D21_pass(D22, D21, D12_imp, ρ) = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
 _M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
 
 _R_pass(D22, ν, ρ) = -2ν*I + D22 + D22' + D22'*(-2ρ*I)*D22
+
+function _D22_pass(M, ρ)
+    Im = _I(M) # Prevents scalar indexing on backwards pass of () / (I + M) on GPU
+    return ((Im + M) \ Im) / ρ  
+end
 
 function _Γ1_pass(nx, ny, C2, D21, ρ, T) 
     [C2'; D21'; zeros(T, nx, ny)] * (-2ρ*I) * [C2 D21 zeros(T, ny, nx)]
