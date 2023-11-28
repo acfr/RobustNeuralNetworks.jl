@@ -1,7 +1,7 @@
 name = "RobustNeuralNetworks"
 uuid = "a1f18e6b-8af1-433f-a85d-2e1ee636a2b8"
 authors = ["Nicholas H. Barbara", "Max Revay", "Ruigang Wang", "Jing Cheng", "Jerome Justin", "Ian R. Manchester"]
-version = "0.3.1"
+version = "0.3.2"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
