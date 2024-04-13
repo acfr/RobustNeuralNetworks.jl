@@ -2,12 +2,12 @@
 
 In Section \ref{sec:rl}, we designed a controller for a simple nonlinear system assuming that the controller had \textit{full state knowledge}: that is, it had access to both the position and velocity of the box. In many practical situations, we may only be able to measure some of the system states. For example, our box may have a camera to estimate its position but not its velocity. In these cases, we need a \textit{state observer} to estimate the full state of the system for feedback control.
 
-In this example, we will show how a contracting REN can be used to learn stable observers for dynamical systems. A common approach to designing state estimators for nonlinear systems is the \textit{Extended Kalman Filter} (EKF). In our case, we will consider observer design as a supervised learning problem. For a detailed explanation of the theory behind learning state observers, and for a similar example designing an observer for a \textit{Partial Differential Equations} (PDE), please refer to Section VIII of \cite{Revay++2021b}.
+In this example, we will show how a contracting REN can be used to learn stable observers for dynamical systems. A common approach to designing state estimators for nonlinear systems is the \textit{Extended Kalman Filter} (EKF). In our case, we will consider observer design as a supervised learning problem. For a detailed explanation of the theory behind learning state observers, and for a similar example designing an observer for a \textit{Partial Differential Equations} (PDE), please refer to Section VIII of \cite{Revay++2023}.
 
 % Overview
 \subsubsection{Background theory} \label{sec:observer-theory}
 
-We briefly summarise some background theory from \cite{Revay++2021b} relevant to this example. Suppose we have a discrete-time, nonlinear dynamical system of the form
+We briefly summarise some background theory from \cite{Revay++2023} relevant to this example. Suppose we have a discrete-time, nonlinear dynamical system of the form
 \begin{align}
     x_{t+1} &= f_d(x_t, u_t) \\
     y_t &= g_d(x_t, u_t)
@@ -18,7 +18,7 @@ with state vector $x_t,$ controlled inputs $u_t,$ and measured outputs $y_t.$ Ou
 \end{equation}
 where $\hat{x}_t$ is the state estimate. A more common (but more restrictive) structure is the well-known Luenberger observer \cite{Luenberger1971}.
 
-To estimate the true state, our observer error $(x_t - \hat{x}_t)$ must converge to zero as time progresses, or $\hat{x}_t \rightarrow x_t$ as $t \rightarrow \infty$. As outlined in \cite{Revay++2021b}, our observer only has to satisfy the following two conditions to guarantee this.
+To estimate the true state, our observer error $(x_t - \hat{x}_t)$ must converge to zero as time progresses, or $\hat{x}_t \rightarrow x_t$ as $t \rightarrow \infty$. As outlined in \cite{Revay++2023}, our observer only has to satisfy the following two conditions to guarantee this.
 
 \begin{enumerate}
     \item The observer must be a contracting system (Sec. \ref{sec:robustness-contraction}).
@@ -26,7 +26,7 @@ To estimate the true state, our observer error $(x_t - \hat{x}_t)$ must converge
     \begin{equation}
         f_o(x_t,u_t,y_t) = f_d(x_t,u_t)
     \end{equation}
-    where $y_t = g_d(x_t,u_t)$. Note the use of $x_t$ not $\hat{x}_t$. It turns out that if the correctness condition is only approximately satisfied such that $|f_o(x_t,u_t,y_t) - f_d(x_t,u_t)| < \rho$ for some small number $\rho\in\mathbb{R}$, then the observer error will still be bounded. See Appendix E of \cite{Revay++2021b} for details.
+    where $y_t = g_d(x_t,u_t)$. Note the use of $x_t$ not $\hat{x}_t$. It turns out that if the correctness condition is only approximately satisfied such that $|f_o(x_t,u_t,y_t) - f_d(x_t,u_t)| < \rho$ for some small number $\rho\in\mathbb{R}$, then the observer error will still be bounded. See Appendix E of \cite{Revay++2023} for details.
 \end{enumerate}
 
 The first condition, contraction, is already guaranteed for all REN models in \verb|RobustNeuralNetworks.jl|. Therefore, to learn a stable observer with RENs, our only requirement is to minimise the one-step-ahead prediction error to approximate the correctness condition. If we have a batch of data $z = \{x_i, u_i, y_i, \ i = 1,2,\ldots,N\},$ this corresponds to minimising the loss function

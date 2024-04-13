@@ -111,7 +111,7 @@ cost(z::AbstractVector, qref, uref) =
 % Define a model
 \subsubsection{Define a model} \label{sec:rl-model}
 
-We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For examples of how Lipschitz bounds can be useful in learning robust controllers, see \cite{Barbara++2023,Russo+Proutiere2019,Song++2023}.
+We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For examples of how Lipschitz bounds can be useful in learning robust controllers, see \cite{Barbara++2023,Russo+Proutiere2021,Song++2023}.
 
 \begin{lstlisting}[language = Julia]
 using RobustNeuralNetworks
