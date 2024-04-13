@@ -46,10 +46,9 @@ k = 5                   # Spring constant (N/m)
 μ = 0.5                 # Viscous damping (kg/m)
 nx = 2                  # Number of states
 
-
-# Continuous and discrete dynamics and measurements
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - 
     k*x[1:1,:] - μ*x[2:2,:]*abs.(x[2:2,:]))/m]
+
 fd(x,u) = x + dt*f(x,u)
 gd(x::Matrix) = x[1:1,:]
 \end{lstlisting}
@@ -88,7 +87,7 @@ data = zip(Xn[indx], Xt[indx], obsv_data[indx])
 % Define a model
 \subsubsection{Define a model} \label{sec:observer-model}
 
-We can construct the parameterization for a contracting REN model using \verb|ContractingRENParams|. The inputs to the model are $[u_t;y_t]$, and its outputs are the next state estimate $\hat{x}_{t+1}$. The flag \verb|output_map=false| sets the output map of the REN to just return its own internal state -- i.e: $C_2 = I$, $D_{21} = 0$, $D_{22} = 0$, $b_y = 0$ from Equation \ref{eqn:ren-G}. This makes the internal state of the REN exactly the state estimate $\hat{x}_t$.
+We can construct the parameterization for a contracting REN model using \verb|ContractingRENParams|. The inputs to the model are $[u_t;y_t]$, and its outputs are the next state estimate $\hat{x}_{t+1}$. The flag \verb|output_map=false| sets the output map of the REN to just return its own internal state -- i.e., $C_2 = I$, $D_{21} = 0$, $D_{22} = 0$, $b_y = 0$ from Equation \ref{eqn:ren-G}. This makes the internal state of the REN exactly the state estimate $\hat{x}_t$.
 
 \begin{lstlisting}[language = Julia]
 using RobustNeuralNetworks

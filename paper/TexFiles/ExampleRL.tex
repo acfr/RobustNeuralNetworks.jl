@@ -1,6 +1,6 @@
 \subsection{Reinforcement learning} \label{sec:rl}
 
-One of the original motivations for developing the model structures in  \verb|RobustNeuralNetworks.jl| was to guarantee stability and robustness in learning-based control. Recently, we have shown that with a controller architecture based on a nonlinear version of classical Youla-Kucera parameterization \cite{Youla++1976}, one can learn over the space of all stabilising controllers for linear or nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterized by a contracting, Lipschitz-bounded REN  \cite{Wang++2022,Barbara++2023}. This is an exciting result when considering learning controllers in safety-critical systems, such as in robotics.
+One of the original motivations for developing the model structures in  \verb|RobustNeuralNetworks.jl| was to guarantee stability and robustness in learning-based control. Recently, we have shown that with a controller architecture based on a nonlinear version of classical Youla-Kucera parameterization \cite{Youla++1976}, one can learn over a space of stabilizing controllers for linear and nonlinear systems using standard reinforcement learning techniques, so long as the control policy is parameterized by a contracting, Lipschitz-bounded REN  \cite{Wang+Manchester2022,Wang++2022,Barbara++2023}. This is an exciting result for learning-based controllers in safety-critical systems, such as in robotics.
 
 In this example, we will demonstrate how to train an LBDN controller with \textit{reinforcement learning} (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
 
@@ -55,7 +55,6 @@ We start by defining the properties of our system and translating the dynamics i
 m = 1                   # Mass (kg)
 k = 5                   # Spring constant (N/m)
 μ = 0.5                 # Viscous damping (kg/m)
-
 Tmax = 4                # Simulation horizon (s)
 dt = 0.02               # Time step (s)
 ts = 1:Int(Tmax/dt)     # Array of time indices
@@ -69,7 +68,7 @@ qref = 2*rand(nref, batches) .- 1
 uref = k*qref
 \end{lstlisting}
 
-It is good practice (and faster) to simulate all simulation batches at once, so we define our dynamics functions to operate on matrices of states and controls. Each row corresponds to a different state or control, and each column corresponds to a simulation for a particular goal position.
+It is good practice (and faster) to simulate all simulation batches at once, so we define our dynamics functions to operate on batches of states and controls. Each row corresponds to a different state or control, and each column corresponds to a simulation for a particular goal position.
 
 \begin{lstlisting}[language = Julia]
 f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - 
@@ -77,9 +76,9 @@ f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] -
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 \end{lstlisting}
 
-RL problems typically involve simulating the system over some time horizon and collecting rewards or costs at each time step. Control policies are trained using approximations of the cost gradient $\nabla J_\theta$, as it is often difficult (or impossible) to compute the exact gradient due to the complexity of dynamics simulators. We refer the reader to \verb|ReinforcementLearning.jl| for further details \cite{Tian++2020}.
+RL problems typically involve simulating the system over some time horizon and collecting rewards or costs at each time step. Control policies are trained using approximations of the cost gradient $\nabla J_\theta$, as it is often difficult (or impossible) to compute the exact gradient due to the complexity of dynamics simulators. We refer the reader to \cite{Sutton+Barto2018} for further details, and \verb|ReinforcementLearning.jl| \cite{Tian++2020} for examples in Julia.
 
-For this simple example, we can back-propagate directly through the dynamics function \verb|fd(x,u)|. The simulator below takes a batch of initial states, goal positions, and a controller \verb|model| whose inputs are $[x; q_\mathrm{ref}]$. It computes trajectories of states and controls $z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}$. To avoid the well-known issue of array mutation being unsupported in differentiable programming, we use a \verb|Zygote.Buffer| to iteratively store the outputs \cite{Innes2018b}.
+For this simple example, we can back-propagate directly through the dynamics function \verb|fd(x,u)| rather than approximating  $\nabla J_\theta$. The simulator below takes a batch of initial states, goal positions, and a controller \verb|model| whose inputs are $[x; q_\mathrm{ref}]$. It computes trajectories of states and controls $z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}$. To avoid the issue of unsupported array mutation when differentiating we use a \verb|Zygote.Buffer| to iteratively store the outputs \cite{Innes2018b}.
 
 \begin{lstlisting}[language = Julia]
 using Zygote: Buffer
@@ -112,7 +111,7 @@ cost(z::AbstractVector, qref, uref) =
 % Define a model
 \subsubsection{Define a model} \label{sec:rl-model}
 
-We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see \cite{Barbara++2023}.
+We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For examples of how Lipschitz bounds can be useful in learning robust controllers, see \cite{Barbara++2023,Russo+Proutiere2019,Song++2023}.
 
 \begin{lstlisting}[language = Julia]
 using RobustNeuralNetworks
@@ -199,6 +198,7 @@ The cost is computation speed, particular in an RL context. Careful inspection o
 
 For example, suppose we train single-hidden-layer LBDNs with $n = 2, 2^2, \ldots, 2^9$ neurons over 100 epochs on our box RL problem, and log the time taken to train each model when using both \verb|LBDN| and \verb|DiffLBDN|.
 
+\newpage
 \begin{lstlisting}[language = Julia]
 function lbdn_compute_times(n; epochs=100)
 

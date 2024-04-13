@@ -1,6 +1,6 @@
 \subsection{Image classification} \label{sec:mnist}
 
-Our first example features an LBDN trained to classify the MNIST dataset \cite{LeCun++2010}. We will use this example to demonstrate how training image classifiers with LBDNs makes them robust to adversarial attacks thanks to the built-in Lipschitz bound. For a detailed investigation of the effect of Lipschitz bounds on classification robustness and reliability, please see \cite{Wang+Manchester2023}.
+Our first example features an LBDN trained to classify the MNIST dataset \cite{LeCun++2010}. We will use this example to demonstrate how training image classifiers with LBDNs makes them robust to noise (and adversarial attacks) thanks to the built-in Lipschitz bound. For a detailed investigation of the effect of Lipschitz bounds on classification robustness and reliability, please see \cite{Wang+Manchester2023}.
 
 % Load the data
 \subsubsection{Load the data} \label{sec:mnist-data}
@@ -15,7 +15,7 @@ x_train, y_train = MNIST(T, split=:train)[:]
 x_test,  y_test  = MNIST(T, split=:test)[:]
 \end{lstlisting}
 
-The feature matrices \verb|x_train| and \verb|x_test| are three-dimensional arrays where each $28 \times 28$ layer contains pixel data for a single handwritten number from 0 to 9 (eg: see Fig. \ref{fig:mnist_numbers}). The labels \verb|y_train| and \verb|y_test| are vectors containing the classification of each image as a number from 0 to 9. We convert each of these to a format better suited to training with \verb|Flux.jl|.
+The feature matrices \verb|x_train| and \verb|x_test| are three-dimensional arrays where each $28 \times 28$ layer contains pixel data for a single handwritten number from 0 to 9 (e.g., see Fig. \ref{fig:mnist_numbers}). The labels \verb|y_train| and \verb|y_test| are vectors containing the classification of each image as a number from 0 to 9. We convert each of these to a format better suited to training with \verb|Flux.jl|.
 
 \begin{lstlisting}[language = Julia]
 using Flux
@@ -30,7 +30,7 @@ y_test  = Flux.onehotbatch(y_test,  0:9)
 data = [(x_train, y_train)]
 \end{lstlisting}
 
-Features are now stored in a $28^2\times N$ \verb|Matrix| where each column contains pixel data from a single image, and the labels have been converted to a $10\times N$ \verb|Flux.OneHotMatrix| where each column contains a 1 in the row corresponding to the image's classification (eg: row 3 for an image showing the number 2) and a 0 otherwise.
+Features are now stored in a $28^2\times N$ \verb|Matrix| where each column contains pixel data from a single image, and the labels have been converted to a $10\times N$ \verb|Flux.OneHotMatrix| where each column contains a 1 in the row corresponding to the image's classification (e.g., row 3 for an image showing the number 2) and a 0 otherwise.
 
 % Define a model
 \subsubsection{Define a model} \label{sec:mnist-model}
@@ -53,7 +53,7 @@ model = Chain(DiffLBDN(model_ps), Flux.softmax)
 
 The \verb|model| consists of two parts. The first is a callable \verb|DiffLBDN| model constructed from its direct parameterization, which is defined by an instance of \verb|DenseLBDNParams| as per Section \ref{sec:parameterizations}. The output is then converted to a probability distribution using a \verb|softmax| layer. Note that all \verb|AbstractLBDN| models can be combined with traditional neural network layers using \verb|Flux.Chain|. 
 
-We could also have constructed the \verb|model| from a combination of \verb|SandwichFC| layers. Introduced in \cite{Wang+Manchester2023}, the \verb|SandwichFC| layer is a fully-connected or dense layer with a guaranteed Lipschitz bound of 1.0. We have designed the user interface for \verb|SandwichFC| to be as similar to that of \verb|Flux.Dense| as possible.
+We could also construct the \verb|model| as a chain of \verb|SandwichFC| layers. Introduced in \cite{Wang+Manchester2023}, the ``sandiwch'' layer is a dense layer with a guaranteed Lipschitz bound of 1.0. We have designed the user interface for \verb|SandwichFC| similarly to that of \verb|Flux.Dense|.
 \begin{lstlisting}[language = Julia]
 model = Chain(
     (x) -> (sqrt(γ) * x),
@@ -120,11 +120,11 @@ initb(n) = Flux.glorot_normal(n)
 
 # Build a dense model
 dense = Chain(
-    Dense(nu, nh[1], relu; 
+    Dense(nu => nh[1], relu; 
           init, bias=initb(nh[1])),
-    Dense(nh[1], nh[2], relu; 
+    Dense(nh[1] => nh[2], relu; 
           init, bias=initb(nh[2])),
-    Dense(nh[2], ny; init, bias=initb(ny)),
+    Dense(nh[2] => ny; init, bias=initb(ny)),
     Flux.softmax
 )
 \end{lstlisting}
@@ -161,7 +161,7 @@ lbdn_error  = noisy_test_error.((model,), ϵs)
 dense_error = noisy_test_error.((dense,), ϵs)
 \end{lstlisting}
 
-Plotting the results in Figure \ref{fig:mnist_robust} very clearly shows that the \verb|dense| network, which has no guarantees on its Lipschitz bound, quickly loses its accuracy as small amounts of noise are added to the image. In contrast, the LBDN \verb|model| maintains its accuracy even when the (maximum) perturbation size is as much as 80\% of the maximum pixel values. This is an illustration of why image classification is one of the most promising use-cases for LBDN models. For a more detailed comparison of LBDN with state-of-the-art image classification methods, see \cite{Wang+Manchester2023}.
+Plotting the results in Figure \ref{fig:mnist_robust} very clearly shows that the \verb|dense| network, which has no guarantees on its Lipschitz bound, quickly loses its accuracy as small amounts of noise are added to the image. In contrast, the LBDN \verb|model| maintains its accuracy even when the (maximum) perturbation size is as much as 80\% of the maximum pixel values. This is an illustration of why image classification is such a promising use-case for LBDN models. For a more detailed comparison of LBDN with state-of-the-art image classification methods, see \cite{Wang+Manchester2023}.
 
 \begin{figure}[!b]
     \centering

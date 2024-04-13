@@ -3,14 +3,15 @@
 % Model types
 \subsection{What are RENs and LBDNs?} \label{sec:model-structures}
 
-A \textit{Lipschitz-Bounded Deep Network} (LBDN) is a (memoryless) deep neural network model with a built-in upper-bound on its Lipschitz constant (Sec. \ref{sec:robustness-lipschitz}). Suppose the network has inputs $u \in\mathbb{R}^{n_u}$, outputs $y \in \mathbb{R}^{n_y}$, and hidden units $z_k \in \mathbb{R}^{n_k}$. We define LBDNs as $L$-layer feed-forward networks, much like MLPs or CNNs, described by the following recursive equations.
+A \textit{Lipschitz-Bounded Deep Network} (LBDN) is a (memoryless) deep neural network with a built-in upper-bound on its Lipschitz constant (Sec. \ref{sec:robustness-lipschitz}). Suppose the network has inputs $u \in\mathbb{R}^{n_u}$, outputs $y \in \mathbb{R}^{n_y}$, and hidden units $z_k \in \mathbb{R}^{n_k}$. The structure of an LBDNs is a $L$-layer feed-forward network (like an MLP or CNN)
 \begin{align} 
 z_0 &= x \label{eqn:lbdn-z0}\\
 z_{k+1} &= \sigma(W_k z_k + b_k), \quad k = 0, \ldots, L-1 \label{eqn:lbdn-sandwich}\\
-y &= W_L z_L + b_L \label{eqn:lbdn-output}
+y &= W_L z_L + b_L, \label{eqn:lbdn-output}
 \end{align}
+where the $W_k, b_k$ are the layer weights and biases (respectively), and $\sigma$ is a nonlinear activation function (e.g. $\tanh$, ReLU).
 
-A \textit{Recurrent Equilibrium Network} (REN) is a neural network model described by linear system in feedback with a nonlinear activation function. Denote $x_t \in \mathbb{R}^{n_x}$ as the internal states of the system, $u_t \in\mathbb{R}^{n_u}$ as its inputs, and $y_t \in \mathbb{R}^{n_y}$ as its outputs. Mathematically, a REN can be written as
+A \textit{Recurrent Equilibrium Network} (REN) is a recurrent model (with memory) described by a linear dynamical system in feedback with a nonlinear activation function. Writing $x_t \in \mathbb{R}^{n_x}$ for the internal states of the system, a REN can be expressed mathematically as
 \begin{align}
     \begin{bmatrix}
         x_{t+1} \\ v_t \\ y_t
@@ -36,11 +37,12 @@ A \textit{Recurrent Equilibrium Network} (REN) is a neural network model describ
     \sigma(v_{t}^1) & \sigma(v_{t}^2) & \cdots & \sigma(v_{t}^q)
     \end{bmatrix}^\top, \label{eqn:ren-sigma}
 \end{align}
-where $v_t, w_t \in \mathbb{R}^{n_v}$ are the inputs and outputs of neurons and $\sigma$ is the activation function. Graphically, this is equivalent to Figure \ref{fig:ren}, where the linear (actually affine) system $G$ is given by Equation \ref{eqn:ren-G}.
+where $v_t, w_t \in \mathbb{R}^{n_v}$ are the inputs and outputs of the activation function $\sigma$. Graphically, this is equivalent to Figure \ref{fig:ren}, where the linear system $G$ is given by Equation \ref{eqn:ren-G}.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.2\textwidth]{Images/ren.pdf}
+    \includegraphics[width=0.19\textwidth]{Images/ren.pdf}
+    \vspace{-2mm}
     \caption{Feedback structure of a recurrent equilibrium network.}
     \label{fig:ren}
 \end{figure}
@@ -48,13 +50,13 @@ where $v_t, w_t \in \mathbb{R}^{n_v}$ are the inputs and outputs of neurons and 
 See \cite{Revay++2021b} and \cite{Wang+Manchester2023} for more on RENs and LBDNs, respectively.
 
 \begin{remark}
-	\cite{Revay++2021b} makes special mention of ``acyclic'' RENs, which have a lower-triangular $D_{11}$ matrix. These are significantly more efficient to evaluate and train than a REN with dense $D_{11}$ matrix, and the performance is similar across a range of problems. All RENs in the current implementation of \verb|RobustNeuralNetworks.jl| are therefore acyclic RENs.
+	\cite{Revay++2021b} makes special mention of ``acyclic'' RENs, which have a lower-triangular $D_{11}$ matrix. Acyclic RENs are significantly more efficient to evaluate than RENs with a dense $D_{11}$ matrix, and performance is typically similar across a range of problems. All RENs in \verb|RobustNeuralNetworks.jl| are therefore acyclic RENs.
 \end{remark}
 
 % Robustness
-\subsection{Robust metrics and IQCs} \label{sec:robustness}
+\subsection{Robustness metrics and IQCs} \label{sec:robustness}
 
-All neural network models in \verb|RobustNeuralNetworks.jl| are designed to satisfy a set of user-defined robustness constraints. There are a number of different robustness criteria which our RENs can satisfy. Some relate to the internal dynamics of the model, others relate to the input-output map. LBDNs are less general, and are specifically constructed to satisfy Lipschitz bounds (Sec. \ref{sec:robustness-lipschitz}).
+All neural network models in \verb|RobustNeuralNetworks.jl| are designed to satisfy a set of user-defined robustness constraints. The RENs can satisfy a range of robustness criteria, some relating to the internal dynamics of a model and others relating to its input-output map. LBDNs are more specialized and are specifically constructed to have a finite, user-tunable Lipschitz bound (Sec. \ref{sec:robustness-lipschitz}).
 
 \subsubsection{Contracting systems} \label{sec:robustness-contraction}
 
@@ -86,16 +88,16 @@ We define additional robustness criteria on the input-output map of RENs with in
 \end{equation}
 for some function $d(a,b) \ge 0$ with $d(a,a) = 0$, where $0 \preceq Q \in \mathbb{R}^{n_y\times n_y}$, $S\in\mathbb{R}^{n_u\times n_y},$ $R=R^\top \in \mathbb{R}^{n_u\times n_u}.$ 
 
-In general, the IQC matrices $(Q,S,R)$ can be chosen (or optimized) to meet a range of performance criteria. There are a few special cases that are worth noting.
+In general, the IQC matrices $(Q,S,R)$ can be chosen (or optimized) to meet a range of performance criteria. The following special cases are worth noting.
 
 \subsubsection{Lipschitz bounds (smoothness)} \label{sec:robustness-lipschitz}
-If $Q = -\frac{1}{\gamma}I$, $R = \gamma I$, $S = 0$ for some $\gamma \in \mathbb{R}$ with $\gamma \ne 0$, the model $\mathcal{M}$ satisfies a Lipschitz bound (incremental $\ell^2$-gain bound) of $\gamma$, defined by
+If $Q = -\frac{1}{\gamma}I$, $R = \gamma I$, $S = 0$ for some $\gamma \in \mathbb{R}$ with $\gamma > 0$, the model $\mathcal{M}$ satisfies a Lipschitz bound (incremental $\ell_2$-gain bound) of $\gamma$ defined by
 \begin{equation}
-\|\mathcal{M}_a(u) - \mathcal{M}_b(v)\|_T^2 \le \gamma^2 \|u - v\|_T^2.
+\|\mathcal{M}_a(u) - \mathcal{M}_b(v)\|^2 \le \gamma^2 \|u - v\|^2
 \end{equation}
-Qualitatively, the Lipschitz bound is a measure of how smooth the network is. If the Lipschitz bound $\gamma$ is small, then small changes in the inputs $u,v$ will lead to small changes in the model output. If $\gamma$ is large, then the model output might change significantly for even small changes to the inputs. This can make the model more sensitive to noise, adversarial attacks, and other input disturbances.
+where $\|\cdot\|$ denotes the $\ell_2$ norm. Qualitatively, the Lipschitz bound is a measure of the network's ``smoothness''. If $\gamma$ is small, then small changes to the inputs $u,v$ induce only small changes to the model output. If $\gamma$ is large (or unbounded, as in the case of, e.g., MLPs and CNNs), then the model output can change significantly even with negligible changes to the inputs. This can make the model highly sensitive to noise, adversarial attacks, and other input disturbances.
 
-As the name suggests, all LBDN models are all constructed to have a user-tunable (or learnable) Lipschitz bound.
+As the name suggests, all LBDN models are constructed to have a user-tunable (or learnable) Lipschitz bound.
 
 \subsubsection{Incremental passivity} 
 We have implemented two versions of incremental passivity. In each case, the network must have the same number of inputs and outputs.
@@ -103,11 +105,11 @@ We have implemented two versions of incremental passivity. In each case, the net
 \begin{enumerate}
     \item If $Q = 0, R = -2\nu I, S = I$ where $\nu \ge 0$, the model is incrementally passive (incrementally strictly input passive if $\nu > 0$). Mathematically, the following inequality holds.
     \begin{equation}
-    \langle \mathcal{M}_a(u) - \mathcal{M}_b(v), u-v \rangle_T \ge \nu \| u-v\|^2_T
+    \langle \mathcal{M}_a(u) - \mathcal{M}_b(v), u-v \rangle \ge \nu \| u-v\|^2
     \end{equation}
     \item If $Q = -2\rho I, R = 0, S = I$ where $\rho > 0$, the model is incrementally strictly output passive. Mathematically, the following inequality holds.
     \begin{equation}
-    \langle \mathcal{M}_a(u) - \mathcal{M}_b(v), u-v \rangle_T \ge \rho \| \mathcal{M}_a(u) - \mathcal{M}_b(v)\|^2_T
+    \langle \mathcal{M}_a(u) - \mathcal{M}_b(v), u-v \rangle \ge \rho \| \mathcal{M}_a(u) - \mathcal{M}_b(v)\|^2
     \end{equation}
 \end{enumerate}
 
@@ -118,11 +120,11 @@ For more details on IQCs and their use in RENs, please see \cite{Revay++2021b}.
 
 The key advantage of the models in \verb|RobustNeuralNetworks.jl| is that they \textit{naturally} satisfy the robustness constraints of Section \ref{sec:robustness} -- i.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
-We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2021b} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$, we call this a \textit{direct parameterization}. Equations \ref{eqn:ren-G} to \ref{eqn:lbdn-output} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness constraints to be imposed on the explicit model. 
+We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2021b} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$ like this, we call the parameterization a \textit{direct parameterization}. Equations \ref{eqn:ren-G} to \ref{eqn:lbdn-output} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness constraints to be imposed on the explicit model. 
 % The direct parameters for RENs and LBDNs are defined in \cite{Revay++2021b} and \cite{Wang+Manchester2023}, respectively.
 
 \subsubsection{Implementation} \label{sec:params-implementation}
-RENs are defined by two abstract types in \verb|RobustNeuralNetworks.jl|. Subtypes of \verb|AbstractRENParams| hold all the information required to directly parameterize a REN satisfying some robustness properties. For example, to initialise the direct parameters of a \textit{contracting} REN with 1 input, 10 states, 20 neurons, 1 output, and a \texttt{relu} activation function, we use the following. The direct parameters $\theta$ are stored in \verb|model_ps.direct|. 
+RENs are defined by two abstract types in \verb|RobustNeuralNetworks.jl|. Subtypes of \verb|AbstractRENParams| hold all the information required to directly parameterize a REN satisfying some robustness properties. For example, to initialize the direct parameters of a \textit{contracting} REN with 1 input, 10 states, 20 neurons, 1 output, and a \texttt{relu} activation function, we use the following. The direct parameters $\theta$ are stored in \verb|model_ps.direct|. 
 
 \begin{lstlisting}[language = Julia]
 using Flux, RobustNeuralNetworks
@@ -147,7 +149,7 @@ Figure \ref{fig:ren-params} illustrates this architecture. We use a similar inte
 \begin{figure}[ht]
     \centering
     \includegraphics[width=0.45\textwidth]{Images/rrn_julia_params.pdf}
-    \caption{Association of models and their parameters in (a) \texttt{Flux.jl} and (b) \texttt{RobustNeuralNetworks.jl}. In (a), model parameters $\theta$ are associated with the \texttt{model}. In (b), the direct parameters $\theta$ are associated with the parameterization \texttt{model\_ps}, and are converted to explicit parameters $\bar{\theta}$ when the \texttt{model} is constructed with \texttt{REN()}.}
+    \caption{Association of models and their parameters in (a) \texttt{Flux.jl} and (b) \texttt{RobustNeuralNetworks.jl}. In (a), model parameters $\theta$ are associated with the \texttt{model}. In (b), the direct parameters $\theta$ are associated with the parameterization \texttt{model\_ps}, and are converted to explicit parameters $\bar{\theta}$ when the \texttt{model} is constructed for evaluation with \texttt{REN()}.}
     \label{fig:ren-params}
 \end{figure}
 
@@ -158,7 +160,7 @@ There are currently four REN parameterizations implemented in this package:
 \begin{enumerate}
     \item \verb|ContractingRENParams| parameterizes contracting RENs with a user-defined upper bound on the contraction rate.
 
-    \item \verb|LipschitzRENParams| parameterizes RENs with a user-defined (or learnable) Lipschitz bound of $\gamma \in (0,\infty)$.
+    \item \verb|LipschitzRENParams| parameterizes RENs with a user-defined (or learnable) Lipschitz bound $\gamma \in (0,\infty)$.
 
     \item \verb|PassiveRENParams| parameterizes incrementally input passive RENs with user-tunable passivity parameter $\nu \ge 0$.
 
@@ -166,7 +168,7 @@ There are currently four REN parameterizations implemented in this package:
     
 \end{enumerate}
 
-There is currently only one LBDN parameterization implemented in \verb|RobustNeuralNetworks.jl|:
+There is currently one LBDN parameterization implemented in \verb|RobustNeuralNetworks.jl|:
 
 \begin{enumerate}
     \item \verb|DenseLBDNParams| parameterizes dense (fully-connected) LBDNs with a user-defined or learnable Lipschitz bound. A dense LBDN is effectively a Lipschitz-bounded MLP.
@@ -231,21 +233,11 @@ end
 % Why separate models
 \subsubsection{Separating parameters and models} \label{sec:separate-params}
 
-For the sake of convenience, we have included the model wrappers \verb|DiffREN| and \verb|DiffLBDN| as alternatives to \verb|REN| and \verb|LBDN|, respectively. These wrappers compute the explicit parameters each time the model is called rather than just once when they are constructed. Any model created with these wrappers can therefore be used exactly the same way as a regular \verb|Flux.jl| model, and there is no need for model construction in the loss function. One can simply replace the definition of the \verb|Flux.Chain| model in the first code cell above with
+For the sake of convenience, we have included the model wrappers \verb|DiffREN| and \verb|DiffLBDN| as alternatives to \verb|REN| and \verb|LBDN|, respectively. These wrappers compute the explicit parameters each time the model is called rather than just once when they are constructed. Any model created with these wrappers can therefore be used exactly the same way as a regular \verb|Flux.jl| model, and there is no need for model construction in the loss function. One can simply replace the definition of the \verb|Flux.Chain| model in the \verb|Flux.jl| example with
 \begin{lstlisting}[language = Julia]
 model_ps = DenseLBDNParams{T}(1, [10], 1; nl=relu)
 model = DiffLBDN(model_ps)
 \end{lstlisting}
 and train the LBDN just like any other \verb|Flux.jl| model. We use these wrappers in Sections \ref{sec:mnist} and \ref{sec:observer}.
 
-We must, however, caution against their use in problems where a model is evaluated many times before being updated. The \verb|model_ps| and \verb|model| are kept separate with \verb|REN| and \verb|LBDN| to offer flexibility. The main computational bottleneck in training a REN or LBDN is converting from the direct to explicit parameters (mapping $\bar{f}: \theta \mapsto \bar{\theta}$). For both model structures, this process involves a matrix inverse, where the number of matrix elements scales quadratically with the dimension of the model in a REN and the dimension of each layer in an LBDN (see \cite{Revay++2021b,Wang+Manchester2023}).
-
-As per Section \ref{sec:params-implementation}, direct parameters are stored in \verb|model_ps|, while explicit parameters are computed when the \verb|model| is created and are stored within it. In some applications (eg: reinforcement learning), a model is called many times with the same explicit parameters $\bar{\theta}$ before its learnable parameters $\theta$ are updated. It is therefore significantly more efficient to store the explicit parameters, use them many times, and then update them only when the learnable parameters change. We cannot store the direct and explicit parameters in the same \verb|model| object since auto-differentiation in Julia does not support array mutation \cite{Innes2018b}. Instead, we separate the two.
-
-\begin{remark}
-	The model wrappers \verb|DiffREN| and \verb|DiffLBDN| re-compute the explicit parameters every time the model is called. In applications where the learnable parameters are updated after one model call (eg: image classification), it is often more convenient and equally fast to use these wrappers.
-	
-	In applications where the model is called many times before updating it (eg: reinforcement learning), use \verb|REN| or \verb|LBDN|. They compute the explicit model when constructed and store it for later use, making them more efficient.
- \end{remark}
-
-The computational benefits of separating models from their parameterizations is explored numerically in Section \ref{sec:rl}.
+The trade-off in using \verb|DiffREN| or \verb|DiffLBDN| is computational efficiency in applications where a model is called many times before a training update (e.g., reinforcement learning). The main computational bottleneck in training a REN or LBDN is converting from the direct to explicit parameters (mapping $\theta \mapsto \bar{\theta}$). This process involves a matrix inverse where the number of matrix elements scales quadratically with the dimension of the model in a REN or the dimension of each layer in an LBDN (see \cite{Revay++2021b,Wang+Manchester2023}). If a model is to be evaluated many times with the same direct parameters in between training updates, it is more efficient to compute the explicit parameters once, hold them fixed over many model calls, and only re-compute them once the direct parameters have been updated. This is exactly the purpose of keeping \verb|model_ps| and \verb|model| separate when using \verb|REN| and \verb|LBDN|. Note that we cannot store the direct and explicit parameters in the same \verb|model| object since auto-differentiation in Julia does not support array mutation \cite{Innes2018b}. We therefore advise using \verb|DiffREN| or \verb|DiffLBDN| for convenience in applications where the model parameters are updated after just one model call (e.g., training an image classifier). The computational benefits of separating models from their parameterizations is explored numerically in Section \ref{sec:rl}.
