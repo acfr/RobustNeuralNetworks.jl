@@ -2,7 +2,7 @@
 
 *Full example code can be found [here](https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/examples/src/lbdn_rl.jl).*
 
-One of the original motivations for developing `RobustNeuralNetworks.jl` was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193)) has shown that, with the right controller architecture, we can learn over the space of all stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
+One of the original motivations for developing `RobustNeuralNetworks.jl` was to guarantee stability and robustness in learning-based control. Some of our recent research (eg: [Wang et al. (2022)](https://ieeexplore.ieee.org/abstract/document/9802667) and [Barbara, Wang & Manchester (2023)](https://arxiv.org/abs/2304.06193v2)) has shown that, with the right controller architecture, we can learn over a space of stabilising controllers for linear/nonlinear systems using standard reinforcement learning techniques, so long as our control policy is parameterised by a REN (see also [(Convex) Nonlinear Control with REN](@ref)).
 
 In this example, we'll demonstrate how to train an LBDN controller with *Reinforcement Learning* (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
 
@@ -75,7 +75,7 @@ f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x::Matrix,u::Matrix) = x + dt*f(x,u)
 ```
 
-Reinforcement learning problems generally involve simulating the system over some time horizon and collecting a series of rewards or costs at each time step. Control policies are then trained using approximations of the cost gradient ``\nabla J_\theta`` because it is often difficult (or impossible) to compute the exact gradient. [ReinforcementLearning.jl](https://juliareinforcementlearning.org/) is the home of all things RL in Julia.
+Reinforcement learning problems generally involve simulating the system over some time horizon and collecting a series of rewards or costs at each time step. Control policies are then trained using approximations of the cost gradient ``\nabla J_\theta`` because it is often difficult (or impossible) to compute the exact gradient. See [ReinforcementLearning.jl](https://juliareinforcementlearning.org/) for more RL in Julia.
 
 For this simple example, we can just write a differentiable simulator of the dynamics. The simulator takes a batch of initial states, goal positions, and a controller `model` whose inputs are ``[x; q_\mathrm{ref}]``. It computes a batch of trajectories of states and controls ``z = \{[x_0;u_0], \ldots, [x_{T-1};u_{T-1}]\}`` for later use. To get around the well-known issue of [array mutation with auto-differentiation](https://fluxml.ai/Zygote.jl/stable/limitations/), we use a [Zygote.Buffer](https://fluxml.ai/Zygote.jl/stable/utils/#Zygote.Buffer) to iteratively store the outputs.
 
@@ -108,7 +108,7 @@ cost(z::AbstractVector, qref, uref) = mean(_cost.(z, (qref,), (uref,)))
 
 ## 3. Define a model
 
-For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see [Barbara, Wang & Manchester (2023)](https://doi.org/10.48550/arXiv.2304.06193).
+For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see [Barbara, Wang & Manchester (2023)](https://arxiv.org/abs/2304.06193v2).
 
 ```julia
 using Flux

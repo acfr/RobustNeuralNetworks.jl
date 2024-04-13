@@ -8,9 +8,11 @@ mutable struct GeneralRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    Q::Matrix{T}
-    S::Matrix{T}
-    R::Matrix{T}
+    Q::AbstractMatrix{T}
+    S::AbstractMatrix{T}
+    R::AbstractMatrix{T}
+    LQ::AbstractMatrix{T}
+    LR::AbstractMatrix{T}
 end
 
 """
@@ -25,13 +27,13 @@ Behavioural constraints are encoded by the matrices `Q,S,R` in an incremental In
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
-- `Q::Matrix{T}`: IQC weight matrix on model outputs
-- `S::Matrix{T}`: IQC coupling matrix on model outputs/inputs
-- `R::Matrix{T}`: IQC weight matrix on model outputs
+- `Q::AbstractMatrix`: IQC weight matrix on model outputs
+- `S::AbstractMatrix`: IQC coupling matrix on model outputs/inputs
+- `R::AbstractMatrix`: IQC weight matrix on model outputs
     
 # Keyword arguments
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -41,8 +43,8 @@ See also [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref), [`Passive
 """
 function GeneralRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int,
-    Q::Matrix{T}, S::Matrix{T}, R::Matrix{T};
-    nl::Function      = Flux.relu, 
+    Q::AbstractMatrix, S::AbstractMatrix, R::AbstractMatrix;
+    nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
     polar_param::Bool = true,
@@ -78,27 +80,19 @@ function GeneralRENParams{T}(
         D22_free=false, rng,
     )
 
-    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, Q, S, R)
+    # For constructing D22. See Eqns 31-33 of TAC paper
+    # Currently converts to Hermitian to avoid numerical conditioning issues
+    Q, S, R = T.(Q), T.(S), T.(R)
+    LQ = Matrix{T}(cholesky(-Q).U)
+    R1 = Hermitian(R - S * (Q \ S'))
+    LR = Matrix{T}(cholesky(R1).U) 
+
+    return GeneralRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, Q, S, R, LQ, LR)
 
 end
 
-Flux.@functor GeneralRENParams (direct, )
-
-function Flux.gpu(m::GeneralRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
-    )
-end
-
-function Flux.cpu(m::GeneralRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return GeneralRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.Q, m.S, m.R
-    )
-end
+@functor GeneralRENParams
+trainable(m::GeneralRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
@@ -114,13 +108,15 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
     X3 = ps.direct.X3
     Y3 = ps.direct.Y3
     Z3 = ps.direct.Z3
+    LQ = ps.LQ
+    LR = ps.LR
 
     # Implicit system and output matrices
     B2_imp = ps.direct.B2
@@ -128,30 +124,19 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
 
     C2 = ps.direct.C2
     D21 = ps.direct.D21
-
-    # Constructing D22. See Eqns 31-33 of TAC paper
-    # Currently converts to Hermitian to avoid numerical conditioning issues
-    LQ = Matrix{T}(cholesky(-Q).U)
-    R1 = Hermitian(R - S * (Q \ S'))
-    LR = Matrix{T}(cholesky(R1).U) 
     
-    M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-    if ny >= nu
-        N = [(I - M) / (I + M); -2*Z3 / (I + M)]
-    else
-        N = [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
-    end
+    M = _M_gen(X3, Y3, Z3, ϵ)
+    N = _N_gen(nu, ny, M, Z3) 
 
-    D22 = -(Q \ S') + (LQ \ N) * LR
+    D22 = _D22_gen(Q, S, LQ, LR, N)
 
     # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = (D22'*Q + S)*C2
-    D21_imp = (D22'*Q + S)*D21 - D12_imp'
+    C2_imp = _C2_gen(D22, C2, Q, S)
+    D21_imp = _D21_gen(D22, D21, D12_imp, Q, S)
 
-    𝑅 = R + S*D22 + D22'*S' + D22'*Q*D22
-
-    Γ1 = [C2'; D21'; zeros(T, nx, ny)] * Q * [C2 D21 zeros(T, ny, nx)]
-    Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
+    𝑅  = _R_gen(R, S, Q, D22)
+    Γ1 = _Γ1_gen(nx, ny, C2, D21, Q, T) 
+    Γ2 = _Γ2_gen(C2_imp, D21_imp, B2_imp, 𝑅)
 
     H = x_to_h(X, ϵ, polar_param, ρ) + Γ2 - Γ1
 
@@ -159,4 +144,34 @@ function direct_to_explicit(ps::GeneralRENParams{T}, return_h=false) where T
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
 
+end
+
+# Auto-diff faster through smaller functions
+_M_gen(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+
+function _N_gen(nu, ny, M, Z3)
+    Im = _I(M) # Prevents scalar indexing on backwards pass of () / (I + M) on GPU
+    if ny == nu
+        return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
+    elseif ny > nu
+        return [(Im - M) / (Im + M); -2*Z3 / (Im + M)]
+    else
+        return [((Im + M) \ (Im - M)) (-2*(Im + M) \ Z3')]
+    end
+end
+
+_D22_gen(Q, S, LQ, LR, N) = -(Q \ S') + (LQ \ N) * LR
+
+_C2_gen(D22, C2, Q, S) = (D22'*Q + S)*C2
+
+_D21_gen(D22, D21, D12_imp, Q, S) = (D22'*Q + S)*D21 - D12_imp'
+
+_R_gen(R, S, Q, D22) = R + S*D22 + D22'*S' + D22'*Q*D22
+
+function _Γ1_gen(nx, ny, C2, D21, Q, T) 
+    [C2'; D21'; zeros(T, nx, ny)] * Q * [C2 D21 zeros(T, ny, nx)]
+end
+
+function _Γ2_gen(C2_imp, D21_imp, B2_imp, 𝑅)
+    [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 end

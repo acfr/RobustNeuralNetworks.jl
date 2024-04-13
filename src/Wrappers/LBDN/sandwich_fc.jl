@@ -18,7 +18,7 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 # Arguments
 
 - `(in, out)::Pair{<:Integer, <:Integer}`: Input and output sizes of the layer.
-- `σ::F=Flux.identity`: Activation function.
+- `σ::F=identity`: Activation function.
 
 # Keyword arguments
 
@@ -32,13 +32,13 @@ A non-expensive layer is a layer with a Lipschitz bound of exactly 1. This layer
 
 We can build a dense LBDN directly using `SandwichFC` layers. The model structure is described in Equation 8 of [Wang & Manchester (2023)](https://proceedings.mlr.press/v202/wang23v.html).
 
-```julia
+```jldoctest
 using Flux
 using Random
 using RobustNeuralNetworks
 
 # Random seed for consistency
-rng = MersenneTwister(42)
+rng = Xoshiro(42)
 
 # Model specification
 nu = 1                  # Number of inputs
@@ -49,29 +49,29 @@ nh = fill(16,2)         # 2 hidden layers, each with 16 neurons
 # Set up dense LBDN model
 model = Flux.Chain(
     (x) -> (√γ * x),
-    SandwichFC(nu => nh[1], Flux.relu; T=Float64, rng),
-    SandwichFC(nh[1] => nh[2], Flux.relu; T=Float64, rng),
+    SandwichFC(nu => nh[1], relu; T=Float64, rng),
+    SandwichFC(nh[1] => nh[2], relu; T=Float64, rng),
     (x) -> (√γ * x),
     SandwichFC(nh[2] => ny; output_layer=true, T=Float64, rng),
 )
 
 # Evaluate on dummy inputs
-u = 10*randn(nu, 10)
+u = 10*randn(rng, nu, 10)
 y = model(u)
 
 println(round.(y;digits=2))
 
 # output
 
-[5.66 2.45 3.98 2.59 0.75 6.14 0.89 5.43 4.11 4.65]
+[4.13 4.37 3.22 8.38 4.15 3.71 0.7 2.04 1.78 2.64]
 ```
 
 See also [`DenseLBDNParams`](@ref), [`DiffLBDN`](@ref).
 """
 function SandwichFC(
     (in, out)::Pair{<:Integer, <:Integer},
-    σ::F               = Flux.identity;
-    init::Function     = Flux.glorot_normal,
+    σ::F               = identity;
+    init::Function     = glorot_normal,
     bias::Bool         = true,
     output_layer::Bool = false, 
     T::DataType        = Float32,
@@ -89,7 +89,7 @@ function SandwichFC(
     return SandwichFC{F, T, typeof(d), typeof(b)}(σ, XY, α, d, b)
 end
 
-Flux.@functor SandwichFC
+@functor SandwichFC
 
 function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
 
@@ -97,7 +97,7 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     XY = m.XY
     α = m.α
     d = m.d
-    b = m.d
+    b = m.b
     σ = m.σ
     n = size(XY,2)
 
@@ -105,11 +105,13 @@ function (m::SandwichFC)(x::AbstractVecOrMat{T}) where T
     output = (d === nothing)
 
     # Get explicit model parameters
-    A_T, B_T = norm_cayley(XY, α, n)
+    A_T, B_T = normalised_cayley(XY, α, n)
     B = B_T'
     
-    # Just output layer?
-    output && (return bias ? B*x .+ b : B*x)
+    # If just the output layer, return Bx + b (or just Bx if no bias)
+    if output
+        return bias ? B*x .+ b : B*x
+    end
 
     # Regular sandwich layer
     Ψd = exp.(d)

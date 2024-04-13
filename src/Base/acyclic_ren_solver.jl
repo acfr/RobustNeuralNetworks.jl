@@ -1,47 +1,80 @@
 # This file is a part of RobustNeuralNetworks.jl. License is MIT: https://github.com/acfr/RobustNeuralNetworks.jl/blob/main/LICENSE 
 
 """
-    solve_tril_layer(ϕ, W::Matrix, b::VecOrMat)
+    tril_eq_layer(σ::F, D11::Matrix, b::VecOrMat) where F
 
-Solves z = ϕ.(W*z .+ b) for lower-triangular W, where
-ϕ is a generic static nonlinearity (eg: relu, tanh).
+Evaluate and solve lower-triangular equilibirum layer.
 """
-function solve_tril_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
-    z_eq = similar(b)
+function tril_eq_layer(σ::F, D11, b) where F
+
+    # Solve the equilibirum layer
+    w_eq = solve_tril_layer(σ, D11, b)
+
+    # Run the equation for auto-diff to get grads: ∂σ/∂(.) * ∂(D₁₁w + b)/∂(.)
+    # By definition, w_eq1 = w_eq so this doesn't change the forward pass.
+    v = D11 * w_eq .+ b
+    w_eq = σ.(v)
+    return tril_layer_back(σ, D11, v, w_eq)
+end
+
+"""
+    solve_tril_layer(σ::F, D11::Matrix, b::VecOrMat) where F
+
+Solves w = σ.(D₁₁*w .+ b) for lower-triangular D₁₁, where
+σ is an activation function with monotone slope restriction (eg: relu, tanh).
+"""
+function solve_tril_layer(σ::F, D11, b) where F
+    z_eq  = similar(b)
+    Di_zi = typeof(b)(zeros(Float32, 1, size(b,2))) 
+    # similar(b, 1, size(b,2)) can induce NaN on GPU!!!
     for i in axes(b,1)
-        Wi = @view W[i:i, 1:i - 1]
+        Di = @view D11[i:i, 1:i - 1]
         zi = @view z_eq[1:i-1,:]
         bi = @view b[i:i, :]
-        z_eq[i:i,:] .= ϕ.(Wi * zi .+ bi)       
+
+        mul!(Di_zi, Di, zi)
+        z_eq[i:i,:] .= σ.(Di_zi .+ bi)  
     end
     return z_eq
 end
-
-# TODO: Tidy up/speed up the code below. Needs docs too
+@non_differentiable solve_tril_layer(σ, D11, b)
 
 """
-    tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq; tol=1E-9)
+    tril_layer_back(σ::F, D11::Matrix, v::VecOrMat{T}, w_eq::VecOrMat{T}) where {F,T}
 
-Calculate gradients for solving lower-triangular equilibirum
-network layer.
+Dummy function to force auto-diff engines to use the custom backwards pass.
 """
-function tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq; tol=1E-9)
-    one_vec = typeof(b)(ones(size(b)))
-    v = W * zeq + b
-    j = pullback(z -> ϕ.(z), v)[2](one_vec)[1]
-
-    eval_grad(t) = (I - (j[:, t] .* W))' \ Δz[:, t]
-    gn = reduce(hcat, eval_grad(t) for t in 1:size(b, 2))
-
-    return nothing, nothing, nothing, gn
+function tril_layer_back(σ::F, D11, v, w_eq::AbstractVecOrMat{T}) where {F,T}
+    return w_eq
 end
-tril_layer_backward(ϕ, W, b, zeq) = zeq
 
-@adjoint solve_tril_layer(ϕ, W, b) = solve_tril_layer(ϕ, W, b), Δz -> (nothing, nothing, nothing)
-@adjoint tril_layer_backward(ϕ, W, b, zeq) = tril_layer_backward(ϕ, W, b, zeq), Δz -> tril_layer_calculate_gradient(Δz, ϕ, W, b, zeq)
+function rrule(::typeof(tril_layer_back), σ::F, D11, v, w_eq::AbstractVecOrMat{T}) where {F,T}
 
-function tril_eq_layer(ϕ::F, W::Matrix, b::VecOrMat) where F
-    weq  = solve_tril_layer(ϕ, W, b)
-    weq1 = ϕ.(W * weq + b)  # Run forward and track grads
-    return tril_layer_backward(ϕ, W, b, weq1)
+    # Forwards pass
+    y = tril_layer_back(σ, D11, v, w_eq)
+
+    # Reverse mode
+    function tril_layer_back_pullback(Δy)
+
+        Δf = NoTangent()
+        Δσ = NoTangent()
+        ΔD11 = NoTangent()
+        Δb = NoTangent()
+
+        # Get gradient of σ(v) wrt v evaluated at v = D₁₁w + b
+        _back(σ, v) = rrule(σ, v)[2]
+        backs = _back.(σ, v)
+        j = map(b -> b(one(T))[2], backs)
+
+        # Compute gradient from implicit function theorem
+        Δw_eq = v
+        for i in axes(Δw_eq, 2)
+            ji = @view j[:, i]
+            Δyi = @view Δy[:, i]
+            Δw_eq[:,i] = (I - (ji .* D11))' \ Δyi
+        end
+        return Δf, Δσ, ΔD11, Δb, Δw_eq
+    end
+
+    return y, tril_layer_back_pullback
 end

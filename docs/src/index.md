@@ -63,4 +63,4 @@ The REN parameterisation was extended to continuous-time systems in [yet to be i
 
 See below for a collection of projects and papers using `RobustNeuralNetworks.jl`.
 
-> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over All Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: [https://doi.org/10.48550/arXiv.2304.06193](https://doi.org/10.48550/arXiv.2304.06193).
+> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: [https://arxiv.org/abs/2304.06193v2](https://arxiv.org/abs/2304.06193v2).

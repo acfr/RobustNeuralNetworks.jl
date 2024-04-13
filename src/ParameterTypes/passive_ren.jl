@@ -9,11 +9,11 @@ mutable struct PassiveRENParams{T} <: AbstractRENParams{T}
     direct::DirectRENParams{T}
     αbar::T
     ν::T
-    # TODO: Add a field for incrementally strictly output passive model (ρ)
+    ρ::T
 end
 
 """
-    PassiveRENParams{T}(nu, nx, nv, ny; <keyword arguments>) where T
+    PassiveRENParams{T}(nu, nx, nv, ny, ν, ρ; <keyword arguments>) where T
 
 Construct direct parameterisation of a passive REN.
 
@@ -22,12 +22,14 @@ Construct direct parameterisation of a passive REN.
 - `nx::Int`: Number of states.
 - `nv::Int`: Number of neurons.
 - `ny::Int`: Number of outputs.
-    
+- `ν::Number=0`: Passivity index. Use `ν > 0` for an incrementally strictly input passive model. Set both `ν = 0` and `ρ = 0` for incrementally passive model.
+- `ρ::Number=0`: Passivity index. Use `ρ > 0` for an incrementally strictly output passive model. 
+
+Note that the product of passivity indices ρν has to be less than 1/4 for passive REN.
+
 # Keyword arguments
 
-- `ν::T=0`: Passivity parameter. Use ν>0 for incrementally strictly input passive model, and ν == 0 for incrementally passive model. 
-
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -36,9 +38,8 @@ See [`DirectRENParams`](@ref) for documentation of keyword arguments `init`, `ϵ
 See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`LipschitzRENParams`](@ref).
 """
 function PassiveRENParams{T}(
-    nu::Int, nx::Int, nv::Int, ny::Int;
-    ν::T              = T(0),
-    nl::Function      = Flux.relu, 
+    nu::Int, nx::Int, nv::Int, ny::Int, ν::Number=T(0), ρ::Number=T(0);
+    nl::Function      = relu, 
     αbar::T           = T(1),
     init              = :random,
     polar_param::Bool = true,
@@ -53,6 +54,15 @@ function PassiveRENParams{T}(
         error("Input and output must have the same dimension for passiveREN")
     end
 
+    # Check ρ and ν
+    if ρ*ν >= 1/4
+        error("ρ and ν can not be arbitrarily large for passiveREN models. Please make sure ρν < 1/4. ")               
+    end
+
+    if ρ < 0 || ν < 0
+        @warn("Warning: negative passivity index detected, passivity is NOT guaranteed")
+    end 
+
     # Direct (implicit) params
     direct_ps = DirectRENParams{T}(
         nu, nx, nv, ny; 
@@ -60,39 +70,22 @@ function PassiveRENParams{T}(
         D22_free=false, rng,
     )
 
-    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν)
+    return PassiveRENParams{T}(nl, nu, nx, nv, ny, direct_ps, αbar, ν, ρ)
 
 end
 
-Flux.@functor PassiveRENParams (direct, )
-
-function Flux.gpu(m::PassiveRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
-    )
-end
-
-function Flux.cpu(m::PassiveRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return PassiveRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.ν
-    )
-end
+@functor PassiveRENParams
+trainable(m::PassiveRENParams) = (direct = m.direct, )
 
 function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
 
     # System sizes
-    nu = ps.nu
-    nx = ps.nx
-    ny = ps.ny
     ν = ps.ν
-        
+    ρ = ps.ρ
+
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ_polar = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
@@ -106,22 +99,57 @@ function direct_to_explicit(ps::PassiveRENParams{T}, return_h=false) where T
     C2 = ps.direct.C2
     D21 = ps.direct.D21
 
-    # Constructing D22 for incrementally passive and incrementally strictly input passive. 
+    # Constructing D22 for incrementally (strictly input) passive and incrementally strictly output passive. 
     # See Eqns 31-33 of TAC paper 
-    # Currently converts to Hermitian to avoid numerical conditioning issues
-    M = X3'*X3 + Y3 - Y3' + ϵ*I
+    M = _M_pass(X3, Y3, ϵ)
 
-    D22 = ν*Matrix(I, ny,nu) + M
-    D21_imp = D21 - D12_imp'
+    if ρ == 0
+        # For ρ==0 case, I(SI)P model
+        D22 = ν*I + M
+        D21_imp = D21 - D12_imp'
 
-    𝑅 = -2ν * Matrix(I, nu, nu) + D22 + D22'
+        𝑅  = _R_pass(D22, ν, ρ) 
+        Γ2 = _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
 
-    Γ2 = [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
+        H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2
+    else    
+        # For ρ!=0 case, ISOP model
+        D22 = _D22_pass(M, ρ)
 
-    H = x_to_h(X, ϵ, polar_param, ρ) + Γ2
+        C2_imp = _C2_pass(D22, C2, ρ)
+        D21_imp = _D21_pass(D22, D21, D12_imp, ρ)
 
+        𝑅  = _R_pass(D22, ν, ρ)
+
+        Γ1 = _Γ1_pass(ps.nx, ps.ny, C2, D21, ρ, T) 
+        Γ2 = _Γ2_pass(C2_imp, D21_imp, B2_imp, 𝑅)
+
+        H = x_to_h(X, ϵ, polar_param, ρ_polar) + Γ2 - Γ1
+    end
+    
     # Get explicit parameterisation
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
 
+end
+
+_C2_pass(D22, C2, ρ) = (D22'*(-2ρ*I) + I)*C2
+
+_D21_pass(D22, D21, D12_imp, ρ) = (D22'*(-2ρ*I) + I)*D21 - D12_imp'
+
+_M_pass(X3, Y3, ϵ) = X3'*X3 + Y3 - Y3' + ϵ*I
+
+_R_pass(D22, ν, ρ) = -2ν*I + D22 + D22' + D22'*(-2ρ*I)*D22
+
+function _D22_pass(M, ρ)
+    Im = _I(M) # Prevents scalar indexing on backwards pass of () / (I + M) on GPU
+    return ((Im + M) \ Im) / ρ  
+end
+
+function _Γ1_pass(nx, ny, C2, D21, ρ, T) 
+    [C2'; D21'; zeros(T, nx, ny)] * (-2ρ*I) * [C2 D21 zeros(T, ny, nx)]
+end
+
+function _Γ2_pass(C2, D21_imp, B2_imp, 𝑅)
+    [C2'; D21_imp'; B2_imp] * (𝑅 \ [C2 D21_imp B2_imp'])
 end

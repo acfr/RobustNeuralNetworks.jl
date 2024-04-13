@@ -5,13 +5,26 @@ using Pkg
 Pkg.activate("..")
 
 using CairoMakie
+using CUDA
 using Flux
 using Printf
 using Random
 using RobustNeuralNetworks
 using Statistics
 
+"""
+A note for the interested reader:
+
+- Change `dev = gpu` and `T = Float32` to train the REN observer on an Nvidia GPU with CUDA
+- This example is currently not optimised for the GPU, and runs faster on CPU
+- It would be easy to re-write it to be much faster on the GPU
+- If you feel like doing this, please go ahead and submit a pull request :)
+
+"""
+
 rng = MersenneTwister(0)
+dev = cpu
+T = Float64
 
 
 #####################################################################
@@ -24,20 +37,20 @@ k = 5                   # Spring constant (N/m)
 nx = 2                  # Number of states
 
 # Continuous and discrete dynamics and measurements
-_visc(v::Matrix) = μ * v .* abs.(v)
-f(x::Matrix,u::Matrix) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
+_visc(v) = μ * v .* abs.(v)
+f(x,u) = [x[2:2,:]; (u[1:1,:] - k*x[1:1,:] - _visc(x[2:2,:]))/m]
 fd(x,u) = x + dt*f(x,u)
-gd(x::Matrix) = x[1:1,:]
+gd(x) = x[1:1,:]
 
 # Generate training data
-dt = 0.01               # Time-step (s)
+dt = T(0.01)            # Time-step (s)
 Tmax = 10               # Simulation horizon
 ts = 1:Int(Tmax/dt)     # Time array indices
 
 batches = 200
-u  = fill(zeros(1, batches), length(ts)-1)
-X  = fill(zeros(1, batches), length(ts))
-X[1] = 0.5*(2*rand(rng, nx, batches) .-1)
+u  = fill(zeros(T, 1, batches), length(ts)-1)
+X  = fill(zeros(T, 1, batches), length(ts))
+X[1] = (2*rand(rng, T, nx, batches) .- 1) / 2
 
 for t in ts[1:end-1]
     X[t+1] = fd(X[t],u[t])
@@ -50,7 +63,7 @@ y = gd.(Xt)
 # Store data for training
 observer_data = [[ut; yt] for (ut,yt) in zip(u, y)]
 indx = shuffle(rng, 1:length(observer_data))
-data = zip(Xn[indx], Xt[indx], observer_data[indx])
+data = zip(Xn[indx] |> dev, Xt[indx] |> dev, observer_data[indx]|> dev)
 
 
 #####################################################################
@@ -61,7 +74,7 @@ nv = 200
 nu = size(observer_data[1], 1)
 ny = nx
 model_ps = ContractingRENParams{Float32}(nu, nx, nv, ny; output_map=false, rng)
-model = DiffREN(model_ps)
+model = DiffREN(model_ps) |> dev
 
 # Loss function: one step ahead error (average over time)
 function loss(model, xn, xt, inputs)
@@ -73,7 +86,7 @@ end
 function train_observer!(model, data; epochs=50, lr=1e-3, min_lr=1e-6)
 
     opt_state = Flux.setup(Adam(lr), model)
-    mean_loss = [1e5]
+    mean_loss = [T(1e5)]
     for epoch in 1:epochs
 
         batch_loss = []
@@ -122,7 +135,7 @@ function simulate(model::AbstractREN, x0, u)
     return output
 end
 x0hat = init_states(model, batches)
-xhat = simulate(model, x0hat, observer_inputs)
+xhat = simulate(model, x0hat |> dev, observer_inputs |> dev)
 
 # Plot results
 function plot_results(x, x̂, ts)
@@ -167,5 +180,5 @@ function plot_results(x, x̂, ts)
     display(fig)
     return fig
 end
-fig = plot_results(x_test, xhat, ts_test)
+fig = plot_results(x_test, xhat |> cpu, ts_test)
 save("../results/ren-obsv/ren_box_obsv.svg", fig)

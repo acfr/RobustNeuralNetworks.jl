@@ -6,6 +6,6 @@
 Generate matrices or vectors from the Glorot normal distribution.
 """
 glorot_normal(n::Int, m::Int; T=Float64, rng=Random.GLOBAL_RNG) = 
-    convert.(T, Flux.glorot_normal(rng, n, m))
+    convert.(T, glorot_normal(rng, n, m))
 glorot_normal(n::Int; T=Float64, rng=Random.GLOBAL_RNG) = 
-    convert.(T, Flux.glorot_normal(rng, n))
+    convert.(T, glorot_normal(rng, n))

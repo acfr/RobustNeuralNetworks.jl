@@ -8,7 +8,7 @@ mutable struct LipschitzRENParams{T} <: AbstractRENParams{T}
     ny::Int
     direct::DirectRENParams{T}
     αbar::T
-    γ::Vector{T}
+    γ::AbstractVector{T}
     learn_γ::Bool
 end
 
@@ -26,7 +26,7 @@ Construct direct parameterisation of a REN with a Lipschitz bound of γ.
     
 # Keyword arguments
 
-- `nl::Function=Flux.relu`: Sector-bounded static nonlinearity.
+- `nl::Function=relu`: Sector-bounded static nonlinearity.
 
 - `αbar::T=1`: Upper bound on the contraction rate with `ᾱ ∈ (0,1]`.
 
@@ -38,7 +38,7 @@ See also [`GeneralRENParams`](@ref), [`ContractingRENParams`](@ref), [`PassiveRE
 """
 function LipschitzRENParams{T}(
     nu::Int, nx::Int, nv::Int, ny::Int, γ::Number;
-    nl::Function      = Flux.relu, 
+    nl::Function      = relu, 
     αbar::T           = T(1),
     learn_γ::Bool     = false,
     init              = :random,
@@ -65,25 +65,9 @@ function LipschitzRENParams{T}(
 
 end
 
-Flux.@functor LipschitzRENParams
-function Flux.trainable(m::LipschitzRENParams)
+@functor LipschitzRENParams
+function trainable(m::LipschitzRENParams)
     m.learn_γ ? (direct = m.direct, γ = m.γ) : (direct = m.direct,)
-end
-
-function Flux.gpu(m::LipschitzRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.gpu(m.direct)
-    return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
-    )
-end
-
-function Flux.cpu(m::LipschitzRENParams{T}) where T
-    # TODO: Test and complete this
-    direct_ps = Flux.cpu(m.direct)
-    return LipschitzRENParams{T}(
-        m.nl, m.nu, m.nx, m.nv, m.ny, direct_ps, m.αbar, m.γ
-    )
 end
 
 function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
@@ -93,12 +77,12 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     nx = ps.nx
     ny = ps.ny
 
-    # Dissipation parameters
-    γ = ps.γ[1]
+    # Lipschitz bound
+    γ = ps.γ
 
     # Implicit parameters
     ϵ = ps.direct.ϵ
-    ρ = ps.direct.ρ[1]
+    ρ = ps.direct.ρ
     X = ps.direct.X
     polar_param = ps.direct.polar_param
 
@@ -117,25 +101,50 @@ function direct_to_explicit(ps::LipschitzRENParams{T}, return_h=false) where T
     if ps.direct.D22_zero
         D22 = ps.direct.D22
     else
-        M = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
-        N = (ny >= nu) ? [(I - M) / (I + M); -2*Z3 / (I + M)] :
-                        [((I + M) \ (I - M)) (-2*(I + M) \ Z3')]
-        D22 = γ*N
+        M = _M_lip(X3, Y3, Z3, ϵ)
+        N = _N_lip(nu, ny, M, Z3)
+        D22 = γ .* N
     end
 
     # Constructing H. See Eqn 28 of TAC paper
-    C2_imp = -(D22')*C2 / γ
-    D21_imp = -(D22')*D21 / γ - D12_imp'
+    C2_imp  = _C2_lip(D22, C2, γ)
+    D21_imp = _D21_lip(D22, D21, γ, D12_imp)
 
-    𝑅 = -D22'*D22 / γ + (γ * I)
-
-    Γ1 = [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] * (-1/γ)
-    Γ2 = [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
+    𝑅  = _R_lip(D22, γ)
+    Γ1 = _Γ1_lip(nx, ny, C2, D21, γ, T) 
+    Γ2 = _Γ2_lip(C2_imp, D21_imp, B2_imp, 𝑅)
 
     H = x_to_h(X, ϵ, polar_param, ρ) + Γ2 - Γ1
 
     # Get explicit parameterisation
     !return_h && (return hmatrix_to_explicit(ps, H, D22))
     return H
+end
 
+# Auto-diff faster through smaller functions
+_M_lip(X3, Y3, Z3, ϵ) = X3'*X3 + Y3 - Y3' + Z3'*Z3 + ϵ*I
+
+function _N_lip(nu, ny, M, Z3)
+    Im = _I(M) # Prevents scalar indexing on backwards pass of () / (I + M) on GPU
+    if ny == nu
+        return [(Im + M) \ (Im - M); Z3] # Separate to avoid numerical issues on GPU
+    elseif ny >= nu
+        return [(Im - M) / (Im + M); -2*Z3 / (Im + M)]
+    else
+        return [((Im + M) \ (Im - M)) (-2*(Im + M) \ Z3')]
+    end
+end
+
+_C2_lip(D22, C2, γ) = -(D22')*C2 ./ γ
+
+_D21_lip(D22, D21, γ, D12_imp) = -(D22')*D21 ./ γ - D12_imp'
+
+_R_lip(D22, γ) = γ .* (-D22'*D22 ./ (γ.^2) + I)
+
+function _Γ1_lip(nx, ny, C2, D21, γ, T)
+    [C2'; D21'; zeros(T, nx, ny)] * [C2 D21 zeros(T, ny, nx)] .* (-1 ./ γ)
+end
+
+function _Γ2_lip(C2_imp, D21_imp, B2_imp, 𝑅)
+    [C2_imp'; D21_imp'; B2_imp] * (𝑅 \ [C2_imp D21_imp B2_imp'])
 end

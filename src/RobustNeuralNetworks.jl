@@ -4,15 +4,21 @@ module RobustNeuralNetworks
 
 ############ Package dependencies ############
 
-using Flux
+using ChainRulesCore: NoTangent, @non_differentiable
+using Flux: relu, identity, @functor
 using LinearAlgebra
-using MatrixEquations: lyapd
 using Random
-using Zygote: pullback, Buffer
-using Zygote: @adjoint
+using Zygote: Buffer
 
 import Base.:(==)
-import Flux.gpu, Flux.cpu
+import ChainRulesCore: rrule
+import Flux: trainable, glorot_normal
+
+# Note: to remove explicit dependency on Flux.jl, use the following
+#   using Functors: @functor
+#   using NNlib: relu, identity
+#   import Optimisers.trainable
+# and re-write `glorot_normal` yourself.
 
 
 ############ Abstract types ############
@@ -27,13 +33,13 @@ abstract type AbstractRENParams{T} end
 abstract type AbstractREN{T} end
 
 """
-    abstract type AbstractLBDNParams{T} end
+    abstract type AbstractLBDNParams{T, L} end
 
 Direct parameterisation for Lipschitz-bounded deep networks.
 """
-abstract type AbstractLBDNParams{T} end
+abstract type AbstractLBDNParams{T, L} end
 
-abstract type AbstractLBDN{T} end
+abstract type AbstractLBDN{T, L} end
 
 
 ############ Includes ############
@@ -106,8 +112,5 @@ export get_lipschitz
 export init_states
 export set_output_zero!
 export update_explicit!
-
-# Extended functions
-# TODO: Need to export things like gpu, cpu, ==, etc.
 
 end # end RobustNeuralNetworks
