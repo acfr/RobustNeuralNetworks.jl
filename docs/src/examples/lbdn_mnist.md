@@ -23,6 +23,7 @@ Let's start by loading the training and test data. [`MLDatasets.jl`](https://jul
 
 ```julia
 using CUDA
+using Flux
 using MLDatasets: MNIST
 
 # Choose device
@@ -38,7 +39,6 @@ x_test,  y_test  = MNIST(T, split=:test)[:] |> dev
 The feature matrices `x_train` and `x_test` are three-dimensional arrays where each 28x28 layer contains pixel data for a single handwritten number from 0 to 9 (see below for an example). The labels `y_train` and `y_test` are vectors containing the classification of each image as a number from 0 to 9. We can convert each of these to an input/output format better suited to training with [`Flux.jl`](https://fluxml.ai/).
 
 ```julia
-using Flux
 using Flux: OneHotMatrix
 
 # Reshape features for model input
