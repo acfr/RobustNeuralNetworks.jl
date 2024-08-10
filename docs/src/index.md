@@ -57,10 +57,12 @@ If you use `RobustNeuralNetworks.jl` for any research or publications, please ci
 
 > R. Wang and I. R. Manchester, "Direct parameterization of Lipschitz-bounded deep networks" in *Proceedings of the 40th International Conference on Machine Learning* (PMLR, 2023) [202:36093-36110](https://proceedings.mlr.press/v202/wang23v.html).
 
-The REN parameterisation was extended to continuous-time systems in [yet to be implemented]:
+The REN parameterisation was extended to continuous-time systems in (yet to be implemented):
 
-> D. Martinelli, C. L. Galimberti, I. R. Manchester, L. Furieri, and G. Ferrari-Trecate, "Unconstrained Parametrization of Dissipative and Contracting Neural Ordinary Differential Equations," April 2023. doi: [https://doi.org/10.48550/arXiv.2304.02976](https://doi.org/10.48550/arXiv.2304.02976).
+> D. Martinelli, C. L. Galimberti, I. R. Manchester, L. Furieri, and G. Ferrari-Trecate, "Unconstrained Parametrization of Dissipative and Contracting Neural Ordinary Differential Equations," *Proceedings of the 62nd IEEE Conference on Decision and Control* (2023). doi: [https://doi.org/10.1109/CDC49753.2023.10383704](https://doi.org/10.1109/CDC49753.2023.10383704).
 
 See below for a collection of projects and papers using `RobustNeuralNetworks.jl`.
 
-> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," April 2023. doi: [https://arxiv.org/abs/2304.06193v2](https://arxiv.org/abs/2304.06193v2).
+> N. H. Barbara, R. Wang, and I. R. Manchester, "Learning Over Contracting and Lipschitz Closed-Loops for Partially-Observed Nonlinear Systems," *Proceedings of the 62nd IEEE Conference on Decision and Control* (2023). doi: [https://doi.org/10.1109/CDC49753.2023.10383269](https://doi.org/10.1109/CDC49753.2023.10383269).
+
+> P. Pauli, R. Wang, I. R. Manchester, and F. Allgöwer, "Lipschitz-Bounded 1D Convolutional Neural Networks using the Cayley Transform and the Controllability Gramian," *Proceedings of the 62nd IEEE Conference on Decision and Control* (2023). doi: [https://doi.org/10.1109/CDC49753.2023.10383534](https://doi.org/10.1109/CDC49753.2023.10383534).

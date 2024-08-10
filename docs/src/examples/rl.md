@@ -108,7 +108,7 @@ cost(z::AbstractVector, qref, uref) = mean(_cost.(z, (qref,), (uref,)))
 
 ## 3. Define a model
 
-For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see [Barbara, Wang & Manchester (2023)](https://arxiv.org/abs/2304.06193v2).
+For this example, we'll learn an LBDN controller with a Lipschitz bound of ``\gamma = 20``. Its inputs are the state ``x_t`` and goal position ``q_\mathrm{ref}``, while its outputs are the control force ``u_t``. We have chosen a model with two hidden layers each of 32 neurons just as an example. For details on how Lipschitz bounds can be useful in learning robust controllers, please see [Barbara, Wang & Manchester (2024)](https://arxiv.org/abs/2405.11432).
 
 ```julia
 using Flux
