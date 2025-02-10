@@ -3,7 +3,7 @@
 % Model types
 \subsection{What are RENs and LBDNs?} \label{sec:model-structures}
 
-A \textit{Lipschitz-Bounded Deep Network} (LBDN) is a (memoryless) deep neural network with a built-in upper-bound on its Lipschitz constant (Sec. \ref{sec:robustness-lipschitz}). Suppose the network has inputs $u \in\mathbb{R}^{n_u}$, outputs $y \in \mathbb{R}^{n_y}$, and hidden units $z_k \in \mathbb{R}^{n_k}$. The structure of an LBDNs is a $L$-layer feed-forward network (like an MLP or CNN)
+A \textit{Lipschitz-Bounded Deep Network} (LBDN) is a (memoryless) deep neural network with a built-in upper-bound on its Lipschitz constant (Sec. \ref{sec:robustness-lipschitz}). Suppose the network has inputs $u \in\mathbb{R}^{n_u}$, outputs $y \in \mathbb{R}^{n_y}$, and hidden units $z_k \in \mathbb{R}^{n_k}$. The structure of an LBDN is an $L$-layer feed-forward network (like an MLP or CNN)
 \begin{align} 
 z_0 &= x \label{eqn:lbdn-z0}\\
 z_{k+1} &= \sigma(W_k z_k + b_k), \quad k = 0, \ldots, L-1 \label{eqn:lbdn-sandwich}\\
@@ -120,7 +120,7 @@ For more details on IQCs and their use in RENs, please see \cite{Revay++2023}.
 
 The key advantage of the models in \verb|RobustNeuralNetworks.jl| is that they \textit{naturally} satisfy the robustness constraints of Section \ref{sec:robustness} -- i.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
 
-We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2023} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$ like this, we call the parameterization a \textit{direct parameterization}. Equations \ref{eqn:ren-G} to \ref{eqn:lbdn-output} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness constraints to be imposed on the explicit model. 
+We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2023} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$ like this, we call the parameterization a \textit{direct parameterization}. Equations \ref{eqn:lbdn-output} to \ref{eqn:ren-G} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness constraints to be imposed on the explicit model. 
 % The direct parameters for RENs and LBDNs are defined in \cite{Revay++2023} and \cite{Wang+Manchester2023}, respectively.
 
 \subsubsection{Implementation} \label{sec:params-implementation}
