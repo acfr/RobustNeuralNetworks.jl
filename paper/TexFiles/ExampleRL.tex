@@ -1,6 +1,6 @@
 \subsection{Reinforcement learning} \label{sec:rl}
 
-One of the original motivations for developing the model structures in  \verb|RobustNeuralNetworks.jl| was to guarantee stability and robustness in learning-based control. Recently, we have shown that with a controller architecture based on a nonlinear version of classical Youla-Kucera parameterization \cite{Youla++1976}, one can learn over a space of stabilizing controllers for linear and nonlinear systems using standard reinforcement learning techniques, so long as the control policy is parameterized by a contracting, Lipschitz-bounded REN  \cite{Wang+Manchester2022,Wang++2022,Barbara++2023}. This is an exciting result for learning-based controllers in safety-critical systems, such as in robotics.
+One of the original motivations for developing the model structures in  \verb|RobustNeuralNetworks.jl| was to guarantee stability and robustness in learning-based control. Recently, we have shown that with a controller architecture based on a nonlinear version of classical Youla-Ku\v{c}era parameterization \cite{Kucera1975,Youla++1976}, one can learn over a space of stabilizing controllers for linear and nonlinear systems using standard reinforcement learning techniques, so long as the control policy is parameterized by a contracting, Lipschitz-bounded REN  \cite{Wang+Manchester2022,Wang++2022,Barbara++2023}. This is an exciting result for learning-based controllers in safety-critical systems, such as in robotics.
 
 In this example, we will demonstrate how to train an LBDN controller with \textit{reinforcement learning} (RL) for a simple nonlinear dynamical system. This controller will not have any stability guarantees. The purpose of this example is simply to showcase the steps required to set up RL experiments for more complex systems with RENs and LBDNs.
 
@@ -111,7 +111,7 @@ cost(z::AbstractVector, qref, uref) =
 % Define a model
 \subsubsection{Define a model} \label{sec:rl-model}
 
-We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For examples of how Lipschitz bounds can be useful in learning robust controllers, see \cite{Barbara++2023,Russo+Proutiere2021,Song++2023}.
+We will train an LBDN controller with a Lipschitz bound of $\gamma = 20$. Its inputs are the state $x_t$ and goal position $q_\mathrm{ref}$, while its outputs are the control force $u_t$. We have chosen a model with two hidden layers each of 32 neurons just as an example. For examples of how Lipschitz bounds can be useful in learning robust controllers, see \cite{Barbara++2024a,Russo+Proutiere2021}.
 
 \begin{lstlisting}[language = Julia]
 using RobustNeuralNetworks
