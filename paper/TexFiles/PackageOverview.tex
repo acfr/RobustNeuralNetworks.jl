@@ -1,4 +1,4 @@
-\verb|RobustNeuralNetwork.jl| contains two classes of neural network models: RENs and LBDNs. This section gives a brief overview of the two model architectures and how they are parameterized to automatically satisfy robustness certificates. We also provide some background on the different types of robustness metrics used to construct the models.
+\verb|RobustNeuralNetwork.jl| contains two classes of neural network models: RENs and LBDNs. This section gives a brief overview of the two model architectures and how they are parameterized to automatically satisfy robustness metrics. We also provide some background on the different types of robustness metrics used to construct the models.
 
 % Model types
 \subsection{What are RENs and LBDNs?} \label{sec:model-structures}
@@ -41,37 +41,37 @@ where $v_t, w_t \in \mathbb{R}^{n_v}$ are the inputs and outputs of the activati
 
 \begin{figure}[h]
     \centering
+    \vspace{-2mm}
     \includegraphics[width=0.19\textwidth]{Images/ren.pdf}
     \vspace{-2mm}
     \caption{Feedback structure of a recurrent equilibrium network.}
     \label{fig:ren}
 \end{figure}
 
-See \cite{Revay++2023} and \cite{Wang+Manchester2023} for more on RENs and LBDNs, respectively.
-
 \begin{remark}
-	\cite{Revay++2023} makes special mention of ``acyclic'' RENs, which have a lower-triangular $D_{11}$ matrix. Acyclic RENs are significantly more efficient to evaluate than RENs with a dense $D_{11}$ matrix, and performance is typically similar across a range of problems. All RENs in \verb|RobustNeuralNetworks.jl| are therefore acyclic RENs.
+	\cite{Revay++2023} makes special mention of ``acyclic'' RENs, which have a lower-triangular $D_{11}$ matrix. Acyclic RENs are significantly more efficient to evaluate than RENs with a dense $D_{11}$ matrix, and performance is typically similar across a range of problems. All RENs in \verb|RobustNeuralNetworks.jl| are acyclic RENs. All LBDNs are acyclic by definition (see \cite[Eqn.~4]{Wang+Manchester2023}).
 \end{remark}
 
 % Robustness
 \subsection{Robustness metrics and IQCs} \label{sec:robustness}
 
-All neural network models in \verb|RobustNeuralNetworks.jl| are designed to satisfy a set of user-defined robustness constraints. The RENs can satisfy a range of robustness criteria, some relating to the internal dynamics of a model and others relating to its input-output map. LBDNs are more specialized and are specifically constructed to have a finite, user-tunable Lipschitz bound (Sec. \ref{sec:robustness-lipschitz}).
+All neural network models in \verb|RobustNeuralNetworks.jl| are designed to satisfy a set of user-defined robustness metrics. We consider four particular robustness metrics relating to the internal stability of a model and its input-output map. LBDNs are more specialized and are specifically constructed to have a finite, user-tunable Lipschitz bound (Sec. \ref{sec:robustness-lipschitz}).
 
 \subsubsection{Contracting systems} \label{sec:robustness-contraction}
 
-Firstly, all of our RENs are contracting systems. This means that they exponentially ``forget'' their initial conditions. If the system starts at two different initial conditions but is given the same input sequence, the internal states will exponentially converge over time. Figure \ref{fig:contracting-ren} shows an example of a contracting REN with one input and a single internal state, where two simulations of the system start with different initial conditions but are provided the same sinusoidal input. See \cite{Bullo2022} for a detailed introduction to contraction theory for dynamical systems.
+Firstly, all of our RENs are contracting systems. This means that they exponentially ``forget'' their initial conditions. If the system starts at two different initial conditions but is given the same input sequence, the internal states will exponentially converge over time. Figure \ref{fig:contracting-ren} shows an example of a contracting REN with one input and a single internal state, where two simulations of the system start with different initial conditions but are provided the same sinusoidal input. See \cite{Lohmiller+Slotine1998} for a detailed introduction to contraction theory for dynamical systems.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.47\textwidth]{Images/contracting_ren.pdf}
+    \includegraphics[width=0.45\textwidth]{Images/contracting_ren.pdf}
+    \vspace{-2mm}
     \caption{Simulation of a contracting REN with a single internal state. The system is simulated from two different initial states with the same sinusoidal input. The contracting system exponentially forgets its initial condition.}
     \label{fig:contracting-ren}
 \end{figure}
 
 \subsubsection{Incremental IQCs}
 
-We define additional robustness criteria on the input-output map of RENs with incremental \textit{integral quadratic constraints} (IQCs). Suppose we have a model $\mathcal{M}$ starting at two different initial conditions $a,b$ with two different input signals $u, v$, and consider their corresponding output trajectories $y^a = \mathcal{M}_a(u)$ and $y^b = \mathcal{M}_b(v).$ The model $\mathcal{M}$ satisfies the IQC defined by matrices $(Q, S, R)$ if
+We can define additional robustness metrics for the input-output map of RENs with incremental \textit{integral quadratic constraints} (IQCs) \cite{Megretski+Rantzer1997}. Suppose we have a model $\mathcal{M}$ starting at two different initial conditions $a,b$ with two different input signals $u, v$, and consider their corresponding output trajectories $y^a = \mathcal{M}_a(u)$ and $y^b = \mathcal{M}_b(v).$ The model $\mathcal{M}$ satisfies the IQC defined by matrices $(Q, S, R)$ if
 \begin{equation}
     \sum_{t=0}^T
     \begin{bmatrix}
@@ -86,7 +86,7 @@ We define additional robustness criteria on the input-output map of RENs with in
     \ge -d(a,b)
     \quad \forall \, T
 \end{equation}
-for some function $d(a,b) \ge 0$ with $d(a,a) = 0$, where $0 \preceq Q \in \mathbb{R}^{n_y\times n_y}$, $S\in\mathbb{R}^{n_u\times n_y},$ $R=R^\top \in \mathbb{R}^{n_u\times n_u}.$ 
+for a function $d(a,b) \ge 0$, $d(a,a) = 0$, where $0 \succeq Q \in \mathbb{R}^{n_y\times n_y}$ is negative semi-definite, $S\in\mathbb{R}^{n_u\times n_y},$ $R=R^\top \in \mathbb{R}^{n_u\times n_u}.$ 
 
 In general, the IQC matrices $(Q,S,R)$ can be chosen (or optimized) to meet a range of performance criteria. The following special cases are worth noting.
 
@@ -100,6 +100,7 @@ where $\|\cdot\|$ denotes the $\ell_2$ norm. Qualitatively, the Lipschitz bound 
 As the name suggests, all LBDN models are constructed to have a user-tunable (or learnable) Lipschitz bound.
 
 \subsubsection{Incremental passivity} 
+Passivity is a generalized notion of energy conservation from classical mechanics \cite{vanderSchaft2017}.
 We have implemented two versions of incremental passivity. In each case, the network must have the same number of inputs and outputs.
 
 \begin{enumerate}
@@ -113,18 +114,17 @@ We have implemented two versions of incremental passivity. In each case, the net
     \end{equation}
 \end{enumerate}
 
-For more details on IQCs and their use in RENs, please see \cite{Revay++2023}.
+Passivity properties are useful in, for example, learning stable dynamical systems \cite{Cheng++2024}. The remainder of this paper will focus on contraction and Lipschitz bounds for demonstrative purposes.
 
 % Parameterisations
 \subsection{Direct and explicit parameterizations} \label{sec:parameterizations}
 
-The key advantage of the models in \verb|RobustNeuralNetworks.jl| is that they \textit{naturally} satisfy the robustness constraints of Section \ref{sec:robustness} -- i.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the robustness requirements.
+The key advantage of the models in \verb|RobustNeuralNetworks.jl| is that they \textit{naturally} satisfy the robustness metrics of Section \ref{sec:robustness} -- i.e., robustness is guaranteed by construction. There is no need to impose additional (possibly computationally-expensive) constraints while training a REN or an LBDN. One can simply use unconstrained optimization methods like gradient descent and be sure that the final model will satisfy the desired properties.
 
-We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2023} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$ like this, we call the parameterization a \textit{direct parameterization}. Equations \ref{eqn:lbdn-output} to \ref{eqn:ren-G} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness constraints to be imposed on the explicit model. 
-% The direct parameters for RENs and LBDNs are defined in \cite{Revay++2023} and \cite{Wang+Manchester2023}, respectively.
+We achieve this by constructing the weight matrices and bias vectors in our models to automatically satisfy specific linear matrix inequalities (see \cite{Revay++2023} for details). The learnable parameters of a REN or LBDN are a set of free, unconstrained variables $\theta \in \mathbb{R}^N$. When the set of learnable parameters is exactly $\mathbb{R}^N$ like this, we call the parameterization a \textit{direct parameterization}. Equations \ref{eqn:lbdn-output} to \ref{eqn:ren-G} describe the \textit{explicit parameterizations} of RENs and LBDNs: model structures that can be called and evaluated on data. For a REN, the explicit parameters are $\bar{\theta} := [W, b]$, and for an LBDN they are $\bar{\theta} := [W_0, b_0, \ldots, W_L, b_L]$. The mapping $\theta \mapsto \bar{\theta}$ depends on the specific robustness metrics to be imposed on the explicit model. 
 
 \subsubsection{Implementation} \label{sec:params-implementation}
-RENs are defined by two abstract types in \verb|RobustNeuralNetworks.jl|. Subtypes of \verb|AbstractRENParams| hold all the information required to directly parameterize a REN satisfying some robustness properties. For example, to initialize the direct parameters of a \textit{contracting} REN with 1 input, 10 states, 20 neurons, 1 output, and a \texttt{relu} activation function, we use the following. The direct parameters $\theta$ are stored in \verb|model_ps.direct|. 
+RENs are defined by two abstract types in \verb|RobustNeuralNetworks.jl|. Subtypes of \verb|AbstractRENParams| hold all the information required to directly parameterize a REN satisfying some robustness metrics. For example, to initialize the direct parameters of a \textit{contracting} REN with 1 input, 10 states, 20 neurons, 1 output, and a \texttt{relu} activation function, we use the following. The direct parameters $\theta$ are stored in \verb|model_ps.direct|. 
 
 \begin{lstlisting}[language = Julia]
 using Flux, RobustNeuralNetworks
