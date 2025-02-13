@@ -38,13 +38,17 @@ Depth = 1
 
 If you use `RobustNeuralNetworks.jl` for any research or publications, please cite our work as necessary.
 ```bibtex
-@article{barbara2023robustneuralnetworksjl,
-   title   = {RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness},
-   author  = {Nicholas H. Barbara and Max Revay and Ruigang Wang and Jing Cheng and Ian R. Manchester},
-   journal = {arXiv preprint arXiv:2306.12612},
-   month   = {6},
-   year    = {2023},
-   url     = {https://arxiv.org/abs/2306.12612v1},
+@article{barbara2025robustneuralnetworksjl, 
+   title = {RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness}, 
+   author = {Nicholas H. Barbara and Max Revay and Ruigang Wang and Jing Cheng and Ian R. Manchester}, 
+   journal = {Proceedings of the JuliaCon Conferences},
+   publisher = {The Open Journal}, 
+   year = {2025}, 
+   volume = {7}, 
+   number = {68}, 
+   pages = {163}, 
+   doi = {10.21105/jcon.00163}, 
+   url = {https://doi.org/10.21105/jcon.00163}, 
 }
 ```
 
