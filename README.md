@@ -1,10 +1,11 @@
 # RobustNeuralNetworks.jl
 
 [![Build Status](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/acfr/RobustNeuralNetworks.jl/actions/workflows/CI.yml?query=branch%3Amain)
-
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/stable/)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://acfr.github.io/RobustNeuralNetworks.jl/dev)
 
+[![DOI](https://proceedings.juliacon.org/papers/10.21105/jcon.00163/status.svg)](https://doi.org/10.21105/jcon.00163)
+[![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.14861888.svg)](http://dx.doi.org/10.5281/zenodo.14861888)
 
 A Julia package for robust neural networks built from the [Recurrent Equilibrium Network (REN)](https://arxiv.org/abs/2104.05942) and [Lipschitz-Bounded Deep Network (LBDN)](https://arxiv.org/abs/2301.11526) model classes. Please visit [the docs page](https://acfr.github.io/RobustNeuralNetworks.jl/dev/) for detailed documentation
 
@@ -51,13 +52,17 @@ The output should be:
 
 If you use `RobustNeuralNetworks.jl` for any research or publications, please cite our work as necessary.
 ```bibtex
-@article{barbara2023robustneuralnetworksjl,
-   title   = {RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness},
-   author  = {Nicholas H. Barbara and Max Revay and Ruigang Wang and Jing Cheng and Ian R. Manchester},
-   journal = {arXiv preprint arXiv:2306.12612},
-   month   = {6},
-   year    = {2023},
-   url     = {https://arxiv.org/abs/2306.12612v1},
+@article{barbara2025robustneuralnetworksjl, 
+   title = {RobustNeuralNetworks.jl: a Package for Machine Learning and Data-Driven Control with Certified Robustness}, 
+   author = {Nicholas H. Barbara and Max Revay and Ruigang Wang and Jing Cheng and Ian R. Manchester}, 
+   journal = {Proceedings of the JuliaCon Conferences},
+   publisher = {The Open Journal}, 
+   year = {2025}, 
+   volume = {7}, 
+   number = {68}, 
+   pages = {163}, 
+   doi = {10.21105/jcon.00163}, 
+   url = {https://doi.org/10.21105/jcon.00163}, 
 }
 ```
 
