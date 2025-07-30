@@ -7,7 +7,7 @@
 [![DOI](https://proceedings.juliacon.org/papers/10.21105/jcon.00163/status.svg)](https://doi.org/10.21105/jcon.00163)
 [![DOI](https://zenodo.org/badge/doi/10.5281/zenodo.14861888.svg)](http://dx.doi.org/10.5281/zenodo.14861888)
 
-A Julia package for robust neural networks built from the [Recurrent Equilibrium Network (REN)](https://arxiv.org/abs/2104.05942) and [Lipschitz-Bounded Deep Network (LBDN)](https://arxiv.org/abs/2301.11526) model classes. Please visit [the docs page](https://acfr.github.io/RobustNeuralNetworks.jl/dev/) for detailed documentation
+A Julia package for robust neural networks built from the [Recurrent Equilibrium Network (REN)](https://arxiv.org/abs/2104.05942) and [Lipschitz-Bounded Deep Network (LBDN)](https://arxiv.org/abs/2301.11526) model classes. Please visit [the docs page](https://acfr.github.io/RobustNeuralNetworks.jl/dev/) for detailed documentation.
 
 ## Installation
 
