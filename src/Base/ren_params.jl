@@ -169,9 +169,10 @@ function DirectRENParams{T}(
         D11 = glorot_normal(nv, nv; T, rng)
         D12 = zeros(T, nv, nu)
 
-        # TODO: This is prone to errors. Needs a bugfix!
-        Λ = 2.5*I
+        # Need to ensure H22 is positive definite
+        Λ = (maximum(eigvals(D11 + D11')) / 2 + 1e-4) * I
         H22 = 2Λ - D11 - D11'
+
         Htild = [(E + E' - P) -C1' F';
                  -C1 H22 B1'
                  F  B1  P] + ϵ * I
